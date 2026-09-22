@@ -4,15 +4,14 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { notify } from "@/lib/notifications/notify";
-import { crossedCustomerMilestone } from "@/lib/notifications/milestones";
+import { crossedCustomerMilestone, milestoneMessage } from "@/lib/notifications/milestones";
+import { flagChurnEvent } from "@/lib/growth-profile/flag-churn";
 
 async function notifyIfMilestone(founderId: string, oldCount: number, newCount: number) {
   const milestone = crossedCustomerMilestone(oldCount, newCount);
   if (!milestone) return;
-  await notify(founderId, "milestone", `You've hit ${milestone} customers!`, {
-    emailSubject: `${milestone} customers — nice work`,
-    emailHtml: `<p>You've reached <strong>${milestone} customers</strong> on your way to 100.</p>`,
-  });
+  const { message, emailSubject, emailHtml } = milestoneMessage(milestone);
+  await notify(founderId, "milestone", message, { emailSubject, emailHtml });
 }
 
 // Manual self-report, independent of any quest (SPEC §8/§14 — "founder
@@ -60,6 +59,10 @@ export async function correctCustomerCount(formData: FormData) {
     .from("founders")
     .update({ current_customer_count: newCount })
     .eq("id", founder.id);
+
+  if (delta < 0) {
+    await flagChurnEvent(founder.id, founder.current_customer_count, newCount);
+  }
   await notifyIfMilestone(founder.id, founder.current_customer_count, newCount);
 
   revalidatePath("/dashboard");

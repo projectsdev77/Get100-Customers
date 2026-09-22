@@ -1,4 +1,5 @@
 import type { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Quest, QuestResult } from "@/types/database";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -72,7 +73,12 @@ export async function recomputeGrowthProfile(
     bottleneckHypothesis = `Keep leaning into ${whatWorking[0].insight.split(" has")[0]} — it's your best-performing channel so far.`;
   }
 
-  await supabase
+  // growth_profiles has a SELECT-only RLS policy (it's system-derived
+  // state, not a founder-authored write, same reasoning as
+  // notifications_log/subscriptions) — the upsert must go through the
+  // admin client, or it would be silently blocked and no rows would ever
+  // actually update.
+  await createAdminClient()
     .from("growth_profiles")
     .upsert(
       {

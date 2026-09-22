@@ -14,7 +14,7 @@ import { summarizeResultNotes } from "@/lib/ai/summarize-result-notes";
 import { computeLevel } from "@/lib/gamification/level";
 import { computeNextStreak } from "@/lib/gamification/streak";
 import { notify } from "@/lib/notifications/notify";
-import { crossedCustomerMilestone } from "@/lib/notifications/milestones";
+import { crossedCustomerMilestone, milestoneMessage } from "@/lib/notifications/milestones";
 import type { Quest, QuestTemplate } from "@/types/database";
 
 // Suggested → active (SPEC §7.3/§7.4).
@@ -213,10 +213,8 @@ export async function submitQuestResult(formData: FormData) {
   }
   const milestone = crossedCustomerMilestone(founder.current_customer_count, newCustomerCount);
   if (milestone) {
-    await notify(founder.id, "milestone", `You've hit ${milestone} customers!`, {
-      emailSubject: `${milestone} customers — nice work`,
-      emailHtml: `<p>You've reached <strong>${milestone} customers</strong> on your way to 100.</p>`,
-    });
+    const { message, emailSubject, emailHtml } = milestoneMessage(milestone);
+    await notify(founder.id, "milestone", message, { emailSubject, emailHtml });
   }
 
   await refreshQuestLog(supabase, founder);

@@ -157,6 +157,17 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0.
 
+**Status:** ⚠️ Code built and pushed. Also caught and fixed a real bug while here: `recomputeGrowthProfile`'s upsert was writing through the founder's session-scoped client, but `growth_profiles` only ever had a SELECT RLS policy — that write would have silently no-opped against a live database, quietly breaking the "adapts based on results" feature from Phase 4/5 onward. Now routed through the admin client, same as the other system-derived tables.
+
+- **Growth Mode (100+):** `getProgressTarget`/`isInGrowthMode` give stretch targets (100→250→500→1000→+500), wired into `GrowthHud` so the dashboard automatically shows "Growth Mode — next target" once `current_customer_count` crosses 100 — this also covers "100+ at signup" (SPEC §14) since it's the same display logic regardless of how the count got there. The 100-customer milestone notification is special-cased to announce Growth Mode entry.
+- **Churn correction:** a downward `correctCustomerCount` now calls `flagChurnEvent`, appending a `strategy_history` entry so future coaching sees it instead of silently ignoring it.
+- **Pivot handling:** `updateProfile` compares industry/product description before and after; a material change appends a `strategy_history` entry and returns `pivotDetected`, which `ProfileForm` surfaces as a dismissible "revisit onboarding?" suggestion — non-blocking, and XP/level/customer count are untouched (both churn and pivot flagging share one `appendStrategyHistory` helper).
+- **Disagreement handling:** already covered by Phase 3's skip-with-reason — no new code needed, just confirmed against SPEC §14 here.
+- **Privacy baseline:** `/api/account/export` streams a founder's full data as a downloadable JSON file (session-scoped, no admin client needed — every table has a founder-scoped SELECT policy). Account deletion (`deleteAccount`, gated behind typing "DELETE") calls `auth.admin.deleteUser`, which cascades through every founder-owned table via the `on delete cascade` foreign keys already in the schema.
+- **QA guardrails:** reaffirmed rather than expanded — Phase 5/7's guardrails (no leftover `{{}}`, non-empty checks, hallucination-proof id validation for chat swaps) already cover the AI surfaces; no new gaps found worth adding contrived checks for.
+
+Verified via lint/typecheck/build — **not yet tested live**.
+
 ## Phase 12 — Pre-launch swap (the one paid phase)
 
 **Goal:** execute the §0 swap table for real — this is the only phase that costs money, and only once the product is ready for real users.

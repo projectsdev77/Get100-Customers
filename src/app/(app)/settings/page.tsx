@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Founder } from "@/types/database";
 import { ProfileForm } from "./profile-form";
 import { NotificationPrefsForm } from "./notification-prefs-form";
+import { DangerZone } from "./danger-zone";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -36,6 +37,8 @@ export default async function SettingsPage() {
           }
         />
       </div>
+
+      <DangerZone />
     </div>
   );
 }
