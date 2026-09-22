@@ -35,6 +35,7 @@ export interface Founder {
   xp: number;
   streak_count: number;
   last_streak_activity_at: string | null;
+  email_notification_prefs: EmailNotificationPrefs;
   created_at: string;
   updated_at: string;
 }
@@ -127,13 +128,24 @@ export interface Subscription {
   updated_at: string;
 }
 
+export type NotificationType =
+  | "new_quest"
+  | "window_approaching"
+  | "re_engagement"
+  | "milestone"
+  | "weekly_recap";
+
 export interface NotificationLogEntry {
   id: string;
   founder_id: string;
-  type: string;
+  type: NotificationType;
   channel: "in_app" | "email";
+  message: string;
+  read_at: string | null;
   sent_at: string;
 }
+
+export type EmailNotificationPrefs = Record<NotificationType, boolean>;
 
 export interface AdminUser {
   id: string;

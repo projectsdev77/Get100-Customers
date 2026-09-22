@@ -124,6 +124,10 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0 (Resend free tier). **Blocked on client:** a free Resend account + a sending domain (can start on Resend's free onboarding domain for testing).
 
+**Status:** ⚠️ Code built and pushed. `notify()` is the single entry point — always logs in-app, additionally emails via Resend (fetch-based, no SDK dependency) unless the founder's `email_notification_prefs` has that type off, using a new service-role admin client (`src/lib/supabase/admin.ts`) since notification writes and the Auth admin email lookup are system-generated, not founder-session writes. `new_quest` fires from `ensureQuestSlots`; `milestone` (level-up and 10/25/50/100 customer thresholds) fires from `submitQuestResult` and the dashboard's manual customer actions; `window_approaching`/`re_engagement` have no natural event to hook, so they're lazily checked (deduped via `hasRecentNotification`) inside `refreshQuestLog`, now also called from the dashboard, not just `/quests`. `weekly_recap` runs from a bearer-secret-protected route (`/api/cron/weekly-recap`) triggered by a **scheduled GitHub Actions workflow** (`.github/workflows/weekly-recap.yml`) — real zero-budget cron, since GitHub Actions scheduled workflows are free within the monthly minutes allowance and Vercel Hobby's free cron tier is more limited. Settings gained an email-preferences toggle section; nav gained an unread-count "Notifications" link to a full list page with mark-all-read.
+
+**Blocked on client (additional):** two GitHub repo secrets for the cron workflow — `APP_URL` (the deployed app's base URL) and `CRON_SECRET` (must match the `CRON_SECRET` env var on the deployment, set in `.env.example`).
+
 ## Phase 9 — Admin dashboard (SPEC §12)
 
 **Goal:** minimum internal tooling for support/debugging.

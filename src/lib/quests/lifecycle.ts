@@ -3,6 +3,8 @@ import type { Founder, GrowthProfile, Quest, QuestTemplate } from "@/types/datab
 import { pickTemplate, templateToQuestFields } from "./select-template";
 import { personalizeQuestWithAI } from "@/lib/ai/personalize-quest";
 import { generateNetNewQuest } from "@/lib/ai/generate-quest";
+import { notify } from "@/lib/notifications/notify";
+import { runLazyNotificationChecks } from "@/lib/notifications/lazy-checks";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -125,10 +127,15 @@ export async function ensureQuestSlots(
       ...built.fields,
     });
     slotsOpen -= 1;
+
+    // In-app only (SPEC §11) — the founder is typically already in the app
+    // when a slot refills, and 3 of these can fire right after onboarding.
+    await notify(founder.id, "new_quest", `New quest: ${built.fields.title}`);
   }
 }
 
 export async function refreshQuestLog(supabase: SupabaseServerClient, founder: Founder) {
   await applyExpiry(supabase, founder.id);
   await ensureQuestSlots(supabase, founder);
+  await runLazyNotificationChecks(supabase, founder);
 }

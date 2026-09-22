@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Founder } from "@/types/database";
+import { refreshQuestLog } from "@/lib/quests/lifecycle";
 import { correctCustomerCount, logCustomer } from "./actions";
 import { GrowthHud } from "./growth-hud";
 
@@ -22,6 +23,8 @@ export default async function DashboardPage() {
   if (!profileComplete || !founder) {
     redirect("/onboarding");
   }
+
+  await refreshQuestLog(supabase, founder);
 
   return (
     <div className="flex flex-col gap-6">

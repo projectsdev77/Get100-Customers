@@ -3,6 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
+import { notify } from "@/lib/notifications/notify";
+import { crossedCustomerMilestone } from "@/lib/notifications/milestones";
+
+async function notifyIfMilestone(founderId: string, oldCount: number, newCount: number) {
+  const milestone = crossedCustomerMilestone(oldCount, newCount);
+  if (!milestone) return;
+  await notify(founderId, "milestone", `You've hit ${milestone} customers!`, {
+    emailSubject: `${milestone} customers — nice work`,
+    emailHtml: `<p>You've reached <strong>${milestone} customers</strong> on your way to 100.</p>`,
+  });
+}
 
 // Manual self-report, independent of any quest (SPEC §8/§14 — "founder
 // marks a quest OR a standalone action as resulting in a new customer").
@@ -18,10 +29,9 @@ export async function logCustomer() {
     note: "Manually logged from dashboard",
   });
 
-  await supabase
-    .from("founders")
-    .update({ current_customer_count: founder.current_customer_count + 1 })
-    .eq("id", founder.id);
+  const newCount = founder.current_customer_count + 1;
+  await supabase.from("founders").update({ current_customer_count: newCount }).eq("id", founder.id);
+  await notifyIfMilestone(founder.id, founder.current_customer_count, newCount);
 
   revalidatePath("/dashboard");
 }
@@ -50,6 +60,7 @@ export async function correctCustomerCount(formData: FormData) {
     .from("founders")
     .update({ current_customer_count: newCount })
     .eq("id", founder.id);
+  await notifyIfMilestone(founder.id, founder.current_customer_count, newCount);
 
   revalidatePath("/dashboard");
 }

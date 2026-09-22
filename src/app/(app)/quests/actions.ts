@@ -13,6 +13,8 @@ import { recomputeGrowthProfile } from "@/lib/growth-profile/recompute";
 import { summarizeResultNotes } from "@/lib/ai/summarize-result-notes";
 import { computeLevel } from "@/lib/gamification/level";
 import { computeNextStreak } from "@/lib/gamification/streak";
+import { notify } from "@/lib/notifications/notify";
+import { crossedCustomerMilestone } from "@/lib/notifications/milestones";
 import type { Quest, QuestTemplate } from "@/types/database";
 
 // Suggested → active (SPEC §7.3/§7.4).
@@ -174,6 +176,7 @@ export async function submitQuestResult(formData: FormData) {
   // change together off one completion — batched into a single founders
   // update rather than several separate writes.
   const newXp = founder.xp + quest.xp_value;
+  const newLevel = computeLevel(newXp);
   const foundersUpdate: Partial<{
     xp: number;
     level: number;
@@ -182,11 +185,12 @@ export async function submitQuestResult(formData: FormData) {
     current_customer_count: number;
   }> = {
     xp: newXp,
-    level: computeLevel(newXp),
+    level: newLevel,
     streak_count: computeNextStreak(founder.streak_count, founder.last_streak_activity_at),
     last_streak_activity_at: nowIso,
   };
 
+  let newCustomerCount = founder.current_customer_count;
   if (structuredAnswers.converted === true) {
     await supabase.from("customer_events").insert({
       founder_id: founder.id,
@@ -195,10 +199,25 @@ export async function submitQuestResult(formData: FormData) {
       delta: 1,
       note: `From quest: ${quest.title}`,
     });
-    foundersUpdate.current_customer_count = founder.current_customer_count + 1;
+    newCustomerCount = founder.current_customer_count + 1;
+    foundersUpdate.current_customer_count = newCustomerCount;
   }
 
   await supabase.from("founders").update(foundersUpdate).eq("id", founder.id);
+
+  if (newLevel > founder.level) {
+    await notify(founder.id, "milestone", `Level up! You're now level ${newLevel}.`, {
+      emailSubject: "Level up!",
+      emailHtml: `<p>You just reached <strong>level ${newLevel}</strong> — keep going.</p>`,
+    });
+  }
+  const milestone = crossedCustomerMilestone(founder.current_customer_count, newCustomerCount);
+  if (milestone) {
+    await notify(founder.id, "milestone", `You've hit ${milestone} customers!`, {
+      emailSubject: `${milestone} customers — nice work`,
+      emailHtml: `<p>You've reached <strong>${milestone} customers</strong> on your way to 100.</p>`,
+    });
+  }
 
   await refreshQuestLog(supabase, founder);
   await recomputeGrowthProfile(supabase, founder.id);

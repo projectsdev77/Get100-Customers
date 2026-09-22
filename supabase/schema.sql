@@ -25,6 +25,8 @@ create table if not exists founders (
   xp integer not null default 0,
   streak_count integer not null default 0,
   last_streak_activity_at timestamptz,
+  email_notification_prefs jsonb not null default
+    '{"new_quest":true,"window_approaching":true,"re_engagement":true,"milestone":true,"weekly_recap":true}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -149,6 +151,8 @@ create table if not exists notifications_log (
   founder_id uuid not null references founders (id) on delete cascade,
   type text not null,
   channel text not null check (channel in ('in_app', 'email')),
+  message text not null default '',
+  read_at timestamptz,
   sent_at timestamptz not null default now()
 );
 
@@ -203,8 +207,15 @@ create policy "customer_events_owner" on customer_events
 create policy "subscriptions_owner" on subscriptions
   for select using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
-create policy "notifications_log_owner" on notifications_log
+-- Reads and marking-as-read go through the founder's own RLS-scoped
+-- session; creation always goes through the service-role admin client
+-- instead (system-generated content — see src/lib/notifications/notify.ts),
+-- so no insert policy is needed here.
+create policy "notifications_log_owner_select" on notifications_log
   for select using (founder_id in (select id from founders where auth_user_id = auth.uid()));
+
+create policy "notifications_log_owner_update" on notifications_log
+  for update using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
 create policy "quest_templates_read_all" on quest_templates
   for select using (auth.role() = 'authenticated');

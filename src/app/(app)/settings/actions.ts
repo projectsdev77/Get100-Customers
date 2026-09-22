@@ -2,9 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { FounderStage } from "@/types/database";
+import type { EmailNotificationPrefs, FounderStage, NotificationType } from "@/types/database";
 
 const VALID_STAGES: FounderStage[] = ["idea", "prototype", "launched"];
+const NOTIFICATION_TYPES: NotificationType[] = [
+  "new_quest",
+  "window_approaching",
+  "re_engagement",
+  "milestone",
+  "weekly_recap",
+];
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient();
@@ -43,4 +50,28 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/settings");
   revalidatePath("/dashboard");
   return { success: true };
+}
+
+// In-app notifications stay always on (core to the game UI, SPEC §11);
+// this only toggles the email channel per category. Plain form action (no
+// useActionState consumer), so this returns void like the other simple
+// actions in this app rather than a result object.
+export async function updateNotificationPrefs(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const prefs = NOTIFICATION_TYPES.reduce((acc, type) => {
+    acc[type] = formData.get(`pref_${type}`) === "on";
+    return acc;
+  }, {} as EmailNotificationPrefs);
+
+  await supabase
+    .from("founders")
+    .update({ email_notification_prefs: prefs, updated_at: new Date().toISOString() })
+    .eq("auth_user_id", user.id);
+
+  revalidatePath("/settings");
 }
