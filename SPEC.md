@@ -150,9 +150,9 @@ Baseline regardless of jurisdiction: account data export, account deletion (casc
 - **Business pivot:** handled by the profile-edit + drift-detection flow in §5 — customer count, XP, and level persist across a pivot (they represent the founder's overall journey), while `strategy_history` records the shift.
 - **Disagreeing with recommendations:** always-available "not for me" skip with optional reason (§7.4), plus always-offered alternatives — this is a growth-profile signal, not a dead end.
 
-## 15. Scale, cost & performance `[ASSUMPTION — confirm]`
+## 15. Scale, cost & performance `[ASSUMPTION — confirm scale/budget]`
 
-No real budget/scale figures exist yet; defaulting to a standard early-stage SaaS design point: low-thousands of concurrent founders in year one, not massive scale from day one. AI cost is managed via a tiered model strategy — a cheaper/faster model for routine quest selection from the template library, a more capable model reserved for onboarding analysis, growth-profile synthesis, and chat; template content is reused/cached rather than regenerated from scratch on every quest. Confirm actual growth targets and AI budget with the client — this materially affects model choice and infra sizing.
+No real budget/scale figures exist yet; defaulting to a standard early-stage SaaS design point: low-thousands of concurrent founders in year one, not massive scale from day one. AI cost is managed via a tiered model strategy on the Gemini API (§18) — a cheaper/faster model (e.g. Gemini Flash tier) for routine quest selection from the template library, a more capable model (e.g. Gemini Pro tier) reserved for onboarding analysis, growth-profile synthesis, and chat; template content is reused/cached rather than regenerated from scratch on every quest. Confirm actual growth targets and paid-tier AI budget with the client — this affects infra sizing and how soon Phase 12's LLM swap (PHASES.md) is needed.
 
 ## 16. Analytics
 
@@ -170,7 +170,7 @@ No real budget/scale figures exist yet; defaulting to a standard early-stage Saa
 
 - **Frontend:** Next.js (React)
 - **Backend/data/auth:** Supabase (Postgres, Auth, Storage for uploaded docs)
-- **AI:** LLM calls (tiered model strategy, §15) for onboarding extraction, quest generation/personalization, result summarization, and chat — server-side (Next.js API routes / Supabase Edge Functions)
+- **AI `[Decision: confirmed]`:** Gemini API (tiered model strategy, §15) for onboarding extraction, quest generation/personalization, result summarization, and chat — server-side (Next.js API routes / Supabase Edge Functions). Google AI Studio's free tier is the dev-phase key (PHASES.md); swapped for a paid production key at launch (PHASES.md Phase 12).
 - **Hosting `[ASSUMPTION — confirm]`:** Vercel (Next.js) + Supabase managed backend
 
 ## 19. Data model
@@ -204,10 +204,11 @@ No real budget/scale figures exist yet; defaulting to a standard early-stage Saa
 
 - Confirm pricing/trial numbers (§3 has a placeholder 14-day trial assumption).
 - Confirm target launch geography for privacy scope (§13).
-- Confirm expected scale and AI budget (§15) — affects model choice and infra sizing.
+- Confirm expected scale and paid-tier AI budget (§15) — affects infra sizing and launch timing.
 - Confirm hosting preference (§18 assumes Vercel/Supabase).
-- Which LLM provider/model for the coaching engine (cost/quality tradeoff)?
 - Does the platform need its own brand identity/name, or is there an existing design system to build the "game" visual style around?
+
+**Resolved since first draft:** LLM provider is Gemini API (§18), per docs/10.
 
 ## 23. Launch scope summary
 

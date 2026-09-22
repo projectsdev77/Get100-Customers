@@ -10,7 +10,7 @@ Rule of thumb used throughout: **build and test on free tiers now, budget line i
 |---|---|---|---|
 | Hosting | Vercel Hobby (free) | Vercel Pro (~$20/mo) | Hobby tier's terms are non-commercial; also raises function execution/bandwidth limits |
 | Database/Auth/Storage | Supabase Free tier | Supabase Pro (~$25/mo) | Free tier pauses projects after 1 week idle, no daily backups, 500MB DB / 1GB storage caps |
-| LLM (AI coaching engine) | Free-tier/rate-limited model (e.g. Gemini free tier or Groq free tier) during dev | Paid Anthropic or OpenAI API key at production quality/rate limits | Free tiers are rate-limited and lower quality — fine for building/testing prompts, not for real founders |
+| LLM (AI coaching engine) | Gemini API free tier (Google AI Studio) during dev — confirmed provider per SPEC §18/docs/10 | Gemini API paid tier at production rate limits/quotas | Free tier is rate-limited (requests/day caps) — fine for building/testing prompts, not for real concurrent founders |
 | Transactional email | Resend free tier (3,000 emails/mo) | Resend paid tier or equivalent | Free tier volume caps out once notification volume grows |
 | Payments | Stripe test mode (free) | Stripe live mode (no upfront cost, just requires business verification) | Not a budget cost, but a required launch step — flagged so it isn't missed |
 | Domain | Vercel's free `*.vercel.app` subdomain | Custom domain (~$10–15/yr) | Needed for a professional/trustworthy launch |
@@ -47,7 +47,7 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 - URL fetch + doc upload to Supabase Storage (free tier)
 - AI extraction from doc/URL into profile fields — first point the app needs an LLM key
 
-**Cost:** $0 if using a free-tier LLM (see §0) during build. **Blocked on client:** a free API key from whichever free-tier LLM we pick for dev (documented in §0; final production key is a launch-time decision, not a build-time one).
+**Cost:** $0 on the Gemini API free tier (see §0). **Blocked on client:** a free Google AI Studio API key (no card required); swapped for a paid-tier key at launch (Phase 12).
 
 ## Phase 3 — Quest template library + rule-based quest engine (SPEC §7)
 
@@ -78,7 +78,7 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 - Free-text result summarization into growth-profile insights
 - Guardrails + golden-set checks from SPEC §17 introduced here, since this is where AI output quality first matters
 
-**Cost:** $0 on a free-tier/rate-limited model during build; this is the phase most sensitive to the LLM swap in §0 before real launch (quality and rate limits both matter here).
+**Cost:** $0 on the Gemini free tier during build; this is the phase most sensitive to the LLM swap in §0 before real launch (quality and rate limits both matter here).
 
 ## Phase 6 — Gamification UI (SPEC §6)
 
@@ -96,7 +96,7 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 - Reuses the Phase 5 LLM integration with full context (profile, growth profile, quest history)
 - Propose-only actions (quest swap suggestions), no autonomous execution
 
-**Cost:** $0 on the same free-tier LLM as Phase 5.
+**Cost:** $0 on the same Gemini free tier as Phase 5.
 
 ## Phase 8 — Notifications (SPEC §11)
 
@@ -139,7 +139,7 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 1. Vercel → Pro
 2. Supabase → Pro
-3. LLM dev key → production LLM key (final provider/model choice — open question in SPEC §22)
+3. Gemini API dev key → production-tier Gemini API key (higher quota, billing enabled)
 4. Resend → paid tier if volume requires it
 5. Custom domain purchase
 6. Stripe → live mode
@@ -155,7 +155,7 @@ Visual journey/map, badges, leaderboards, boss-battle milestones, evidence/integ
 
 Phase 0 needs no accounts and I can start now. Phase 1 onward needs, when you're ready:
 - A free Supabase project (URL + anon/service keys)
-- A choice of which free-tier LLM to build against for dev (Gemini free tier vs. Groq free tier vs. other — happy to recommend once we're there)
+- A free Google AI Studio API key for Gemini (Phase 2)
 - Later: a free Resend account (Phase 8), a Stripe test-mode account (Phase 10, also free)
 
 I'll start Phase 0 now.
