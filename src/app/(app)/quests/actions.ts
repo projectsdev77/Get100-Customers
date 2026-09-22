@@ -3,9 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
-import { OCCUPYING_STATUSES, refreshQuestLog } from "@/lib/quests/lifecycle";
-import { pickTemplate, templateToQuestFields } from "@/lib/quests/select-template";
+import {
+  buildQuestInsertFields,
+  getGrowthProfile,
+  OCCUPYING_STATUSES,
+  refreshQuestLog,
+} from "@/lib/quests/lifecycle";
 import { recomputeGrowthProfile } from "@/lib/growth-profile/recompute";
+import { summarizeResultNotes } from "@/lib/ai/summarize-result-notes";
 import type { Quest, QuestTemplate } from "@/types/database";
 
 // Suggested → active (SPEC §7.3/§7.4).
@@ -82,13 +87,14 @@ export async function regenerateQuest(questId: string) {
     .select("*")
     .returns<QuestTemplate[]>();
 
-  const template = pickTemplate(founder, templates ?? [], excludeIds);
-  if (!template) return;
+  const growth = await getGrowthProfile(supabase, founder.id);
+  const built = await buildQuestInsertFields(founder, growth, templates ?? [], excludeIds);
+  if (!built) return;
 
   await supabase.from("quests").delete().eq("id", questId);
   await supabase.from("quests").insert({
     founder_id: founder.id,
-    ...templateToQuestFields(template),
+    ...built.fields,
   });
 
   revalidatePath("/quests");
@@ -115,8 +121,8 @@ export async function markQuestDone(questId: string) {
 // question's declared type, stores structured_answers + free-text notes,
 // and — since a "converted" boolean is how quests self-report a new
 // customer (SPEC §8 manual self-report) — bumps the founder's customer
-// count when that answer is true. Free-text AI summarization (ai_summary)
-// stays null until Phase 5.
+// count when that answer is true. Free-text notes get AI-summarized
+// (SPEC §8/§15, Phase 5) into ai_summary before growth-profile recompute.
 export async function submitQuestResult(formData: FormData) {
   const questId = String(formData.get("questId"));
   const supabase = await createClient();
@@ -147,12 +153,14 @@ export async function submitQuestResult(formData: FormData) {
 
   const notes = String(formData.get("notes") || "") || null;
   const nowIso = new Date().toISOString();
+  const aiSummary = notes ? await summarizeResultNotes(quest.title, notes) : null;
 
   await supabase.from("quest_results").insert({
     quest_id: quest.id,
     founder_id: founder.id,
     structured_answers: structuredAnswers,
     notes,
+    ai_summary: aiSummary,
   });
 
   await supabase

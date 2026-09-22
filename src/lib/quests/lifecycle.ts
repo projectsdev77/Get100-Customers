@@ -1,6 +1,8 @@
 import type { createClient } from "@/lib/supabase/server";
-import type { Founder, Quest, QuestTemplate } from "@/types/database";
+import type { Founder, GrowthProfile, Quest, QuestTemplate } from "@/types/database";
 import { pickTemplate, templateToQuestFields } from "./select-template";
+import { personalizeQuestWithAI } from "@/lib/ai/personalize-quest";
+import { generateNetNewQuest } from "@/lib/ai/generate-quest";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -20,6 +22,68 @@ export async function applyExpiry(supabase: SupabaseServerClient, founderId: str
     .eq("founder_id", founderId)
     .in("status", OCCUPYING_STATUSES)
     .lt("expires_at", nowIso);
+}
+
+export async function getGrowthProfile(
+  supabase: SupabaseServerClient,
+  founderId: string,
+): Promise<GrowthProfile | null> {
+  const { data } = await supabase
+    .from("growth_profiles")
+    .select("*")
+    .eq("founder_id", founderId)
+    .single<GrowthProfile>();
+  return data ?? null;
+}
+
+// The hybrid template+AI quest builder (SPEC §7.1). Picks a template via
+// the rule-based ranking (§select-template) and asks Gemini to personalize
+// it; falls back to the raw template on any AI failure or guardrail
+// rejection (SPEC §17 — never show broken output). When no template is
+// eligible at all, generates a net-new quest instead.
+export async function buildQuestInsertFields(
+  founder: Founder,
+  growth: GrowthProfile | null,
+  templates: QuestTemplate[],
+  excludeTemplateIds: string[],
+) {
+  const template = pickTemplate(founder, templates, excludeTemplateIds);
+
+  if (template) {
+    const base = templateToQuestFields(template);
+    const personalized = await personalizeQuestWithAI(founder, growth, template);
+    return {
+      fields: personalized
+        ? { ...base, title: personalized.title, instructions: personalized.instructions, tools_provided: personalized.tools_provided }
+        : base,
+      usedTemplateId: template.id as string | null,
+    };
+  }
+
+  const generated = await generateNetNewQuest(founder, growth);
+  if (!generated) return null;
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + generated.window_days);
+
+  return {
+    fields: {
+      template_id: null,
+      title: generated.title,
+      description: null,
+      instructions: generated.instructions,
+      category: generated.category,
+      xp_value: generated.xp_value,
+      tools_provided: generated.tools_provided,
+      result_questions: generated.result_questions,
+      success_criteria: null,
+      sub_tasks: [],
+      suggested_window: `${generated.window_days} day${generated.window_days === 1 ? "" : "s"}`,
+      expires_at: expiresAt.toISOString(),
+      status: "suggested" as const,
+    },
+    usedTemplateId: null,
+  };
 }
 
 // Tops up suggested quests until (active + suggested + …) reaches the cap
@@ -46,18 +110,19 @@ export async function ensureQuestSlots(
     .returns<QuestTemplate[]>();
   if (!templates || templates.length === 0) return;
 
+  const growth = await getGrowthProfile(supabase, founder.id);
   const usedTemplateIds = occupyingRows
     .map((q) => q.template_id)
     .filter((id): id is string => Boolean(id));
 
   while (slotsOpen > 0) {
-    const template = pickTemplate(founder, templates, usedTemplateIds);
-    if (!template) break;
+    const built = await buildQuestInsertFields(founder, growth, templates, usedTemplateIds);
+    if (!built) break;
 
-    usedTemplateIds.push(template.id);
+    if (built.usedTemplateId) usedTemplateIds.push(built.usedTemplateId);
     await supabase.from("quests").insert({
       founder_id: founder.id,
-      ...templateToQuestFields(template),
+      ...built.fields,
     });
     slotsOpen -= 1;
   }

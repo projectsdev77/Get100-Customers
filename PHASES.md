@@ -90,6 +90,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0 on the Gemini free tier during build; this is the phase most sensitive to the LLM swap in §0 before real launch (quality and rate limits both matter here).
 
+**Status:** ⚠️ Code built and pushed — `personalizeQuestWithAI` (fast tier) fills a picked template's placeholders from founder+growth context with a no-leftover-`{{}}` guardrail, falling back to the raw template on any failure; `generateNetNewQuest` (capable tier) covers the no-template-fits case with its own guardrails (required `converted` boolean, sane XP/window bounds); `summarizeResultNotes` (fast tier) fills `quest_results.ai_summary`, which `recomputeGrowthProfile` now surfaces as evidence instead of the bare conversion-rate string. `scripts/golden-set-check.ts` + `npm run golden-set` is the manual SPEC §17 QA tool (3 founder archetypes, not run in CI — needs a real key). Verified via lint/typecheck/build against placeholder env vars — **the AI calls themselves are unexercised until a real `GEMINI_API_KEY` exists**; run `npm run golden-set` first thing once you have one.
+
 ## Phase 6 — Gamification UI (SPEC §6)
 
 **Goal:** XP, levels, streak, 0–100 progress bar, made visually the primary surface.

@@ -9,9 +9,10 @@ interface ChannelStats {
   conversion_rate: number;
 }
 
-// Straightforward aggregation, not AI-derived yet (SPEC §9, PHASES.md
-// Phase 4 — Phase 5 replaces the what_working/bottleneck heuristics below
-// with AI-derived synthesis over the same channels_tried shape).
+// Numeric aggregation is straightforward (non-AI) by design (SPEC §9,
+// PHASES.md Phase 4) — Phase 5 only adds the AI-summarized notes as
+// supplementary evidence text (SPEC §8) on top of the same shape; the
+// conversion-rate ranking itself stays deterministic.
 export async function recomputeGrowthProfile(
   supabase: SupabaseServerClient,
   founderId: string,
@@ -21,15 +22,20 @@ export async function recomputeGrowthProfile(
     .select("*, quest_results(*)")
     .eq("founder_id", founderId)
     .eq("status", "completed")
+    .order("completed_at", { ascending: true })
     .returns<(Quest & { quest_results: QuestResult[] })[]>();
 
   const completed = quests ?? [];
 
   const channels: Record<string, ChannelStats> = {};
+  const latestSummaryByCategory: Record<string, string> = {};
   for (const quest of completed) {
     if (!quest.category) continue;
     const result = quest.quest_results[0];
     const converted = result?.structured_answers?.converted === true;
+    if (result?.ai_summary) {
+      latestSummaryByCategory[quest.category] = result.ai_summary;
+    }
 
     const stats = channels[quest.category] ?? { attempts: 0, successes: 0, conversion_rate: 0 };
     stats.attempts += 1;
@@ -43,14 +49,14 @@ export async function recomputeGrowthProfile(
     .sort(([, a], [, b]) => b.conversion_rate - a.conversion_rate)
     .map(([category, s]) => ({
       insight: `${category} has converted ${s.successes} of ${s.attempts} attempts`,
-      evidence: `conversion_rate=${s.conversion_rate.toFixed(2)}`,
+      evidence: latestSummaryByCategory[category] ?? `conversion_rate=${s.conversion_rate.toFixed(2)}`,
     }));
 
   const whatNotWorking = Object.entries(channels)
     .filter(([, s]) => s.attempts >= 2 && s.successes === 0)
     .map(([category, s]) => ({
       insight: `${category} hasn't converted after ${s.attempts} attempts`,
-      evidence: `conversion_rate=0`,
+      evidence: latestSummaryByCategory[category] ?? `conversion_rate=0`,
     }));
 
   const totalAttempts = Object.values(channels).reduce((sum, s) => sum + s.attempts, 0);
