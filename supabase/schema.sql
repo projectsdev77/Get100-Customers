@@ -24,6 +24,7 @@ create table if not exists founders (
   level integer not null default 1,
   xp integer not null default 0,
   streak_count integer not null default 0,
+  last_streak_activity_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

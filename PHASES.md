@@ -101,6 +101,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0.
 
+**Status:** ⚠️ Code built and pushed — `computeLevel`/`xpIntoCurrentLevel` (100 XP/level, cosmetic only) and `computeNextStreak` (day-based, 7-day reset window, no XP/level clawback) are pure functions wired into `submitQuestResult`'s single batched founders update. Dashboard's `GrowthHud` replaces the plain-text progress line with an actual customer progress bar, level badge + XP bar, and streak line — this is the primary game-state surface SPEC §6 calls for. Verified via lint/typecheck/build — **not yet tested live**, and the streak/leveling math itself has no live data to exercise yet.
+
 ## Phase 7 — Chat interface (SPEC §10)
 
 **Goal:** secondary, context-aware chat surface.

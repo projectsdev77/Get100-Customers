@@ -34,6 +34,7 @@ export interface Founder {
   level: number;
   xp: number;
   streak_count: number;
+  last_streak_activity_at: string | null;
   created_at: string;
   updated_at: string;
 }

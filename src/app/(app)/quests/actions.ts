@@ -11,6 +11,8 @@ import {
 } from "@/lib/quests/lifecycle";
 import { recomputeGrowthProfile } from "@/lib/growth-profile/recompute";
 import { summarizeResultNotes } from "@/lib/ai/summarize-result-notes";
+import { computeLevel } from "@/lib/gamification/level";
+import { computeNextStreak } from "@/lib/gamification/streak";
 import type { Quest, QuestTemplate } from "@/types/database";
 
 // Suggested → active (SPEC §7.3/§7.4).
@@ -168,6 +170,23 @@ export async function submitQuestResult(formData: FormData) {
     .update({ status: "completed", completed_at: nowIso, resolved_at: nowIso })
     .eq("id", quest.id);
 
+  // XP/level/streak (SPEC §6) and, on conversion, the customer count all
+  // change together off one completion — batched into a single founders
+  // update rather than several separate writes.
+  const newXp = founder.xp + quest.xp_value;
+  const foundersUpdate: Partial<{
+    xp: number;
+    level: number;
+    streak_count: number;
+    last_streak_activity_at: string;
+    current_customer_count: number;
+  }> = {
+    xp: newXp,
+    level: computeLevel(newXp),
+    streak_count: computeNextStreak(founder.streak_count, founder.last_streak_activity_at),
+    last_streak_activity_at: nowIso,
+  };
+
   if (structuredAnswers.converted === true) {
     await supabase.from("customer_events").insert({
       founder_id: founder.id,
@@ -176,11 +195,10 @@ export async function submitQuestResult(formData: FormData) {
       delta: 1,
       note: `From quest: ${quest.title}`,
     });
-    await supabase
-      .from("founders")
-      .update({ current_customer_count: founder.current_customer_count + 1 })
-      .eq("id", founder.id);
+    foundersUpdate.current_customer_count = founder.current_customer_count + 1;
   }
+
+  await supabase.from("founders").update(foundersUpdate).eq("id", founder.id);
 
   await refreshQuestLog(supabase, founder);
   await recomputeGrowthProfile(supabase, founder.id);
