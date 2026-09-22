@@ -229,3 +229,24 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_founder();
+
+-- ---------------------------------------------------------------------------
+-- Storage bucket for onboarding doc uploads (SPEC §5, PHASES.md Phase 2).
+-- Files are stored under `<auth_user_id>/<filename>` so the RLS policy below
+-- can scope access by path prefix. Private bucket — no public URLs.
+-- ---------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('founder-documents', 'founder-documents', false)
+on conflict (id) do nothing;
+
+create policy "founder_documents_storage_owner_select" on storage.objects
+  for select using (
+    bucket_id = 'founder-documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "founder_documents_storage_owner_insert" on storage.objects
+  for insert with check (
+    bucket_id = 'founder-documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );

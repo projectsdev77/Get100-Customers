@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Founder } from "@/types/database";
 
@@ -16,26 +16,15 @@ export default async function DashboardPage() {
 
   const profileComplete = Boolean(founder?.industry && founder?.product_description);
 
+  if (!profileComplete) {
+    redirect("/onboarding");
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
         Welcome{founder?.name ? `, ${founder.name}` : ""}
       </h1>
-
-      {!profileComplete && (
-        <div className="rounded border border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            Your founder profile isn&apos;t filled in yet — quests can&apos;t be personalized
-            until it is.
-          </p>
-          <Link
-            href="/settings"
-            className="mt-2 inline-block text-sm font-medium underline text-black dark:text-zinc-50"
-          >
-            Complete your profile
-          </Link>
-        </div>
-      )}
 
       <div className="rounded border border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Progress</p>

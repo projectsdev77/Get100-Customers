@@ -29,6 +29,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0. **Blocked on client:** none — this phase needs no accounts.
 
+**Status:** ✅ Code built and pushed. Lint/typecheck/build verified clean.
+
 ## Phase 1 — Auth & founder profile (SPEC §5, §19 `founders`)
 
 **Goal:** a founder can sign up, log in, and have a profile row.
@@ -39,6 +41,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0 (Supabase free tier). **Blocked on client:** a free Supabase account/project (takes 2 minutes, no card required).
 
+**Status:** ⚠️ Code built and pushed (auth, session proxy, profile CRUD, auto-provisioning trigger). Verified via lint/typecheck/build against placeholder env vars — **not yet tested against a live Supabase project**, since none exists yet. Needs your Supabase URL/keys to actually verify signup/login end-to-end.
+
 ## Phase 2 — Conversational onboarding (SPEC §5)
 
 **Goal:** the "character creation" flow that populates the founder profile, plus optional doc/URL upload.
@@ -48,6 +52,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 - AI extraction from doc/URL into profile fields — first point the app needs an LLM key
 
 **Cost:** $0 on the Gemini API free tier (see §0). **Blocked on client:** a free Google AI Studio API key (no card required); swapped for a paid-tier key at launch (Phase 12).
+
+**Status:** ⚠️ Code built and pushed (step-by-step wizard, URL/text-file analysis, Gemini extraction, storage upload). Verified via lint/typecheck/build against placeholder env vars — **not yet tested against a live Supabase project or a real Gemini key**. PDF/DOCX upload parsing is intentionally out of scope for now (only .txt/.md); noted inline in code as a fast-follow.
 
 ## Phase 3 — Quest template library + rule-based quest engine (SPEC §7)
 
