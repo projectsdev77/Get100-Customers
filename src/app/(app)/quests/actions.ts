@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { OCCUPYING_STATUSES, refreshQuestLog } from "@/lib/quests/lifecycle";
 import { pickTemplate, templateToQuestFields } from "@/lib/quests/select-template";
+import { recomputeGrowthProfile } from "@/lib/growth-profile/recompute";
 import type { Quest, QuestTemplate } from "@/types/database";
 
 // Suggested → active (SPEC §7.3/§7.4).
@@ -93,8 +94,8 @@ export async function regenerateQuest(questId: string) {
   revalidatePath("/quests");
 }
 
-// Active → awaiting_report. Structured result questions (SPEC §8) land in
-// Phase 4 — this just marks it done for now.
+// Active → awaiting_report. Structured result questions get answered next
+// (submitQuestResult below), which is what actually completes the quest.
 export async function markQuestDone(questId: string) {
   const supabase = await createClient();
   const founder = await getCurrentFounder(supabase);
@@ -108,4 +109,74 @@ export async function markQuestDone(questId: string) {
     .eq("status", "active");
 
   revalidatePath("/quests");
+}
+
+// awaiting_report → completed (SPEC §8). Coerces each answer by the
+// question's declared type, stores structured_answers + free-text notes,
+// and — since a "converted" boolean is how quests self-report a new
+// customer (SPEC §8 manual self-report) — bumps the founder's customer
+// count when that answer is true. Free-text AI summarization (ai_summary)
+// stays null until Phase 5.
+export async function submitQuestResult(formData: FormData) {
+  const questId = String(formData.get("questId"));
+  const supabase = await createClient();
+  const founder = await getCurrentFounder(supabase);
+  if (!founder) return;
+
+  const { data: quest } = await supabase
+    .from("quests")
+    .select("*")
+    .eq("id", questId)
+    .eq("founder_id", founder.id)
+    .eq("status", "awaiting_report")
+    .single<Quest>();
+  if (!quest) return;
+
+  const structuredAnswers: Record<string, string | number | boolean> = {};
+  for (const question of quest.result_questions) {
+    const raw = formData.get(`answer_${question.id}`);
+    if (raw === null) continue;
+    if (question.type === "number") {
+      structuredAnswers[question.id] = Number(raw) || 0;
+    } else if (question.type === "boolean") {
+      structuredAnswers[question.id] = raw === "true";
+    } else {
+      structuredAnswers[question.id] = String(raw);
+    }
+  }
+
+  const notes = String(formData.get("notes") || "") || null;
+  const nowIso = new Date().toISOString();
+
+  await supabase.from("quest_results").insert({
+    quest_id: quest.id,
+    founder_id: founder.id,
+    structured_answers: structuredAnswers,
+    notes,
+  });
+
+  await supabase
+    .from("quests")
+    .update({ status: "completed", completed_at: nowIso, resolved_at: nowIso })
+    .eq("id", quest.id);
+
+  if (structuredAnswers.converted === true) {
+    await supabase.from("customer_events").insert({
+      founder_id: founder.id,
+      quest_id: quest.id,
+      event_type: "reported",
+      delta: 1,
+      note: `From quest: ${quest.title}`,
+    });
+    await supabase
+      .from("founders")
+      .update({ current_customer_count: founder.current_customer_count + 1 })
+      .eq("id", founder.id);
+  }
+
+  await refreshQuestLog(supabase, founder);
+  await recomputeGrowthProfile(supabase, founder.id);
+
+  revalidatePath("/quests");
+  revalidatePath("/dashboard");
 }

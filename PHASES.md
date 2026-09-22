@@ -75,6 +75,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 - `growth_profiles` aggregation logic (channels_tried, what_working/not_working) — starts as straightforward aggregation, not AI-derived yet
 - Manual customer self-report + correction (`customer_events`)
 
+**Status:** ⚠️ Code built and pushed — result-question form (typed per SPEC §7.2 question types) on `awaiting_report` quests, `submitQuestResult` completing the quest and, on a true `converted` answer, auto-logging a `customer_events` row + incrementing the founder's count (the "converted" checkbox *is* the manual self-report, SPEC §8). `recomputeGrowthProfile` aggregates channel conversion rates + a simple bottleneck heuristic (non-AI, per plan) after every result. Dashboard also gets standalone "+1 customer" and "correct count" controls (SPEC §14 churn/correction handling). Verified via lint/typecheck/build — **not yet tested live**.
+
 **Cost:** $0 — still no new AI dependency; free-text summarization can stay a stub/raw-notes-passthrough until Phase 5.
 
 ## Phase 5 — AI personalization layer (SPEC §7.1, §9)

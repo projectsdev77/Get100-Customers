@@ -3,7 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { refreshQuestLog } from "@/lib/quests/lifecycle";
 import type { Quest } from "@/types/database";
-import { acceptQuest, markQuestDone, regenerateQuest, skipQuest } from "./actions";
+import {
+  acceptQuest,
+  markQuestDone,
+  regenerateQuest,
+  skipQuest,
+  submitQuestResult,
+} from "./actions";
 
 const STATUS_LABEL: Record<Quest["status"], string> = {
   suggested: "Suggested",
@@ -125,15 +131,66 @@ export default async function QuestsPage() {
       {awaitingReport.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Awaiting report
+            Report your results
           </h2>
           {awaitingReport.map((quest) => (
-            <div
+            <form
               key={quest.id}
-              className="rounded border border-zinc-300 bg-white p-4 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
+              action={submitQuestResult}
+              className="flex flex-col gap-3 rounded border border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900"
             >
-              {quest.title} — result logging lands in the next build phase.
-            </div>
+              <input type="hidden" name="questId" value={quest.id} />
+              <p className="font-medium text-black dark:text-zinc-50">{quest.title}</p>
+
+              {quest.result_questions.map((q) => (
+                <label
+                  key={q.id}
+                  className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300"
+                >
+                  {q.prompt}
+                  {q.type === "boolean" ? (
+                    <select
+                      name={`answer_${q.id}`}
+                      defaultValue="false"
+                      className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
+                    >
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  ) : q.type === "number" ? (
+                    <input
+                      type="number"
+                      name={`answer_${q.id}`}
+                      min={0}
+                      defaultValue={0}
+                      className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      name={`answer_${q.id}`}
+                      className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
+                    />
+                  )}
+                </label>
+              ))}
+
+              <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
+                Anything else worth noting?
+                <textarea
+                  name="notes"
+                  rows={2}
+                  className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
+                />
+              </label>
+
+              <button
+                type="submit"
+                className="self-start rounded bg-black px-4 py-2 text-sm text-white dark:bg-zinc-50 dark:text-black"
+              >
+                Submit report
+              </button>
+            </form>
           ))}
         </section>
       )}
