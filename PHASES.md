@@ -149,6 +149,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0 to build and fully test. Real cost only appears as Stripe's per-transaction fee once live, which is revenue-linked, not upfront budget.
 
+**Status:** ⚠️ Code built and pushed — signup's provisioning trigger now also creates a `trialing` subscription with a 14-day `trial_ends_at` (SPEC §3 assumption). `applySubscriptionLifecycle` (admin client only — there is deliberately no client-writable RLS policy for subscription status) lazily flips `trialing`→`restricted` past trial end and `past_due`→`restricted` past a 7-day `grace_period_ends_at`, called from `refreshQuestLog` alongside the other lazy checks. Restricted accounts are gated at the point of use rather than blocked from viewing anything: `ensureQuestSlots` stops generating new quests, and chat's `sendMessage` returns a "please update your payment method" reply instead of calling Gemini — history/progress stay fully viewable, matching SPEC §3's "read-only, not locked out." `/billing` (Stripe Checkout via server-side redirect, no publishable key/Stripe.js needed) and `/api/webhooks/stripe` (checkout completed, subscription updated/deleted, payment failed/succeeded) are both built entirely against test mode. Verified via lint/typecheck/build — **not yet tested live**, and needs real Stripe test-mode keys plus a webhook pointed at the deployed URL (or `stripe listen` locally) to exercise.
+
 ## Phase 11 — Growth Mode, edge cases, hardening (SPEC §14)
 
 **Goal:** the long-tail correctness work — 100+ at signup, pivot handling, churn correction, disagreement handling, privacy baseline (export/delete), QA guardrails tightened.

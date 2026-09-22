@@ -43,6 +43,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/settings" className="text-zinc-600 hover:underline dark:text-zinc-400">
             Settings
           </Link>
+          <Link href="/billing" className="text-zinc-600 hover:underline dark:text-zinc-400">
+            Billing
+          </Link>
           <form action={logout}>
             <button type="submit" className="text-zinc-600 hover:underline dark:text-zinc-400">
               Log out

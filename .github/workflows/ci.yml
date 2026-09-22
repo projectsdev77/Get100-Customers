@@ -24,3 +24,6 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: placeholder
           GEMINI_API_KEY: placeholder
           CRON_SECRET: placeholder
+          STRIPE_SECRET_KEY: sk_test_placeholder
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder
+          STRIPE_PRICE_ID: price_placeholder

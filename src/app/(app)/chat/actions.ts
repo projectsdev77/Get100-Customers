@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { getGrowthProfile, OCCUPYING_STATUSES, refreshQuestLog } from "@/lib/quests/lifecycle";
 import { sendChatMessage, type ChatTurn } from "@/lib/ai/chat";
+import { getSubscription, isRestricted } from "@/lib/subscriptions/status";
 import type { Quest } from "@/types/database";
 
 export interface ChatActionResult {
@@ -27,6 +28,14 @@ export async function sendMessage(
   const founder = await getCurrentFounder(supabase);
   if (!founder) {
     return { ...FALLBACK, reply: "You need to be signed in to chat." };
+  }
+
+  const subscription = await getSubscription(supabase, founder.id);
+  if (isRestricted(subscription)) {
+    return {
+      ...FALLBACK,
+      reply: "Your account is restricted — please update your payment method to keep chatting.",
+    };
   }
 
   const growth = await getGrowthProfile(supabase, founder.id);

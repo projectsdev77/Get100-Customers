@@ -137,6 +137,8 @@ create table if not exists subscriptions (
   status text not null default 'trialing'
     check (status in ('trialing', 'active', 'past_due', 'restricted', 'canceled')),
   trial_ends_at timestamptz,
+  grace_period_ends_at timestamptz,
+  stripe_customer_id text,
   billing_provider text default 'stripe',
   billing_provider_ref text,
   created_at timestamptz not null default now(),
@@ -230,9 +232,10 @@ create policy "quest_templates_read_all" on quest_templates
   for select using (auth.role() = 'authenticated');
 
 -- ---------------------------------------------------------------------------
--- Auto-provision a founders row the instant someone signs up (Phase 1), so
--- every later feature can assume founder_id already exists as a foreign key
--- target. security definer runs as the table owner, bypassing RLS, since
+-- Auto-provision a founders row (Phase 1) AND a trialing subscription
+-- (Phase 10, SPEC §3 — 14-day trial) the instant someone signs up, so every
+-- later feature can assume both already exist as foreign key targets.
+-- security definer runs as the table owner, bypassing RLS, since
 -- auth.users inserts happen outside any founder's own session.
 -- ---------------------------------------------------------------------------
 create or replace function public.handle_new_founder()
@@ -241,10 +244,20 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  new_founder_id uuid;
 begin
   insert into public.founders (auth_user_id)
   values (new.id)
-  on conflict (auth_user_id) do nothing;
+  on conflict (auth_user_id) do nothing
+  returning id into new_founder_id;
+
+  if new_founder_id is not null then
+    insert into public.subscriptions (founder_id, status, trial_ends_at)
+    values (new_founder_id, 'trialing', now() + interval '14 days')
+    on conflict (founder_id) do nothing;
+  end if;
+
   return new;
 end;
 $$;

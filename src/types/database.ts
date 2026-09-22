@@ -122,6 +122,8 @@ export interface Subscription {
   plan: string;
   status: SubscriptionStatus;
   trial_ends_at: string | null;
+  grace_period_ends_at: string | null;
+  stripe_customer_id: string | null;
   billing_provider: string | null;
   billing_provider_ref: string | null;
   created_at: string;

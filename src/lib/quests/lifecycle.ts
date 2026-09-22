@@ -5,6 +5,7 @@ import { personalizeQuestWithAI } from "@/lib/ai/personalize-quest";
 import { generateNetNewQuest } from "@/lib/ai/generate-quest";
 import { notify } from "@/lib/notifications/notify";
 import { runLazyNotificationChecks } from "@/lib/notifications/lazy-checks";
+import { applySubscriptionLifecycle, getSubscription, isRestricted } from "@/lib/subscriptions/status";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -95,6 +96,12 @@ export async function ensureQuestSlots(
   supabase: SupabaseServerClient,
   founder: Founder,
 ): Promise<void> {
+  // Restricted accounts (trial/grace period expired with no payment, SPEC
+  // §3) can still view their existing quest log — they just stop getting
+  // new ones until payment is resolved.
+  const subscription = await getSubscription(supabase, founder.id);
+  if (isRestricted(subscription)) return;
+
   const { data: occupying } = await supabase
     .from("quests")
     .select("id, template_id")
@@ -135,6 +142,7 @@ export async function ensureQuestSlots(
 }
 
 export async function refreshQuestLog(supabase: SupabaseServerClient, founder: Founder) {
+  await applySubscriptionLifecycle(founder.id);
   await applyExpiry(supabase, founder.id);
   await ensureQuestSlots(supabase, founder);
   await runLazyNotificationChecks(supabase, founder);
