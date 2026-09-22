@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-An AI growth coach that helps startup founders acquire their first 100 customers. Delivered as part of the AI Engineer Bootcamp / GTM Engineer Bootcamp offering, it gives each founder a personalized, proactive plan based on their specific company/idea — and it should **feel like a game**, not a chatbot.
+An AI growth coach that helps startup founders acquire their first 100 customers. It is its own standalone platform (conceptually similar in spirit to the AI Engineer Bootcamp / GTM Engineer Bootcamp, but not delivered as part of either), giving each founder a personalized, proactive plan based on their specific company/idea — and it should **feel like a game**, not a chatbot.
 
 - **Core promise:** get the founder from 0 → 100 customers.
 - **Interaction model:** AI coach analyzes the founder's business, then proactively assigns quests/actions. The founder executes in the real world and self-reports progress. The AI does not take actions on the founder's behalf (no auto-sending emails, no auto-posting) — coaching only.
@@ -10,11 +10,11 @@ An AI growth coach that helps startup founders acquire their first 100 customers
 
 ## 2. Target user
 
-Early-stage startup founders (bootcamp participants) who have an idea or early product but few or no customers yet. Assume solo or small-team founders, non-technical-marketing background, need structure and accountability more than raw information.
+Early-stage startup founders who have an idea or early product but few or no customers yet. Assume solo or small-team founders, non-technical-marketing background, need structure and accountability more than raw information.
 
 ## 3. Business model
 
-- **Subscription (SaaS)**, offered standalone and/or bundled with the AI Engineer / GTM Engineer bootcamp.
+- **Subscription (SaaS)** — sold as its own standalone product, independent of any bootcamp.
 - Plan tiers (draft, TBD with client): single tier for MVP is fine — expand to tiers (e.g. limited quests vs. unlimited coaching depth) post-MVP.
 
 ## 4. Core loop
@@ -100,7 +100,7 @@ Chosen for MVP because it requires only a single state model (points, streak, le
 - Subscription pricing/tiers — single tier or multiple?
 - Confirm hosting preference (Vercel/Supabase assumed).
 - Any requirement to eventually verify self-reported customers (evidence, integrations) for credibility, or is trust-based self-report acceptable long-term?
-- Any existing bootcamp branding/design system to match for the "game" visual style?
+- Does the platform need its own brand identity/name (separate from the bootcamps), or is there an existing design system to build the "game" visual style around?
 - Which LLM provider/model for the coaching engine (cost/quality tradeoff)?
 
 ## 14. MVP scope summary
