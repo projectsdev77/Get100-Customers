@@ -166,6 +166,15 @@ create table if not exists admin_users (
   created_at timestamptz not null default now()
 );
 
+-- Without RLS, any authenticated user could read this table over the REST
+-- API and enumerate admin auth_user_ids. Self-select only, so the app can
+-- ask "am I an admin"; rows are otherwise managed via the service-role
+-- client or the Supabase dashboard, never by clients directly.
+alter table admin_users enable row level security;
+
+create policy "admin_users_self_select" on admin_users
+  for select using (auth.uid() = auth_user_id);
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security — founders can only read/write their own data.
 -- quest_templates is readable by any authenticated user (shared library),

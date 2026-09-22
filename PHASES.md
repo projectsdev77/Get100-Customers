@@ -137,6 +137,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0.
 
+**Status:** ⚠️ Code built and pushed — found `admin_users` had **no RLS enabled at all** (any authenticated user could've read it over the REST API and enumerated admin ids); fixed with a self-select-only policy before building anything on top of it. `/admin` is gated once in `src/app/admin/layout.tsx` via `isCurrentUserAdmin` (checked through the founder's own RLS-scoped session); everything under it then uses the service-role admin client for cross-founder reads, since normal RLS stays scoped to `auth.uid()` regardless of admin status. Founder list (`/admin`) shows stage/customers/level/subscription; founder detail (`/admin/founders/[id]`) adds profile, read-only growth profile, and two support overrides (customer-count correction, subscription status) via `adminCorrectCustomerCount`/`adminUpdateSubscriptionStatus`. Verified via lint/typecheck/build — **not yet tested live**, and no `admin_users` row exists yet for anyone (see final setup checklist for how to add one).
+
 ## Phase 10 — Subscriptions & billing (SPEC §3)
 
 **Goal:** trial + subscription + grace-period dunning, fully working in test mode.
