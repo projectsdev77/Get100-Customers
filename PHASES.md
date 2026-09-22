@@ -63,6 +63,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 - Quest lifecycle (`suggested → active → awaiting_report → completed/skipped/expired`)
 - Quest journal UI, up to 3 concurrent quests, "show other options" / "not for me"
 
+**Status:** ⚠️ Code built and pushed — `supabase/seed.sql` (12 starter templates across all 6 channels), rule-based `pickTemplate` selection (stage filter + prefer untried channels), lazy expiry, auto-refill up to 3 concurrent slots, and the full accept/skip/regenerate/mark-done action set with a quest log + journal UI. Verified via lint/typecheck/build against placeholder env vars — **not yet tested against a live Supabase project** (needs schema.sql + seed.sql actually run). `awaiting_report` is a dead end until Phase 4 exists — expected, not a bug.
+
 **Cost:** $0 — no AI calls yet, pure logic + seeded content. **Rationale for sequencing:** proves the core loop and UI before spending any LLM budget on personalization.
 
 ## Phase 4 — Result logging & growth profile (SPEC §8, §9)

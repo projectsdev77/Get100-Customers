@@ -66,6 +66,7 @@ create table if not exists quest_templates (
   title_template text not null,
   instructions_template text not null,
   default_xp integer not null default 10,
+  default_window_days integer not null default 3,
   result_question_set jsonb not null default '[]'::jsonb,
   tool_templates jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
@@ -88,10 +89,12 @@ create table if not exists quests (
   success_criteria text,
   sub_tasks jsonb not null default '[]'::jsonb,
   suggested_window text,
+  expires_at timestamptz,
   status text not null default 'suggested'
     check (status in ('suggested', 'active', 'in_progress', 'awaiting_report', 'completed', 'skipped', 'expired')),
   skip_reason text,
   created_at timestamptz not null default now(),
+  resolved_at timestamptz,
   completed_at timestamptz
 );
 

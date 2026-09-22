@@ -66,6 +66,7 @@ export interface QuestTemplate {
   title_template: string;
   instructions_template: string;
   default_xp: number;
+  default_window_days: number;
   result_question_set: Array<{ id: string; prompt: string; type: "number" | "text" | "boolean" }>;
   tool_templates: Array<{ label: string; content: string }>;
   created_at: string;
@@ -85,9 +86,11 @@ export interface Quest {
   success_criteria: string | null;
   sub_tasks: Array<{ label: string; done: boolean }>;
   suggested_window: string | null;
+  expires_at: string | null;
   status: QuestStatus;
   skip_reason: string | null;
   created_at: string;
+  resolved_at: string | null;
   completed_at: string | null;
 }
 

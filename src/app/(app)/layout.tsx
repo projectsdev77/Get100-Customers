@@ -20,6 +20,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           Get100-Customers
         </Link>
         <div className="flex items-center gap-4 text-sm">
+          <Link href="/quests" className="text-zinc-600 hover:underline dark:text-zinc-400">
+            Quests
+          </Link>
           <Link href="/settings" className="text-zinc-600 hover:underline dark:text-zinc-400">
             Settings
           </Link>
