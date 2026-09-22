@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "../(auth)/actions";
+import { ChatWidget } from "./chat/chat-widget";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -34,6 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </nav>
       <main className="mx-auto max-w-2xl px-6 py-10">{children}</main>
+      <ChatWidget />
     </div>
   );
 }

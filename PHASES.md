@@ -112,6 +112,8 @@ Nothing above blocks development — it only blocks **scale and commercial launc
 
 **Cost:** $0 on the same Gemini free tier as Phase 5.
 
+**Status:** ⚠️ Code built and pushed — `ChatWidget` is a bottom-right bubble/panel (not persisted server-side; history lives for the tab session), mounted in the `(app)` layout so it's available everywhere except onboarding. `sendChatMessage` (capable tier) gets full context — founder profile, growth profile, and current occupying quests by id/title/status — via `systemInstruction`, and can only *propose* a quest swap (never execute); a proposed id is validated server-side against the founder's actual quest list before the UI's confirm button will even show (guards against a hallucinated id). Confirming calls the same skip → refill path Phase 3's "not for me" uses. Verified via lint/typecheck/build — **unexercised until a real `GEMINI_API_KEY` and Supabase project exist**.
+
 ## Phase 8 — Notifications (SPEC §11)
 
 **Goal:** in-app + email notifications for the core triggers.
