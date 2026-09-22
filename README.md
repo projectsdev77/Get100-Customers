@@ -4,6 +4,7 @@ An AI growth coach that helps startup founders acquire their first 100 customers
 
 - **Product spec:** [SPEC.md](./SPEC.md)
 - **Build plan (zero-budget, phased):** [PHASES.md](./PHASES.md)
+- **Manual setup checklist (do this first):** [SETUP.md](./SETUP.md)
 - **Discovery/reference docs:** [docs/](./docs)
 
 ## Stack
@@ -12,9 +13,10 @@ Next.js (App Router, TypeScript, Tailwind) + Supabase (Postgres/Auth/Storage) + 
 
 ## Getting started
 
+See [SETUP.md](./SETUP.md) for the full walkthrough (Supabase project, Gemini key, Resend, Stripe test mode, GitHub Actions secrets). Short version once everything's in `.env.local`:
+
 ```bash
 npm install
-cp .env.example .env.local   # fill in keys — see PHASES.md for which phase needs which
 npm run dev
 ```
 

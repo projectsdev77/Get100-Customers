@@ -1,5 +1,7 @@
 # Get100-Customers — Implementation Phases
 
+**Status: Phases 0–11 are code-complete and pushed** (verified via lint/typecheck/build against placeholder env vars — none of it has run against a live backend yet). Phase 12 is the manual pre-launch step. See [SETUP.md](./SETUP.md) for the checklist to get everything actually running and tested.
+
 Built against SPEC.md, sequenced for a **zero-budget build**: every phase uses only free tiers / no-cost tools until explicitly noted. Each phase lists what's built, what it costs (should always be $0 during build), and a **"Swap for launch"** note — the paid replacement the client should make before real users hit it. All swap notes are also rolled up in §0 as a single table for the client to review.
 
 Rule of thumb used throughout: **build and test on free tiers now, budget line items only get spent right before they'd actually be needed** (real user traffic, real email volume, real LLM cost at scale, going live on payments).
