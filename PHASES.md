@@ -182,6 +182,19 @@ Verified via lint/typecheck/build — **not yet tested live**.
 6. Stripe → live mode
 7. (Optional) Sentry paid tier if free tier volume is exceeded
 
+## Phase 13 — Design system integration ("Coach Violet + Lime" handoff)
+
+**Goal:** implement the UI/UX designer's handoff (design tokens, component library, and a static prototype) into the actual app, in place of the plain black/white/zinc styling Phases 0–11 shipped with. Zero-budget throughout — no new paid services.
+
+Done one surface at a time, verified with `tsc`/`lint`/`build` plus a local Playwright screenshot pass (light + dark) before each commit:
+
+1. Design tokens (colors/typography/spacing) wired into `src/app/globals.css` via Tailwind v4's `@theme inline`; Hanken Grotesk swapped in for Geist Sans via `next/font/google` (Geist Mono kept for tabular/mono data).
+2. Shared component library under `src/components/ui/` (actions, forms, surfaces, game, navigation, quests, data) reimplementing the handoff's reference components as Tailwind utilities on the same tokens, not the reference inline styles.
+3. Auth pages, onboarding wizard (+ `weekly_hours` field and a review step), app shell (`TopNav`, restricted-account banner), dashboard (`GrowthHud` with conic-gradient progress rings and a stepped Growth Mode target ladder), quests page (`QuestCard`/`JournalRow`, reordered sections, "Why this?" reasoning, the 3-active-quest cap's flash message), notifications, settings (business profile now editable including `weekly_hours`, notification prefs, danger zone), billing (plan tile, portal deep-links, real Stripe invoice history), admin (generic `Table` component, company/email search), chat widget (restricted paused state, "Keep it" alongside "Swap this quest"), and the landing page — all restyled to match.
+4. A few gaps between the handoff and the existing build (quest capacity model, onboarding fields, "why this?" reasoning storage, stage enum) were resolved with the client rather than guessed — see git history on `claude/dazzling-heisenberg-h65viq` for the specific questions and answers.
+
+Two schema/prompt additions came out of the handoff's gap resolution rather than the original Phases 3–4: a `weekly_hours` column (feeds quest sizing and is now editable in Settings, not just onboarding) and a `reasoning` column on `quests` (the AI- or template-generated "why this?" sentence). Everything else in this phase is UI-only, plus the billing invoice history and admin search additions the handoff's prototype called for.
+
 ## Fast-follow (post-launch, per SPEC §23)
 
 Visual journey/map, badges, leaderboards, boss-battle milestones, evidence/integration-based customer verification, standalone template library, multiple subscription tiers, full BI tooling — unchanged from SPEC §23, sequenced after Phase 12 based on real usage data.

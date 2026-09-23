@@ -30,10 +30,16 @@ Open [http://localhost:3000](http://localhost:3000).
 
 `npm run golden-set` runs the sample founder profiles in `scripts/golden-set-check.ts` against the live Gemini API and prints the personalized/generated quest output for manual review (SPEC §17). Needs a real `GEMINI_API_KEY` in `.env.local` — not run in CI. Re-run it after touching any prompt in `src/lib/ai/` or `supabase/seed.sql`.
 
+## Design system
+
+The UI implements a designer's "Coach Violet + Lime" handoff (tokens + component reference + a static prototype) — see PHASES.md Phase 13. Tokens live in `src/app/tokens/` (colors, typography, spacing) and feed Tailwind v4's `@theme inline` block in `src/app/globals.css`; there's no manual dark-mode toggle, just `prefers-color-scheme` (override with `data-theme="light"|"dark"` on `<html>` for QA). Shared components live in `src/components/ui/`.
+
 ## Project layout
 
 ```
 src/app/                Next.js routes (App Router)
+src/app/tokens/         Design tokens (colors, typography, spacing) — see "Design system" above
+src/components/ui/      Shared design-system components (actions, forms, surfaces, game, navigation, data)
 src/lib/supabase/       Supabase client factories (browser + server)
 src/lib/ai/             Gemini client + prompts (tiered model strategy, SPEC §15)
 src/lib/quests/         Rule-based selection + AI-personalized quest lifecycle (SPEC §7)
