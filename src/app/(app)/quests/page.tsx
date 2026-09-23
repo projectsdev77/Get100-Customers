@@ -1,8 +1,14 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
-import { refreshQuestLog } from "@/lib/quests/lifecycle";
+import { refreshQuestLog, MAX_ACTIVE_QUESTS } from "@/lib/quests/lifecycle";
 import type { Quest } from "@/types/database";
+import { QuestCard, JournalRow } from "@/components/ui/quests/QuestCard";
+import { Button } from "@/components/ui/actions/Button";
+import { Select } from "@/components/ui/forms/Select";
+import { Textarea } from "@/components/ui/forms/Textarea";
+import { Input } from "@/components/ui/forms/Input";
+import { Banner } from "@/components/ui/surfaces/Banner";
 import {
   acceptQuest,
   markQuestDone,
@@ -11,19 +17,21 @@ import {
   submitQuestResult,
 } from "./actions";
 
-const STATUS_LABEL: Record<Quest["status"], string> = {
-  suggested: "Suggested",
-  active: "Active",
-  in_progress: "In progress",
-  awaiting_report: "Awaiting report",
-  completed: "Completed",
-  skipped: "Skipped",
-  expired: "Expired",
-};
-
 const HISTORY_STATUSES: Quest["status"][] = ["completed", "skipped", "expired"];
 
-export default async function QuestsPage() {
+const SKIP_REASONS = [
+  { value: "too_hard", label: "Too hard" },
+  { value: "not_relevant", label: "Not relevant" },
+  { value: "already_tried", label: "Already tried" },
+  { value: "no_time", label: "No time" },
+];
+
+export default async function QuestsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ flash?: string }>;
+}) {
+  const { flash } = await searchParams;
   const supabase = await createClient();
   const founder = await getCurrentFounder(supabase);
   if (!founder) redirect("/login");
@@ -46,180 +54,147 @@ export default async function QuestsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">Quests</h1>
+      <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
+        Quests
+      </h1>
 
-      {suggested.length > 0 && (
+      {flash && <Banner tone="error">{flash}</Banner>}
+
+      {awaitingReport.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Next up
+          <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
+            Report your results
           </h2>
-          {suggested.map((quest) => (
-            <div
-              key={quest.id}
-              className="rounded border border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              <p className="font-medium text-black dark:text-zinc-50">{quest.title}</p>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                {quest.instructions}
-              </p>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                +{quest.xp_value} XP · {quest.suggested_window}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <form action={acceptQuest.bind(null, quest.id)}>
-                  <button
-                    type="submit"
-                    className="rounded bg-black px-3 py-1.5 text-sm text-white dark:bg-zinc-50 dark:text-black"
-                  >
-                    Accept
-                  </button>
-                </form>
-                <form action={regenerateQuest.bind(null, quest.id)}>
-                  <button
-                    type="submit"
-                    className="rounded border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700"
-                  >
-                    Show other options
-                  </button>
-                </form>
-                <SkipForm questId={quest.id} />
-              </div>
-            </div>
+          {awaitingReport.map((quest) => (
+            <form key={quest.id} action={submitQuestResult}>
+              <input type="hidden" name="questId" value={quest.id} />
+              <QuestCard
+                status="awaiting_report"
+                title={quest.title}
+                xp={quest.xp_value}
+                reasoning={quest.reasoning}
+                actions={
+                  <Button type="submit" size="sm">
+                    Submit report
+                  </Button>
+                }
+              >
+                <div className="flex flex-col gap-3">
+                  {quest.result_questions.map((q) =>
+                    q.type === "boolean" ? (
+                      <Select
+                        key={q.id}
+                        name={`answer_${q.id}`}
+                        label={q.prompt}
+                        defaultValue="false"
+                        options={[
+                          { value: "true", label: "Yes" },
+                          { value: "false", label: "No" },
+                        ]}
+                      />
+                    ) : q.type === "number" ? (
+                      <Input
+                        key={q.id}
+                        type="number"
+                        name={`answer_${q.id}`}
+                        label={q.prompt}
+                        min={0}
+                        defaultValue={0}
+                      />
+                    ) : (
+                      <Input key={q.id} type="text" name={`answer_${q.id}`} label={q.prompt} />
+                    ),
+                  )}
+                  <Textarea name="notes" label="Anything else worth noting?" rows={2} />
+                </div>
+              </QuestCard>
+            </form>
           ))}
         </section>
       )}
 
       {active.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Active
+          <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
+            Active ({active.length} of {MAX_ACTIVE_QUESTS})
           </h2>
           {active.map((quest) => (
-            <div
+            <QuestCard
               key={quest.id}
-              className="rounded border border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              <p className="font-medium text-black dark:text-zinc-50">{quest.title}</p>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                {quest.instructions}
-              </p>
-              {quest.tools_provided.length > 0 && (
-                <div className="mt-2 rounded bg-zinc-50 p-2 text-xs text-zinc-600 dark:bg-zinc-950 dark:text-zinc-400">
-                  <p className="font-medium">{quest.tools_provided[0].label}</p>
-                  <p className="whitespace-pre-wrap">{quest.tools_provided[0].content}</p>
-                </div>
-              )}
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                +{quest.xp_value} XP · {quest.suggested_window}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <form action={markQuestDone.bind(null, quest.id)}>
-                  <button
-                    type="submit"
-                    className="rounded bg-black px-3 py-1.5 text-sm text-white dark:bg-zinc-50 dark:text-black"
-                  >
-                    Mark done
-                  </button>
-                </form>
-                <SkipForm questId={quest.id} />
-              </div>
-            </div>
+              status={quest.status}
+              title={quest.title}
+              instructions={quest.instructions}
+              xp={quest.xp_value}
+              window={quest.suggested_window}
+              tool={quest.tools_provided[0] ?? null}
+              reasoning={quest.reasoning}
+              actions={
+                <>
+                  <form action={markQuestDone.bind(null, quest.id)}>
+                    <Button type="submit" size="sm">
+                      Mark done
+                    </Button>
+                  </form>
+                  <SkipForm questId={quest.id} />
+                </>
+              }
+            />
           ))}
         </section>
       )}
 
-      {awaitingReport.length > 0 && (
+      {suggested.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Report your results
+          <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
+            Next up
           </h2>
-          {awaitingReport.map((quest) => (
-            <form
+          {suggested.map((quest) => (
+            <QuestCard
               key={quest.id}
-              action={submitQuestResult}
-              className="flex flex-col gap-3 rounded border border-zinc-300 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              <input type="hidden" name="questId" value={quest.id} />
-              <p className="font-medium text-black dark:text-zinc-50">{quest.title}</p>
-
-              {quest.result_questions.map((q) => (
-                <label
-                  key={q.id}
-                  className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300"
-                >
-                  {q.prompt}
-                  {q.type === "boolean" ? (
-                    <select
-                      name={`answer_${q.id}`}
-                      defaultValue="false"
-                      className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
-                    >
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
-                    </select>
-                  ) : q.type === "number" ? (
-                    <input
-                      type="number"
-                      name={`answer_${q.id}`}
-                      min={0}
-                      defaultValue={0}
-                      className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      name={`answer_${q.id}`}
-                      className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
-                    />
-                  )}
-                </label>
-              ))}
-
-              <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-                Anything else worth noting?
-                <textarea
-                  name="notes"
-                  rows={2}
-                  className="rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950"
-                />
-              </label>
-
-              <button
-                type="submit"
-                className="self-start rounded bg-black px-4 py-2 text-sm text-white dark:bg-zinc-50 dark:text-black"
-              >
-                Submit report
-              </button>
-            </form>
+              status="suggested"
+              title={quest.title}
+              instructions={quest.instructions}
+              xp={quest.xp_value}
+              window={quest.suggested_window}
+              reasoning={quest.reasoning}
+              actions={
+                <>
+                  <form action={acceptQuest.bind(null, quest.id)}>
+                    <Button type="submit" size="sm">
+                      Accept
+                    </Button>
+                  </form>
+                  <form action={regenerateQuest.bind(null, quest.id)}>
+                    <Button type="submit" variant="secondary" size="sm">
+                      Show other options
+                    </Button>
+                  </form>
+                  <SkipForm questId={quest.id} />
+                </>
+              }
+            />
           ))}
         </section>
       )}
 
       {history.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <section className="flex flex-col gap-1 rounded-panel bg-card px-4 py-2">
+          <h2 className="pt-2 text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
             Quest journal
           </h2>
           {history.map((quest) => (
-            <div
+            <JournalRow
               key={quest.id}
-              className="flex items-center justify-between rounded border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
-            >
-              <span className="text-zinc-700 dark:text-zinc-300">{quest.title}</span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                {STATUS_LABEL[quest.status]}
-                {quest.skip_reason ? ` — ${quest.skip_reason}` : ""}
-              </span>
-            </div>
+              status={quest.status}
+              title={quest.title}
+              xp={quest.status === "completed" ? quest.xp_value : null}
+              note={quest.skip_reason}
+            />
           ))}
         </section>
       )}
 
-      {all.length === 0 && (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          No quests yet — check back shortly.
-        </p>
-      )}
+      {all.length === 0 && <p className="text-sm text-secondary">No quests yet — check back shortly.</p>}
     </div>
   );
 }
@@ -228,23 +203,10 @@ function SkipForm({ questId }: { questId: string }) {
   return (
     <form action={skipQuest} className="flex items-center gap-2">
       <input type="hidden" name="questId" value={questId} />
-      <select
-        name="reason"
-        className="rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-        defaultValue=""
-      >
-        <option value="">Not for me…</option>
-        <option value="too_hard">Too hard</option>
-        <option value="not_relevant">Not relevant</option>
-        <option value="already_tried">Already tried</option>
-        <option value="no_time">No time</option>
-      </select>
-      <button
-        type="submit"
-        className="rounded border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700"
-      >
+      <Select name="reason" placeholder="Not for me…" options={SKIP_REASONS} className="w-40" />
+      <Button type="submit" variant="secondary" size="sm">
         Skip
-      </button>
+      </Button>
     </form>
   );
 }
