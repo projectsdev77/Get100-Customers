@@ -3,6 +3,7 @@ import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { redirect } from "next/navigation";
 import type { NotificationLogEntry } from "@/types/database";
 import { markAllRead } from "./actions";
+import { Button } from "@/components/ui/actions/Button";
 
 export default async function NotificationsPage() {
   const supabase = await createClient();
@@ -19,45 +20,53 @@ export default async function NotificationsPage() {
     .returns<NotificationLogEntry[]>();
 
   const items = notifications ?? [];
-  const hasUnread = items.some((n) => !n.read_at);
+  const unreadCount = items.filter((n) => !n.read_at).length;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">Notifications</h1>
-        {hasUnread && (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
+            Notifications
+          </h1>
+          <span className="text-sm text-secondary">
+            {unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up."}
+          </span>
+        </div>
+        {unreadCount > 0 && (
           <form action={markAllRead}>
-            <button
-              type="submit"
-              className="rounded border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700"
-            >
-              Mark all read
-            </button>
+            <Button type="submit" variant="secondary" size="sm">
+              Mark all as read
+            </Button>
           </form>
         )}
       </div>
 
-      {items.length === 0 && (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">Nothing yet.</p>
+      {items.length === 0 ? (
+        <p className="text-sm text-secondary">Nothing yet.</p>
+      ) : (
+        <div className="flex flex-col gap-0.5 rounded-panel bg-card p-2">
+          {items.map((n) => {
+            const unread = !n.read_at;
+            return (
+              <div
+                key={n.id}
+                className={`flex items-start gap-3.5 rounded-tile p-4 ${unread ? "bg-sunken" : ""}`}
+              >
+                <span
+                  className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${unread ? "bg-accent" : "bg-strong"}`}
+                />
+                <span className={`min-w-0 flex-1 text-[15px] leading-[1.4] text-primary ${unread ? "font-semibold" : "font-normal"}`}>
+                  {n.message}
+                </span>
+                <span className="shrink-0 whitespace-nowrap text-xs text-secondary">
+                  {new Date(n.sent_at).toLocaleString()}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       )}
-
-      <div className="flex flex-col gap-2">
-        {items.map((n) => (
-          <div
-            key={n.id}
-            className={`rounded border px-3 py-2 text-sm ${
-              n.read_at
-                ? "border-zinc-200 text-zinc-500 dark:border-zinc-800 dark:text-zinc-400"
-                : "border-zinc-300 bg-zinc-50 text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-            }`}
-          >
-            {n.message}
-            <span className="ml-2 text-xs text-zinc-400">
-              {new Date(n.sent_at).toLocaleString()}
-            </span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
