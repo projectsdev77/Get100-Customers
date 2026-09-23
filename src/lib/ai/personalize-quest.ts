@@ -6,6 +6,7 @@ export interface PersonalizedQuestContent {
   title: string;
   instructions: string;
   tools_provided: Array<{ label: string; content: string }>;
+  reasoning: string;
 }
 
 const RESPONSE_SCHEMA = {
@@ -24,11 +25,15 @@ const RESPONSE_SCHEMA = {
         required: ["label", "content"],
       },
     },
+    reasoning: { type: Type.STRING },
   },
-  required: ["title", "instructions", "tools_provided"],
+  required: ["title", "instructions", "tools_provided", "reasoning"],
 };
 
-type FounderContext = Pick<Founder, "company_name" | "industry" | "product_description" | "icp">;
+type FounderContext = Pick<
+  Founder,
+  "company_name" | "industry" | "product_description" | "icp" | "weekly_hours"
+>;
 type GrowthContext = Pick<
   GrowthProfile,
   "what_working" | "what_not_working" | "bottleneck_hypothesis"
@@ -52,6 +57,7 @@ Founder:
 - Industry: ${founder.industry ?? "unknown"}
 - Product: ${founder.product_description ?? "unknown"}
 - Target customer (ICP): ${founder.icp ?? "unknown"}
+- Hours available per week for this: ${founder.weekly_hours ?? "unknown"}
 
 Growth context:
 ${growthNotes}
@@ -61,7 +67,16 @@ Template instructions: ${template.instructions_template}
 Template tools: ${JSON.stringify(template.tool_templates)}
 
 Return the personalized title, instructions, and tools_provided (same shape
-as the template tools, content rewritten with placeholders filled in).`;
+as the template tools, content rewritten with placeholders filled in). If
+the founder has limited hours available, scale the ask down (e.g. fewer
+emails/posts) rather than changing the channel — "we size quests to fit."
+
+Also return "reasoning": one short sentence, in a coach's voice, explaining
+to the founder why this specific quest was picked for them right now
+(reference their growth context when there is one, e.g. a channel that's
+working or a stated bottleneck — otherwise reference their stage/ICP). This
+is shown to the founder behind a "Why this?" toggle, so write it TO them
+("You..."), not about them.`;
 }
 
 // Hybrid template+AI quest personalization (SPEC §7.1). Runs on the "fast"
@@ -90,7 +105,9 @@ export async function personalizeQuestWithAI(
     const parsed = JSON.parse(raw) as PersonalizedQuestContent;
 
     // Guardrails (SPEC §17): no empty fields, no leftover placeholders.
-    if (!parsed.title?.trim() || !parsed.instructions?.trim()) return null;
+    if (!parsed.title?.trim() || !parsed.instructions?.trim() || !parsed.reasoning?.trim()) {
+      return null;
+    }
     if (/\{\{.*?\}\}/.test(JSON.stringify(parsed))) return null;
 
     return parsed;

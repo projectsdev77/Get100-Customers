@@ -14,7 +14,16 @@ import { generateNetNewQuest } from "../src/lib/ai/generate-quest";
 import type { Founder, QuestTemplate } from "../src/types/database";
 
 const FOUNDERS: Array<
-  Pick<Founder, "company_name" | "industry" | "product_description" | "icp" | "stage" | "channels_tried">
+  Pick<
+    Founder,
+    | "company_name"
+    | "industry"
+    | "product_description"
+    | "icp"
+    | "stage"
+    | "channels_tried"
+    | "weekly_hours"
+  >
 > = [
   {
     company_name: "Ledgerly",
@@ -23,6 +32,7 @@ const FOUNDERS: Array<
     icp: "freelance consultants who bill hourly and hate manual invoicing",
     stage: "prototype",
     channels_tried: [],
+    weekly_hours: "3-5",
   },
   {
     company_name: "PawPath",
@@ -31,6 +41,7 @@ const FOUNDERS: Array<
     icp: "urban professionals with dogs who work long hours",
     stage: "idea",
     channels_tried: ["communities"],
+    weekly_hours: "1-2",
   },
   {
     company_name: "Buildscope",
@@ -39,6 +50,7 @@ const FOUNDERS: Array<
     icp: "owners of 2-10 person residential construction crews",
     stage: "launched",
     channels_tried: ["cold_email", "content"],
+    weekly_hours: "10+",
   },
 ];
 

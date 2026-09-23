@@ -64,11 +64,17 @@ export async function buildQuestInsertFields(
   const template = pickTemplate(founder, templates, excludeTemplateIds);
 
   if (template) {
-    const base = templateToQuestFields(template);
+    const base = templateToQuestFields(template, founder);
     const personalized = await personalizeQuestWithAI(founder, growth, template);
     return {
       fields: personalized
-        ? { ...base, title: personalized.title, instructions: personalized.instructions, tools_provided: personalized.tools_provided }
+        ? {
+            ...base,
+            title: personalized.title,
+            instructions: personalized.instructions,
+            tools_provided: personalized.tools_provided,
+            reasoning: personalized.reasoning,
+          }
         : base,
       usedTemplateId: template.id as string | null,
     };
@@ -88,6 +94,7 @@ export async function buildQuestInsertFields(
       instructions: generated.instructions,
       category: generated.category,
       xp_value: generated.xp_value,
+      reasoning: generated.reasoning,
       tools_provided: generated.tools_provided,
       result_questions: generated.result_questions,
       success_criteria: null,

@@ -27,7 +27,23 @@ export function pickTemplate(
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function templateToQuestFields(template: QuestTemplate) {
+// Deterministic, non-AI reasoning (SPEC §17 fallback) — used when
+// personalizeQuestWithAI fails or is skipped, so "Why this?" always has
+// something grounded to show rather than nothing.
+export function buildFallbackReasoning(
+  founder: Pick<Founder, "channels_tried" | "stage">,
+  template: QuestTemplate,
+): string {
+  if (!founder.channels_tried.includes(template.category)) {
+    return `You haven't tried ${template.category.replace(/_/g, " ")} yet — worth testing at your stage.`;
+  }
+  return `${template.category.replace(/_/g, " ")} is a channel you've already tried, so we're giving it another pass.`;
+}
+
+export function templateToQuestFields(
+  template: QuestTemplate,
+  founder: Pick<Founder, "channels_tried" | "stage">,
+) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + template.default_window_days);
 
@@ -38,6 +54,7 @@ export function templateToQuestFields(template: QuestTemplate) {
     instructions: template.instructions_template,
     category: template.category,
     xp_value: template.default_xp,
+    reasoning: buildFallbackReasoning(founder, template),
     tools_provided: template.tool_templates,
     result_questions: template.result_question_set,
     success_criteria: null,

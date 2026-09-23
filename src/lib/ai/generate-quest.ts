@@ -10,6 +10,7 @@ export interface GeneratedQuest {
   window_days: number;
   result_questions: Array<{ id: string; prompt: string; type: "number" | "text" | "boolean" }>;
   tools_provided: Array<{ label: string; content: string }>;
+  reasoning: string;
 }
 
 const RESPONSE_SCHEMA = {
@@ -43,13 +44,28 @@ const RESPONSE_SCHEMA = {
         required: ["label", "content"],
       },
     },
+    reasoning: { type: Type.STRING },
   },
-  required: ["title", "instructions", "category", "xp_value", "window_days", "result_questions"],
+  required: [
+    "title",
+    "instructions",
+    "category",
+    "xp_value",
+    "window_days",
+    "result_questions",
+    "reasoning",
+  ],
 };
 
 type FounderContext = Pick<
   Founder,
-  "company_name" | "industry" | "product_description" | "icp" | "stage" | "channels_tried"
+  | "company_name"
+  | "industry"
+  | "product_description"
+  | "icp"
+  | "stage"
+  | "channels_tried"
+  | "weekly_hours"
 >;
 type GrowthContext = Pick<
   GrowthProfile,
@@ -83,15 +99,24 @@ Founder:
 - Target customer (ICP): ${founder.icp ?? "unknown"}
 - Stage: ${founder.stage ?? "unknown"}
 - Channels already tried: ${founder.channels_tried.join(", ") || "none yet"}
+- Hours available per week for this: ${founder.weekly_hours ?? "unknown"}
 
 Growth context:
 ${growthNotes}
 
-Design a single quest completable within a few days. category should be a
+Design a single quest completable within a few days, scoped to fit the
+founder's available hours per week ("we size quests to fit" — a smaller
+ask for fewer hours, not a different channel). category should be a
 short snake_case channel label (e.g. cold_email, content, communities).
 result_questions should be 2-4 short questions to ask when the founder
 reports back, at least one boolean question with id "converted" asking
-whether it led to a new customer. xp_value 6-15. window_days 1-5.`;
+whether it led to a new customer. xp_value 6-15. window_days 1-5.
+
+Also return "reasoning": one short sentence, in a coach's voice, written
+TO the founder ("You...") explaining why you designed this particular
+quest for them right now — reference their growth context if there is
+one, otherwise their stage/ICP/channels tried. Shown behind a "Why this?"
+toggle in the app.`;
 
   try {
     const client = getGeminiClient();
@@ -111,7 +136,12 @@ whether it led to a new customer. xp_value 6-15. window_days 1-5.`;
 
     // Guardrails (SPEC §17): required fields present, sane bounds, no
     // fabricated-looking template syntax left in.
-    if (!parsed.title?.trim() || !parsed.instructions?.trim() || !parsed.category?.trim()) {
+    if (
+      !parsed.title?.trim() ||
+      !parsed.instructions?.trim() ||
+      !parsed.category?.trim() ||
+      !parsed.reasoning?.trim()
+    ) {
       return null;
     }
     if (!parsed.result_questions?.some((q) => q.id === "converted" && q.type === "boolean")) {
