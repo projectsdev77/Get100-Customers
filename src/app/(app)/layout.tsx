@@ -54,10 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       )}
 
       <main className="mx-auto max-w-[1120px] px-6 py-10">{children}</main>
-      {/* ChatWidget's own restricted-state UI (disabled input, paused
-          message) is wired in a later pass — it currently detects
-          restriction itself via the sendMessage action's reply. */}
-      <ChatWidget />
+      <ChatWidget restricted={restricted} />
     </div>
   );
 }
