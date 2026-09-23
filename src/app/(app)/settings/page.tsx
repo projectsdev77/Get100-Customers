@@ -17,26 +17,24 @@ export default async function SettingsPage() {
     .single<Founder>();
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">Profile settings</h1>
-        <ProfileForm founder={founder ?? null} />
-      </div>
+    <div className="flex max-w-[560px] flex-col gap-5">
+      <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
+        Settings
+      </h1>
 
-      <div className="flex flex-col gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
-        <h2 className="text-lg font-semibold text-black dark:text-zinc-50">Notifications</h2>
-        <NotificationPrefsForm
-          prefs={
-            founder?.email_notification_prefs ?? {
-              new_quest: true,
-              window_approaching: true,
-              re_engagement: true,
-              milestone: true,
-              weekly_recap: true,
-            }
+      <ProfileForm founder={founder ?? null} />
+
+      <NotificationPrefsForm
+        prefs={
+          founder?.email_notification_prefs ?? {
+            new_quest: true,
+            window_approaching: true,
+            re_engagement: true,
+            milestone: true,
+            weekly_recap: true,
           }
-        />
-      </div>
+        }
+      />
 
       <DangerZone />
     </div>

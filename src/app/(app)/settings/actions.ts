@@ -5,9 +5,16 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { appendStrategyHistory } from "@/lib/growth-profile/append-strategy-history";
-import type { EmailNotificationPrefs, FounderStage, Founder, NotificationType } from "@/types/database";
+import type {
+  EmailNotificationPrefs,
+  FounderStage,
+  Founder,
+  NotificationType,
+  WeeklyHours,
+} from "@/types/database";
 
 const VALID_STAGES: FounderStage[] = ["idea", "prototype", "launched"];
+const VALID_WEEKLY_HOURS: WeeklyHours[] = ["1-2", "3-5", "6-10", "10+"];
 const NOTIFICATION_TYPES: NotificationType[] = [
   "new_quest",
   "window_approaching",
@@ -33,7 +40,8 @@ export async function updateProfile(formData: FormData) {
     .single<Pick<Founder, "id" | "industry" | "product_description">>();
 
   const stage = String(formData.get("stage") || "");
-  const channelsRaw = String(formData.get("channels_tried") || "");
+  const weeklyHours = String(formData.get("weekly_hours") || "");
+  const channelsRaw = formData.getAll("channels_tried").map(String).filter(Boolean);
   const newIndustry = String(formData.get("industry") || "") || null;
   const newProductDescription = String(formData.get("product_description") || "") || null;
 
@@ -46,10 +54,8 @@ export async function updateProfile(formData: FormData) {
       product_description: newProductDescription,
       icp: String(formData.get("icp") || "") || null,
       stage: VALID_STAGES.includes(stage as FounderStage) ? stage : null,
-      channels_tried: channelsRaw
-        .split(",")
-        .map((c) => c.trim())
-        .filter(Boolean),
+      weekly_hours: VALID_WEEKLY_HOURS.includes(weeklyHours as WeeklyHours) ? weeklyHours : null,
+      channels_tried: channelsRaw,
       updated_at: new Date().toISOString(),
     })
     .eq("auth_user_id", user.id);
