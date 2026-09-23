@@ -6,3 +6,7 @@
 export function daysRemaining(untilIso: string): number {
   return Math.max(0, Math.ceil((new Date(untilIso).getTime() - Date.now()) / 86_400_000));
 }
+
+export function isoDaysAgo(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString();
+}

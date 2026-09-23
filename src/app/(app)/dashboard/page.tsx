@@ -1,10 +1,13 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Founder } from "@/types/database";
-import { refreshQuestLog } from "@/lib/quests/lifecycle";
+import { refreshQuestLog, OCCUPYING_STATUSES } from "@/lib/quests/lifecycle";
 import { correctCustomerCount, logCustomer } from "./actions";
-import { GrowthHud } from "./growth-hud";
+import { isoDaysAgo } from "@/lib/utils/days-remaining";
+import { GrowthHud } from "@/components/ui/game/GrowthHud";
+import { Card } from "@/components/ui/surfaces/Card";
+import { Input } from "@/components/ui/forms/Input";
+import { Button, LinkButton } from "@/components/ui/actions/Button";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -26,48 +29,70 @@ export default async function DashboardPage() {
 
   await refreshQuestLog(supabase, founder);
 
+  const weekAgoIso = isoDaysAgo(7);
+  const [{ data: weekEvents }, { count: questCount }] = await Promise.all([
+    supabase
+      .from("customer_events")
+      .select("delta")
+      .eq("founder_id", founder.id)
+      .gte("reported_at", weekAgoIso)
+      .returns<{ delta: number }[]>(),
+    supabase
+      .from("quests")
+      .select("id", { count: "exact", head: true })
+      .eq("founder_id", founder.id)
+      .in("status", OCCUPYING_STATUSES),
+  ]);
+  const weekDelta = (weekEvents ?? []).reduce((sum, e) => sum + e.delta, 0);
+
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+      <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
         Welcome{founder.name ? `, ${founder.name}` : ""}
       </h1>
 
-      <GrowthHud founder={founder} />
+      <div className="grid grid-cols-1 items-start gap-6 min-[860px]:grid-cols-[1fr_320px]">
+        <GrowthHud
+          customers={founder.current_customer_count}
+          weekDelta={weekDelta !== 0 ? weekDelta : null}
+          level={founder.level}
+          xp={founder.xp}
+          streak={founder.streak_count}
+        />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <form action={logCustomer}>
-          <button
-            type="submit"
-            className="rounded bg-black px-3 py-1.5 text-sm text-white dark:bg-zinc-50 dark:text-black"
-          >
-            + I got a new customer
-          </button>
-        </form>
+        <div className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-3 p-5">
+            <h2 className="text-base font-medium text-primary">Log progress</h2>
+            <form action={logCustomer}>
+              <Button type="submit" fullWidth size="sm">
+                + I got a new customer
+              </Button>
+            </form>
+            <form action={correctCustomerCount} className="flex items-center gap-2">
+              <Input
+                type="number"
+                name="count"
+                min={0}
+                defaultValue={founder.current_customer_count}
+                className="flex-1"
+              />
+              <Button type="submit" variant="outline" size="sm">
+                Save
+              </Button>
+            </form>
+          </Card>
 
-        <form action={correctCustomerCount} className="flex items-center gap-2">
-          <label className="text-sm text-zinc-600 dark:text-zinc-400">Correct count:</label>
-          <input
-            type="number"
-            name="count"
-            min={0}
-            defaultValue={founder.current_customer_count}
-            className="w-20 rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <button
-            type="submit"
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700"
-          >
-            Save
-          </button>
-        </form>
+          <Card className="flex flex-col gap-3 p-5">
+            <h2 className="text-base font-medium text-primary">Your quests</h2>
+            <p className="text-sm text-secondary">
+              {questCount ?? 0} quest{questCount === 1 ? "" : "s"} in your log right now.
+            </p>
+            <LinkButton href="/quests" variant="outline" size="sm">
+              View your quests →
+            </LinkButton>
+          </Card>
+        </div>
       </div>
-
-      <Link
-        href="/quests"
-        className="rounded bg-black px-4 py-3 text-center text-sm font-medium text-white dark:bg-zinc-50 dark:text-black"
-      >
-        View your quests →
-      </Link>
     </div>
   );
 }

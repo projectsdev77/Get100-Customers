@@ -1,7 +1,7 @@
 // Customer-count milestones worth celebrating (SPEC §11 triggers).
 // 100 is special-cased as Growth Mode entry, not just another number
 // (SPEC §14 — reaching 100 isn't a hard stop).
-const CUSTOMER_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
+const CUSTOMER_MILESTONES = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
 
 export function crossedCustomerMilestone(oldCount: number, newCount: number): number | null {
   const crossed = CUSTOMER_MILESTONES.filter((m) => oldCount < m && newCount >= m);
