@@ -13,6 +13,8 @@ export type QuestStatus =
 
 export type FounderStage = "idea" | "prototype" | "launched";
 
+export type WeeklyHours = "1-2" | "3-5" | "6-10" | "10+";
+
 export type SubscriptionStatus =
   | "trialing"
   | "active"
@@ -30,6 +32,7 @@ export interface Founder {
   icp: string | null;
   stage: FounderStage | null;
   channels_tried: string[];
+  weekly_hours: WeeklyHours | null;
   current_customer_count: number;
   level: number;
   xp: number;
@@ -83,6 +86,7 @@ export interface Quest {
   instructions: string | null;
   category: string | null;
   xp_value: number;
+  reasoning: string | null;
   tools_provided: Array<{ label: string; content: string }>;
   result_questions: Array<{ id: string; prompt: string; type: "number" | "text" | "boolean" }>;
   success_criteria: string | null;

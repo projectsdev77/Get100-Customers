@@ -1,11 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import {
   buildQuestInsertFields,
+  countActiveQuests,
   getGrowthProfile,
+  MAX_ACTIVE_QUESTS,
   OCCUPYING_STATUSES,
   refreshQuestLog,
 } from "@/lib/quests/lifecycle";
@@ -17,11 +20,20 @@ import { notify } from "@/lib/notifications/notify";
 import { crossedCustomerMilestone, milestoneMessage } from "@/lib/notifications/milestones";
 import type { Quest, QuestTemplate } from "@/types/database";
 
-// Suggested → active (SPEC §7.3/§7.4).
+// Suggested → active (SPEC §7.3/§7.4), blocked while 3 quests are already
+// active (design handoff's capacity model). The flash message rides a
+// redirect query param, same pattern as login's searchParams messages.
 export async function acceptQuest(questId: string) {
   const supabase = await createClient();
   const founder = await getCurrentFounder(supabase);
   if (!founder) return;
+
+  const activeCount = await countActiveQuests(supabase, founder.id);
+  if (activeCount >= MAX_ACTIVE_QUESTS) {
+    redirect(
+      `/quests?flash=${encodeURIComponent("You already have 3 active quests. Finish or skip one first.")}`,
+    );
+  }
 
   await supabase
     .from("quests")
@@ -30,6 +42,7 @@ export async function acceptQuest(questId: string) {
     .eq("founder_id", founder.id)
     .eq("status", "suggested");
 
+  await refreshQuestLog(supabase, founder);
   revalidatePath("/quests");
 }
 

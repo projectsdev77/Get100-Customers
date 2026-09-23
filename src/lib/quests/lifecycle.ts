@@ -9,10 +9,21 @@ import { applySubscriptionLifecycle, getSubscription, isRestricted } from "@/lib
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
-// Statuses that occupy one of the founder's 3 concurrent quest slots
-// (SPEC §7.3) — only completed/skipped/expired free a slot.
+// Statuses considered "in flight" for template-exclusion purposes (never
+// suggest a template that's already active/suggested/awaiting report) —
+// only completed/skipped/expired are free to reuse. This is a separate
+// concept from the active-quest cap below: it's about not repeating a
+// template, not about capacity.
 export const OCCUPYING_STATUSES = ["suggested", "active", "in_progress", "awaiting_report"];
-const MAX_CONCURRENT_QUESTS = 3;
+
+// Design handoff: "Active (N of 3)" caps ACTIVE quests specifically —
+// accept is blocked past 3, with its own flash message — while a single
+// "next up" suggestion and any "awaiting report" quests sit outside that
+// cap and can coexist with it (SPEC gap resolved 2026-09-23, superseding
+// the earlier shared-pool-of-3 model).
+export const MAX_ACTIVE_QUESTS = 3;
+const MAX_SUGGESTED_QUESTS = 1;
+const ACTIVE_STATUSES = ["active", "in_progress"];
 
 // Flips any occupying quest whose soft deadline has passed to 'expired'
 // (SPEC §7.3). No cron job needed for a zero-budget build — this runs
@@ -89,9 +100,11 @@ export async function buildQuestInsertFields(
   };
 }
 
-// Tops up suggested quests until (active + suggested + …) reaches the cap
-// (SPEC §7.4 — "when a slot opens, the AI recommends one primary next
-// quest"). Called after any action that might have freed a slot.
+// Tops up to one pending "next up" suggestion, independent of the active
+// count (design handoff — a suggestion should always be waiting, but
+// accepting it is what's gated by the active-quest cap, not generating
+// it). Called after any action that might have resolved the current
+// suggestion or freed an active slot.
 export async function ensureQuestSlots(
   supabase: SupabaseServerClient,
   founder: Founder,
@@ -104,14 +117,14 @@ export async function ensureQuestSlots(
 
   const { data: occupying } = await supabase
     .from("quests")
-    .select("id, template_id")
+    .select("id, template_id, status")
     .eq("founder_id", founder.id)
     .in("status", OCCUPYING_STATUSES)
-    .returns<Pick<Quest, "id" | "template_id">[]>();
+    .returns<Pick<Quest, "id" | "template_id" | "status">[]>();
 
   const occupyingRows = occupying ?? [];
-  let slotsOpen = MAX_CONCURRENT_QUESTS - occupyingRows.length;
-  if (slotsOpen <= 0) return;
+  const suggestedCount = occupyingRows.filter((q) => q.status === "suggested").length;
+  if (suggestedCount >= MAX_SUGGESTED_QUESTS) return;
 
   const { data: templates } = await supabase
     .from("quest_templates")
@@ -124,21 +137,31 @@ export async function ensureQuestSlots(
     .map((q) => q.template_id)
     .filter((id): id is string => Boolean(id));
 
-  while (slotsOpen > 0) {
-    const built = await buildQuestInsertFields(founder, growth, templates, usedTemplateIds);
-    if (!built) break;
+  const built = await buildQuestInsertFields(founder, growth, templates, usedTemplateIds);
+  if (!built) return;
 
-    if (built.usedTemplateId) usedTemplateIds.push(built.usedTemplateId);
-    await supabase.from("quests").insert({
-      founder_id: founder.id,
-      ...built.fields,
-    });
-    slotsOpen -= 1;
+  await supabase.from("quests").insert({
+    founder_id: founder.id,
+    ...built.fields,
+  });
 
-    // In-app only (SPEC §11) — the founder is typically already in the app
-    // when a slot refills, and 3 of these can fire right after onboarding.
-    await notify(founder.id, "new_quest", `New quest: ${built.fields.title}`);
-  }
+  // In-app only (SPEC §11) — the founder is typically already in the app
+  // when a suggestion refills.
+  await notify(founder.id, "new_quest", `New quest: ${built.fields.title}`);
+}
+
+// Used by acceptQuest to enforce the "3 active" cap (design handoff)
+// before a suggested → active transition.
+export async function countActiveQuests(
+  supabase: SupabaseServerClient,
+  founderId: string,
+): Promise<number> {
+  const { count } = await supabase
+    .from("quests")
+    .select("id", { count: "exact", head: true })
+    .eq("founder_id", founderId)
+    .in("status", ACTIVE_STATUSES);
+  return count ?? 0;
 }
 
 export async function refreshQuestLog(supabase: SupabaseServerClient, founder: Founder) {
