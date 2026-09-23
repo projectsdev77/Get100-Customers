@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
+import Link from "next/link";
 
 type Variant = "primary" | "secondary" | "outline" | "coach" | "danger";
 type Size = "sm" | "md";
@@ -16,6 +17,18 @@ const SIZE_CLASSES: Record<Size, string> = {
   md: "h-11 px-5 text-sm",
 };
 
+// Shared by Button and LinkButton so a link can look exactly like a
+// button (e.g. a banner's "Go to billing" action) without an <a> nested
+// inside a <button>, which is invalid HTML.
+export function buttonClasses(
+  variant: Variant = "primary",
+  size: Size = "md",
+  fullWidth = false,
+  className = "",
+) {
+  return `inline-flex items-center justify-center gap-2 rounded-full font-medium transition-[background,transform] duration-200 ease-out active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${fullWidth ? "w-full" : ""} ${className}`;
+}
+
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
@@ -32,10 +45,25 @@ export function Button({
   className = "",
   ...props
 }: ButtonProps) {
+  return <button {...props} className={buttonClasses(variant, size, fullWidth, className)} />;
+}
+
+export interface LinkButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+  href: string;
+  variant?: Variant;
+  size?: Size;
+  fullWidth?: boolean;
+}
+
+export function LinkButton({
+  href,
+  variant = "primary",
+  size = "md",
+  fullWidth = false,
+  className = "",
+  ...props
+}: LinkButtonProps) {
   return (
-    <button
-      {...props}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-medium transition-[background,transform] duration-200 ease-out active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${fullWidth ? "w-full" : ""} ${className}`}
-    />
+    <Link href={href} {...props} className={buttonClasses(variant, size, fullWidth, className)} />
   );
 }

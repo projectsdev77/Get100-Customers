@@ -1,9 +1,12 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
+import { getSubscription, isRestricted } from "@/lib/subscriptions/status";
 import { logout } from "../(auth)/actions";
 import { ChatWidget } from "./chat/chat-widget";
+import { TopNav } from "@/components/ui/navigation/TopNav";
+import { Banner } from "@/components/ui/surfaces/Banner";
+import { LinkButton } from "@/components/ui/actions/Button";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -17,6 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const founder = await getCurrentFounder(supabase);
   let unreadCount = 0;
+  let restricted = false;
   if (founder) {
     const { count } = await supabase
       .from("notifications_log")
@@ -25,35 +29,34 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       .eq("channel", "in_app")
       .is("read_at", null);
     unreadCount = count ?? 0;
+
+    const subscription = await getSubscription(supabase, founder.id);
+    restricted = isRestricted(subscription);
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
-      <nav className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-        <Link href="/dashboard" className="font-semibold text-black dark:text-zinc-50">
-          Get100-Customers
-        </Link>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/quests" className="text-zinc-600 hover:underline dark:text-zinc-400">
-            Quests
-          </Link>
-          <Link href="/notifications" className="text-zinc-600 hover:underline dark:text-zinc-400">
-            Notifications{unreadCount > 0 ? ` (${unreadCount})` : ""}
-          </Link>
-          <Link href="/settings" className="text-zinc-600 hover:underline dark:text-zinc-400">
-            Settings
-          </Link>
-          <Link href="/billing" className="text-zinc-600 hover:underline dark:text-zinc-400">
-            Billing
-          </Link>
-          <form action={logout}>
-            <button type="submit" className="text-zinc-600 hover:underline dark:text-zinc-400">
-              Log out
-            </button>
-          </form>
+    <div className="min-h-screen bg-canvas">
+      <TopNav unreadCount={unreadCount} onLogout={logout} />
+
+      {restricted && (
+        <div className="mx-auto max-w-[1120px] px-6 pt-4">
+          <Banner
+            tone="error"
+            action={
+              <LinkButton href="/billing" size="sm" variant="danger">
+                Go to billing
+              </LinkButton>
+            }
+          >
+            Your account is restricted — subscribe to get new quests and chat back.
+          </Banner>
         </div>
-      </nav>
-      <main className="mx-auto max-w-2xl px-6 py-10">{children}</main>
+      )}
+
+      <main className="mx-auto max-w-[1120px] px-6 py-10">{children}</main>
+      {/* ChatWidget's own restricted-state UI (disabled input, paused
+          message) is wired in a later pass — it currently detects
+          restriction itself via the sendMessage action's reply. */}
       <ChatWidget />
     </div>
   );
