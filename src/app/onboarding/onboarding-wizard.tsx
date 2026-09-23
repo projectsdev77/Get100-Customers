@@ -3,15 +3,40 @@
 import { useState, useTransition } from "react";
 import { analyzeSource, completeOnboarding, type ExtractedFields } from "./actions";
 import type { Founder } from "@/types/database";
+import { Stepper } from "@/components/ui/navigation/Stepper";
+import { Input } from "@/components/ui/forms/Input";
+import { Textarea } from "@/components/ui/forms/Textarea";
+import { ChipGroup } from "@/components/ui/forms/Chip";
+import { Button } from "@/components/ui/actions/Button";
+import { Banner } from "@/components/ui/surfaces/Banner";
 
 const CHANNEL_OPTIONS = [
-  { value: "cold_email", label: "Cold email" },
-  { value: "warm_intros", label: "Warm intros" },
-  { value: "communities", label: "Online communities" },
-  { value: "content", label: "Content" },
-  { value: "paid", label: "Paid ads" },
-  { value: "partnerships", label: "Partnerships" },
+  "Cold email",
+  "Warm intros",
+  "Online communities",
+  "Content",
+  "Paid ads",
+  "Partnerships",
 ];
+const CHANNEL_VALUES: Record<string, string> = {
+  "Cold email": "cold_email",
+  "Warm intros": "warm_intros",
+  "Online communities": "communities",
+  Content: "content",
+  "Paid ads": "paid",
+  Partnerships: "partnerships",
+};
+const CHANNEL_LABELS = Object.fromEntries(
+  Object.entries(CHANNEL_VALUES).map(([label, value]) => [value, label]),
+);
+
+const STAGE_OPTIONS = ["Idea", "Prototype", "Launched"];
+const STAGE_VALUES: Record<string, string> = { Idea: "idea", Prototype: "prototype", Launched: "launched" };
+const STAGE_LABELS = Object.fromEntries(Object.entries(STAGE_VALUES).map(([l, v]) => [v, l]));
+
+const HOURS_OPTIONS = ["1–2", "3–5", "6–10", "10+"];
+const HOURS_VALUES: Record<string, string> = { "1–2": "1-2", "3–5": "3-5", "6–10": "6-10", "10+": "10+" };
+const HOURS_LABELS = Object.fromEntries(Object.entries(HOURS_VALUES).map(([l, v]) => [v, l]));
 
 interface FormState {
   name: string;
@@ -22,6 +47,7 @@ interface FormState {
   stage: string;
   channels_tried: string[];
   current_customer_count: string;
+  weekly_hours: string;
 }
 
 function initialState(founder: Founder | null): FormState {
@@ -34,10 +60,9 @@ function initialState(founder: Founder | null): FormState {
     stage: founder?.stage ?? "",
     channels_tried: founder?.channels_tried ?? [],
     current_customer_count: String(founder?.current_customer_count ?? 0),
+    weekly_hours: founder?.weekly_hours ?? "",
   };
 }
-
-const inputClass = "w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900";
 
 export function OnboardingWizard({ founder }: { founder: Founder | null }) {
   const [step, setStep] = useState(0);
@@ -84,41 +109,45 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     });
   }
 
+  const reviewRows: Array<[string, string]> = [
+    ["Company", data.company_name],
+    ["Industry", data.industry],
+    ["What you sell", data.product_description],
+    ["Ideal customer", data.icp],
+    ["Stage", STAGE_LABELS[data.stage] ?? data.stage],
+    ["Channels tried", data.channels_tried.map((c) => CHANNEL_LABELS[c] ?? c).join(", ")],
+    ["Customers today", data.current_customer_count],
+    ["Hours a week", HOURS_LABELS[data.weekly_hours] ?? data.weekly_hours],
+  ];
+
   const steps = [
     {
       title: "Got a website or notes? (optional)",
       body: (
         <div className="flex flex-col gap-3">
-          <input
-            className={inputClass}
+          <Input
             placeholder="https://yourproduct.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">or</p>
+          <p className="text-sm text-secondary">or</p>
           <input id="onboarding-file" type="file" accept=".txt,.md" />
-          {analyzeError && <p className="text-sm text-red-600 dark:text-red-400">{analyzeError}</p>}
+          {analyzeError && <Banner tone="error">{analyzeError}</Banner>}
           {analyzed && (
-            <p className="text-sm text-green-700 dark:text-green-400">
+            <Banner tone="success">
               Pre-filled what we could find — you&apos;ll review every field next.
-            </p>
+            </Banner>
           )}
-          <button
-            type="button"
-            onClick={handleAnalyze}
-            disabled={isAnalyzing}
-            className="self-start rounded border border-zinc-300 px-4 py-2 text-sm disabled:opacity-50 dark:border-zinc-700"
-          >
+          <Button type="button" variant="outline" onClick={handleAnalyze} disabled={isAnalyzing}>
             {isAnalyzing ? "Analyzing…" : "Analyze"}
-          </button>
+          </Button>
         </div>
       ),
     },
     {
       title: "What's your company or product called?",
       body: (
-        <input
-          className={inputClass}
+        <Input
           value={data.company_name}
           onChange={(e) => setData({ ...data, company_name: e.target.value })}
           autoFocus
@@ -128,8 +157,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     {
       title: "What industry are you in?",
       body: (
-        <input
-          className={inputClass}
+        <Input
           value={data.industry}
           onChange={(e) => setData({ ...data, industry: e.target.value })}
           autoFocus
@@ -139,8 +167,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     {
       title: "In one line, what does your product do?",
       body: (
-        <textarea
-          className={inputClass}
+        <Textarea
           rows={3}
           value={data.product_description}
           onChange={(e) => setData({ ...data, product_description: e.target.value })}
@@ -150,98 +177,92 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     },
     {
       title: "Who's your target customer?",
+      hint: "Ideal customer profile — be specific.",
       body: (
-        <input
-          className={inputClass}
-          value={data.icp}
-          onChange={(e) => setData({ ...data, icp: e.target.value })}
-          autoFocus
-        />
+        <Input value={data.icp} onChange={(e) => setData({ ...data, icp: e.target.value })} autoFocus />
       ),
     },
     {
       title: "What stage are you at?",
       body: (
-        <div className="flex gap-2">
-          {(["idea", "prototype", "launched"] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setData({ ...data, stage: s })}
-              className={`rounded border px-4 py-2 text-sm capitalize ${
-                data.stage === s
-                  ? "border-black bg-black text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-black"
-                  : "border-zinc-300 dark:border-zinc-700"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        <ChipGroup
+          options={STAGE_OPTIONS}
+          multi={false}
+          value={STAGE_LABELS[data.stage] ?? ""}
+          onChange={(v) => setData({ ...data, stage: STAGE_VALUES[v as string] })}
+        />
       ),
     },
     {
       title: "Which channels have you already tried?",
       body: (
-        <div className="flex flex-wrap gap-2">
-          {CHANNEL_OPTIONS.map((c) => {
-            const selected = data.channels_tried.includes(c.value);
-            return (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() =>
-                  setData({
-                    ...data,
-                    channels_tried: selected
-                      ? data.channels_tried.filter((v) => v !== c.value)
-                      : [...data.channels_tried, c.value],
-                  })
-                }
-                className={`rounded border px-3 py-1.5 text-sm ${
-                  selected
-                    ? "border-black bg-black text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-black"
-                    : "border-zinc-300 dark:border-zinc-700"
-                }`}
-              >
-                {c.label}
-              </button>
-            );
-          })}
-        </div>
+        <ChipGroup
+          options={CHANNEL_OPTIONS}
+          multi
+          value={data.channels_tried.map((c) => CHANNEL_LABELS[c] ?? c)}
+          onChange={(v) =>
+            setData({ ...data, channels_tried: (v as string[]).map((label) => CHANNEL_VALUES[label]) })
+          }
+        />
       ),
     },
     {
       title: "How many customers do you have today?",
+      hint: "Paying or committed. A rough number is fine.",
       body: (
-        <input
+        <Input
           type="number"
           min={0}
-          className={inputClass}
           value={data.current_customer_count}
           onChange={(e) => setData({ ...data, current_customer_count: e.target.value })}
           autoFocus
         />
       ),
     },
+    {
+      title: "How many hours a week can you give this?",
+      hint: "We size quests to fit.",
+      body: (
+        <ChipGroup
+          options={HOURS_OPTIONS}
+          multi={false}
+          value={HOURS_LABELS[data.weekly_hours] ?? ""}
+          onChange={(v) => setData({ ...data, weekly_hours: HOURS_VALUES[v as string] })}
+        />
+      ),
+    },
+    {
+      title: "Does this look right?",
+      hint: "You can change any of this later in Settings.",
+      body: (
+        <div className="flex flex-col rounded-tile bg-sunken px-4">
+          {reviewRows.map(([label, value], i) => (
+            <div
+              key={label}
+              className={`grid grid-cols-[140px_minmax(0,1fr)] gap-3 py-2.5 ${i ? "border-t border-subtle" : ""}`}
+            >
+              <span className="text-[13px] font-medium text-secondary">{label}</span>
+              <span className="text-sm text-primary">{value || "—"}</span>
+            </div>
+          ))}
+        </div>
+      ),
+    },
   ];
 
   const isLastStep = step === steps.length - 1;
   const isFirstStep = step === 0;
+  const current = steps[step];
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="h-1 w-full rounded bg-zinc-200 dark:bg-zinc-800">
-        <div
-          className="h-1 rounded bg-black transition-all dark:bg-zinc-50"
-          style={{ width: `${((step + 1) / steps.length) * 100}%` }}
-        />
-      </div>
+      <Stepper step={step + 1} total={steps.length} />
 
-      <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
-        {steps[step].title}
+      <h1 className="text-2xl font-medium leading-[1.25] tracking-[-0.01em] text-primary">
+        {current.title}
       </h1>
-      {steps[step].body}
+      {"hint" in current && current.hint && <p className="-mt-4 text-sm text-secondary">{current.hint}</p>}
+      {current.body}
 
       {isLastStep ? (
         <form action={completeOnboarding} className="flex justify-between">
@@ -254,42 +275,27 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
           {data.channels_tried.map((c) => (
             <input key={c} type="hidden" name="channels_tried" value={c} />
           ))}
-          <input
-            type="hidden"
-            name="current_customer_count"
-            value={data.current_customer_count}
-          />
-          <button
-            type="button"
-            onClick={() => setStep(step - 1)}
-            className="rounded border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700"
-          >
+          <input type="hidden" name="current_customer_count" value={data.current_customer_count} />
+          <input type="hidden" name="weekly_hours" value={data.weekly_hours} />
+          <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
             Back
-          </button>
-          <button
-            type="submit"
-            className="rounded bg-black px-5 py-2 text-white dark:bg-zinc-50 dark:text-black"
-          >
-            Start my quest log
-          </button>
+          </Button>
+          <Button type="submit">Start my quest log</Button>
         </form>
       ) : (
         <div className="flex justify-between">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => setStep(step - 1)}
             disabled={isFirstStep}
-            className="rounded border border-zinc-300 px-4 py-2 text-sm disabled:opacity-0 dark:border-zinc-700"
+            className={isFirstStep ? "invisible" : ""}
           >
             Back
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep(step + 1)}
-            className="rounded bg-black px-5 py-2 text-white dark:bg-zinc-50 dark:text-black"
-          >
+          </Button>
+          <Button type="button" onClick={() => setStep(step + 1)}>
             {step === 0 ? "Skip" : "Next"}
-          </button>
+          </Button>
         </div>
       )}
     </div>

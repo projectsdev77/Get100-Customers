@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { extractFounderProfile } from "@/lib/ai/extract-founder-profile";
 import { extractUploadedFileText, fetchUrlText } from "@/lib/onboarding/fetch-source-text";
-import type { FounderStage } from "@/types/database";
+import type { FounderStage, WeeklyHours } from "@/types/database";
 
 const VALID_STAGES: FounderStage[] = ["idea", "prototype", "launched"];
+const VALID_WEEKLY_HOURS: WeeklyHours[] = ["1-2", "3-5", "6-10", "10+"];
 
 export interface ExtractedFields {
   company_name: string | null;
@@ -110,6 +111,7 @@ export async function completeOnboarding(formData: FormData) {
   if (!user) redirect("/login");
 
   const stage = String(formData.get("stage") || "");
+  const weeklyHours = String(formData.get("weekly_hours") || "");
   const channelsTried = formData.getAll("channels_tried").map(String);
   const customerCount = Math.max(
     0,
@@ -125,6 +127,7 @@ export async function completeOnboarding(formData: FormData) {
       product_description: String(formData.get("product_description") || "") || null,
       icp: String(formData.get("icp") || "") || null,
       stage: VALID_STAGES.includes(stage as FounderStage) ? stage : null,
+      weekly_hours: VALID_WEEKLY_HOURS.includes(weeklyHours as WeeklyHours) ? weeklyHours : null,
       channels_tried: channelsTried,
       current_customer_count: customerCount,
       updated_at: new Date().toISOString(),

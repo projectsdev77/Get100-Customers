@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Founder } from "@/types/database";
 import { OnboardingWizard } from "./onboarding-wizard";
+import { Card } from "@/components/ui/surfaces/Card";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -20,10 +21,10 @@ export default async function OnboardingPage() {
     .single<Founder>();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-6 font-sans dark:bg-black">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
+      <Card className="w-full max-w-md p-8">
         <OnboardingWizard founder={founder ?? null} />
-      </div>
+      </Card>
     </div>
   );
 }
