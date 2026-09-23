@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { login } from "../actions";
+import { Card } from "@/components/ui/surfaces/Card";
+import { Banner } from "@/components/ui/surfaces/Banner";
+import { Input } from "@/components/ui/forms/Input";
+import { Button } from "@/components/ui/actions/Button";
 
 export default async function LoginPage({
   searchParams,
@@ -9,56 +13,33 @@ export default async function LoginPage({
   const params = await searchParams;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-6 font-sans dark:bg-black">
-      <div className="w-full max-w-sm">
-        <h1 className="mb-6 text-2xl font-semibold text-black dark:text-zinc-50">Log in</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-6">
+      <Card className="flex w-full max-w-[420px] flex-col gap-5 p-8">
+        <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
+          Log in
+        </h1>
 
         {params.message === "check-email" && (
-          <p className="mb-4 rounded bg-green-50 px-3 py-2 text-sm text-green-800 dark:bg-green-950 dark:text-green-300">
-            Check your email to confirm your account, then log in.
-          </p>
+          <Banner tone="success">Check your email to confirm your account, then log in.</Banner>
         )}
-        {params.error && (
-          <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-300">
-            {params.error}
-          </p>
-        )}
+        {params.error && <Banner tone="error">{params.error}</Banner>}
 
         <form action={login} className="flex flex-col gap-4">
           <input type="hidden" name="next" value={params.next ?? "/dashboard"} />
-          <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-            Email
-            <input
-              type="email"
-              name="email"
-              required
-              className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
-            Password
-            <input
-              type="password"
-              name="password"
-              required
-              className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <button
-            type="submit"
-            className="mt-2 rounded bg-black px-4 py-2 text-white dark:bg-zinc-50 dark:text-black"
-          >
+          <Input label="Email" type="email" name="email" required />
+          <Input label="Password" type="password" name="password" required />
+          <Button type="submit" fullWidth>
             Log in
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-secondary">
           No account?{" "}
-          <Link href="/signup" className="font-medium underline">
+          <Link href="/signup" className="font-medium text-primary underline">
             Sign up
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }
