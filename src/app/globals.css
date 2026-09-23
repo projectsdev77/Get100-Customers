@@ -39,9 +39,13 @@
   --color-ring-track: var(--ring-track);
 
   --color-quest-suggested: var(--quest-suggested-bg);
+  --color-quest-suggested-ink: var(--quest-suggested-ink);
   --color-quest-active: var(--quest-active-bg);
+  --color-quest-active-ink: var(--quest-active-ink);
   --color-quest-input: var(--quest-input-bg);
+  --color-quest-input-ink: var(--quest-input-ink);
   --color-quest-done: var(--quest-done-bg);
+  --color-quest-done-ink: var(--quest-done-ink);
 
   --color-banner-error-bg: var(--banner-error-bg);
   --color-banner-error-border: var(--banner-error-border);
@@ -53,6 +57,8 @@
   --color-banner-info-border: var(--banner-info-border);
   --color-banner-info-fg: var(--banner-info-fg);
 
+  --radius-sm: 8px;
+  --radius-md: 14px;
   --radius-tile: 22px;
   --radius-panel: 28px;
   --radius-shell: 32px;
