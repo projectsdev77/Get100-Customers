@@ -30,7 +30,11 @@ export async function createCheckoutSession() {
   if (session.url) redirect(session.url);
 }
 
-export async function createPortalSession() {
+// Deep-links straight into the portal's payment-method or cancellation
+// flow (design handoff's separate "Update payment method"/"Cancel
+// subscription" buttons) instead of dropping the founder on the portal's
+// generic landing page.
+export async function createPortalSession(flow?: "payment_method_update" | "subscription_cancel") {
   const supabase = await createClient();
   const founder = await getCurrentFounder(supabase);
   if (!founder) redirect("/login");
@@ -42,6 +46,7 @@ export async function createPortalSession() {
   const session = await stripe.billingPortal.sessions.create({
     customer: subscription.stripe_customer_id,
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`,
+    ...(flow ? { flow_data: { type: flow } } : {}),
   });
 
   redirect(session.url);
