@@ -14,11 +14,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
-      <nav className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-        <span className="font-semibold text-black dark:text-zinc-50">Admin</span>
+    <div className="min-h-screen bg-canvas">
+      <nav className="mx-auto max-w-[1120px] px-6 py-3.5">
+        <span className="text-[17px] font-semibold tracking-[-0.01em] text-primary">
+          Get100-Customers <span className="font-medium text-secondary">/ Admin</span>
+        </span>
       </nav>
-      <main className="mx-auto max-w-4xl px-6 py-10">{children}</main>
+      <main className="mx-auto max-w-[1120px] px-6 py-10">{children}</main>
     </div>
   );
 }

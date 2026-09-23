@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Founder, GrowthProfile, Subscription } from "@/types/database";
 import { adminCorrectCustomerCount, adminUpdateSubscriptionStatus } from "./actions";
+import { Card } from "@/components/ui/surfaces/Card";
+import { Input } from "@/components/ui/forms/Input";
+import { Select } from "@/components/ui/forms/Select";
+import { Button } from "@/components/ui/actions/Button";
 
 export default async function AdminFounderDetailPage({
   params,
@@ -32,96 +36,87 @@ export default async function AdminFounderDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
           {founder.company_name ?? founder.name ?? "Unnamed founder"}
         </h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">{authUser?.user?.email}</p>
+        <p className="font-mono text-[13px] text-secondary">{authUser?.user?.email}</p>
       </div>
 
-      <section className="rounded border border-zinc-300 bg-white p-4 text-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <h2 className="mb-2 font-medium text-black dark:text-zinc-50">Profile</h2>
-        <dl className="grid grid-cols-2 gap-2 text-zinc-700 dark:text-zinc-300">
-          <dt className="text-zinc-500 dark:text-zinc-400">Industry</dt>
-          <dd>{founder.industry ?? "—"}</dd>
-          <dt className="text-zinc-500 dark:text-zinc-400">Stage</dt>
-          <dd>{founder.stage ?? "—"}</dd>
-          <dt className="text-zinc-500 dark:text-zinc-400">ICP</dt>
-          <dd>{founder.icp ?? "—"}</dd>
-          <dt className="text-zinc-500 dark:text-zinc-400">Product</dt>
-          <dd>{founder.product_description ?? "—"}</dd>
-          <dt className="text-zinc-500 dark:text-zinc-400">Level / XP</dt>
-          <dd>
+      <Card className="flex flex-col gap-4 p-6">
+        <h2 className="text-base font-medium text-primary">Profile</h2>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          <dt className="text-secondary">Industry</dt>
+          <dd className="text-primary">{founder.industry ?? "—"}</dd>
+          <dt className="text-secondary">Stage</dt>
+          <dd className="text-primary">{founder.stage ?? "—"}</dd>
+          <dt className="text-secondary">ICP</dt>
+          <dd className="text-primary">{founder.icp ?? "—"}</dd>
+          <dt className="text-secondary">Product</dt>
+          <dd className="text-primary">{founder.product_description ?? "—"}</dd>
+          <dt className="text-secondary">Level / XP</dt>
+          <dd className="font-mono text-primary">
             {founder.level} / {founder.xp} XP
           </dd>
-          <dt className="text-zinc-500 dark:text-zinc-400">Streak</dt>
-          <dd>{founder.streak_count} days</dd>
-          <dt className="text-zinc-500 dark:text-zinc-400">Quests completed</dt>
-          <dd>{questsCompleted ?? 0}</dd>
+          <dt className="text-secondary">Streak</dt>
+          <dd className="font-mono text-primary">{founder.streak_count} days</dd>
+          <dt className="text-secondary">Quests completed</dt>
+          <dd className="font-mono text-primary">{questsCompleted ?? 0}</dd>
         </dl>
-      </section>
+      </Card>
 
-      <section className="rounded border border-zinc-300 bg-white p-4 text-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <h2 className="mb-2 font-medium text-black dark:text-zinc-50">
-          Growth profile (read-only)
-        </h2>
+      <Card className="flex flex-col gap-3 p-6">
+        <h2 className="text-base font-medium text-primary">Growth profile (read-only)</h2>
         {growth ? (
-          <dl className="flex flex-col gap-2 text-zinc-700 dark:text-zinc-300">
-            <dt className="text-zinc-500 dark:text-zinc-400">Bottleneck hypothesis</dt>
-            <dd>{growth.bottleneck_hypothesis ?? "—"}</dd>
-            <dt className="text-zinc-500 dark:text-zinc-400">What&apos;s working</dt>
-            <dd>{JSON.stringify(growth.what_working)}</dd>
-            <dt className="text-zinc-500 dark:text-zinc-400">What&apos;s not working</dt>
-            <dd>{JSON.stringify(growth.what_not_working)}</dd>
+          <dl className="flex flex-col gap-3 text-sm">
+            <dt className="text-secondary">Bottleneck hypothesis</dt>
+            <dd className="text-primary">{growth.bottleneck_hypothesis ?? "—"}</dd>
+            <dt className="text-secondary">What&apos;s working</dt>
+            <dd className="font-mono text-[13px] text-primary">
+              {JSON.stringify(growth.what_working)}
+            </dd>
+            <dt className="text-secondary">What&apos;s not working</dt>
+            <dd className="font-mono text-[13px] text-primary">
+              {JSON.stringify(growth.what_not_working)}
+            </dd>
           </dl>
         ) : (
-          <p className="text-zinc-500 dark:text-zinc-400">No growth profile yet.</p>
+          <p className="text-sm text-secondary">No growth profile yet.</p>
         )}
-      </section>
+      </Card>
 
-      <section className="rounded border border-zinc-300 bg-white p-4 text-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <h2 className="mb-3 font-medium text-black dark:text-zinc-50">Support overrides</h2>
+      <Card className="flex flex-col gap-4 p-6">
+        <h2 className="text-base font-medium text-primary">Support overrides</h2>
 
-        <form action={adminCorrectCustomerCount} className="mb-4 flex items-center gap-2">
+        <form action={adminCorrectCustomerCount} className="flex flex-wrap items-end gap-2">
           <input type="hidden" name="founderId" value={founder.id} />
-          <label className="text-zinc-600 dark:text-zinc-400">Customer count:</label>
-          <input
+          <Input
+            label="Customer count"
             type="number"
             name="count"
             min={0}
             defaultValue={founder.current_customer_count}
-            className="w-20 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-950"
+            className="w-32"
           />
-          <button
-            type="submit"
-            className="rounded border border-zinc-300 px-3 py-1.5 dark:border-zinc-700"
-          >
+          <Button type="submit" variant="secondary" size="sm">
             Save
-          </button>
+          </Button>
         </form>
 
-        <form action={adminUpdateSubscriptionStatus} className="flex items-center gap-2">
+        <form action={adminUpdateSubscriptionStatus} className="flex flex-wrap items-end gap-2">
           <input type="hidden" name="founderId" value={founder.id} />
-          <label className="text-zinc-600 dark:text-zinc-400">Subscription status:</label>
-          <select
+          <Select
+            label="Subscription status"
             name="status"
             defaultValue={subscription?.status ?? "trialing"}
-            className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-950"
-          >
-            <option value="trialing">trialing</option>
-            <option value="active">active</option>
-            <option value="past_due">past_due</option>
-            <option value="restricted">restricted</option>
-            <option value="canceled">canceled</option>
-          </select>
-          <button
-            type="submit"
-            className="rounded border border-zinc-300 px-3 py-1.5 dark:border-zinc-700"
-          >
+            options={["trialing", "active", "past_due", "restricted", "canceled"]}
+            className="w-40"
+          />
+          <Button type="submit" variant="secondary" size="sm">
             Save
-          </button>
+          </Button>
         </form>
-      </section>
+      </Card>
     </div>
   );
 }
