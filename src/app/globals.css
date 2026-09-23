@@ -1,26 +1,69 @@
+/* Coach Violet + Lime design system (designer handoff). Tokens are CSS
+   vars that auto-switch on prefers-color-scheme, so semantic utilities
+   like bg-card / text-secondary / bg-tile-customers work in both themes
+   with no dark: prefixes needed anywhere in the app. */
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-hanken-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-canvas: var(--bg-canvas);
+  --color-card: var(--surface-card);
+  --color-sunken: var(--surface-sunken);
+  --color-subtle: var(--border-subtle);
+  --color-strong: var(--border-strong);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-on-tile: var(--text-on-tile);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-action: var(--action-primary-bg);
+  --color-action-fg: var(--action-primary-fg);
+  --color-action-hover: var(--action-primary-hover);
+  --color-action-2: var(--action-secondary-bg);
+  --color-action-2-hover: var(--action-secondary-hover);
+  --color-danger: var(--danger);
+
+  --color-tile-customers: var(--tile-customers);
+  --color-tile-customers-ink: var(--tile-customers-ink);
+  --color-tile-level: var(--tile-level);
+  --color-tile-level-ink: var(--tile-level-ink);
+  --color-tile-streak: var(--tile-streak);
+  --color-tile-streak-ink: var(--tile-streak-ink);
+  --color-ring-customers: var(--ring-customers);
+  --color-ring-level: var(--ring-level);
+  --color-ring-track: var(--ring-track);
+
+  --color-quest-suggested: var(--quest-suggested-bg);
+  --color-quest-active: var(--quest-active-bg);
+  --color-quest-input: var(--quest-input-bg);
+  --color-quest-done: var(--quest-done-bg);
+
+  --color-banner-error-bg: var(--banner-error-bg);
+  --color-banner-error-border: var(--banner-error-border);
+  --color-banner-error-fg: var(--banner-error-fg);
+  --color-banner-success-bg: var(--banner-success-bg);
+  --color-banner-success-border: var(--banner-success-border);
+  --color-banner-success-fg: var(--banner-success-fg);
+  --color-banner-info-bg: var(--banner-info-bg);
+  --color-banner-info-border: var(--banner-info-border);
+  --color-banner-info-fg: var(--banner-info-fg);
+
+  --radius-tile: 22px;
+  --radius-panel: 28px;
+  --radius-shell: 32px;
+  --radius-field: 14px;
+  --shadow-float: 0 12px 32px rgba(26,22,51,.14), 0 2px 6px rgba(26,22,51,.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Optional manual override for QA/screenshots: <html data-theme="light|dark"> */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
 }

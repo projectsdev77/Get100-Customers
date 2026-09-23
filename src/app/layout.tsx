@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Hanken_Grotesk, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Hanken Grotesk replaces Geist Sans as the primary typeface (design
+// handoff, Coach Violet + Lime system). Geist Mono stays, used only for
+// tabular data and IDs per the handoff's type rules.
+const hankenSans = Hanken_Grotesk({
+  variable: "--font-hanken-sans",
+  weight: ["300", "400", "500", "600"],
   subsets: ["latin"],
 });
 
@@ -21,9 +25,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${hankenSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-canvas text-primary font-sans">{children}</body>
     </html>
   );
 }

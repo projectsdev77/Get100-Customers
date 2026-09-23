@@ -1,0 +1,89 @@
+/* Get100 — Coach Violet + Lime. Light default; dark follows OS unless data-theme is set. */
+:root, [data-theme="light"] {
+  --violet-100: #EEEDF2; --violet-200: #DCD6F7; --violet-400: #A99CFF; --violet-600: #5B4BC4; --violet-700: #524A8A;
+  --violet-800: #2A2836; --violet-900: #1B1A25; --violet-950: #0F0E16;
+  --lime-100: #F1F8DA; --lime-200: #E3F1B5; --lime-300: #D6F36A; --lime-700: #5A6B1E;
+  --sky-100: #EAF1F6; --sky-200: #D5E4EE; --sky-700: #3F6275;
+  --butter-100: #FBF3D6; --butter-200: #F6E6B0; --butter-700: #6E6230;
+  --rose-100: #FBEAE7; --rose-200: #F5D0CA; --rose-600: #B83A2B; --rose-700: #8A2E24;
+  --ink-900: #1A1633; --ink-600: #6A6583; --ink-400: #9E9AB3; --ink-50: #EEF0F2;
+
+  --bg-canvas: var(--violet-100);
+  --surface-card: #FFFFFF;
+  --surface-sunken: var(--violet-100);
+  --border-subtle: #E2E0EA;
+  --border-strong: #CAC6D8;
+  --text-primary: var(--ink-900);
+  --text-secondary: var(--ink-600);
+  --text-on-tile: var(--ink-900);
+  --accent: var(--violet-600);
+  --accent-soft: var(--violet-200);
+  --action-primary-bg: var(--ink-900);
+  --action-primary-fg: #FFFFFF;
+  --action-primary-hover: #2C2750;
+  --action-secondary-bg: var(--violet-100);
+  --action-secondary-hover: #E3E1EB;
+  --focus-ring: var(--violet-600);
+
+  --tile-customers: var(--violet-200); --tile-customers-ink: var(--violet-700); --ring-customers: var(--violet-600);
+  --tile-level: var(--lime-200); --tile-level-ink: var(--lime-700); --ring-level: var(--ink-900);
+  --tile-streak: var(--sky-200); --tile-streak-ink: var(--sky-700);
+  --ring-track: rgba(255,255,255,.75);
+
+  --quest-suggested-bg: var(--sky-200); --quest-suggested-ink: var(--sky-700);
+  --quest-active-bg: var(--violet-200); --quest-active-ink: var(--violet-700);
+  --quest-input-bg: var(--butter-200); --quest-input-ink: var(--butter-700);
+  --quest-done-bg: var(--violet-100); --quest-done-ink: var(--ink-600);
+
+  --banner-error-bg: var(--rose-100); --banner-error-border: var(--rose-200); --banner-error-fg: var(--rose-700);
+  --banner-success-bg: var(--lime-100); --banner-success-border: var(--lime-200); --banner-success-fg: var(--lime-700);
+  --banner-info-bg: var(--sky-100); --banner-info-border: var(--sky-200); --banner-info-fg: var(--sky-700);
+  --danger: var(--rose-600);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-canvas: var(--violet-950);
+    --surface-card: var(--violet-900);
+    --surface-sunken: var(--violet-800);
+    --border-subtle: #2A2836;
+    --border-strong: #3B3949;
+    --text-primary: var(--ink-50);
+    --text-secondary: var(--ink-400);
+    --accent: var(--violet-400);
+    --accent-soft: #2E2A4A;
+    --action-primary-bg: var(--ink-50);
+    --action-primary-fg: var(--ink-900);
+    --action-primary-hover: #FFFFFF;
+    --action-secondary-bg: var(--violet-800);
+    --action-secondary-hover: #34323F;
+    --focus-ring: var(--violet-400);
+    --quest-done-bg: var(--violet-800); --quest-done-ink: var(--ink-400);
+    --banner-error-bg: #2E1714; --banner-error-border: #4D231D; --banner-error-fg: #F4A99E;
+    --banner-success-bg: #1E2410; --banner-success-border: #34401A; --banner-success-fg: var(--lime-300);
+    --banner-info-bg: #15212A; --banner-info-border: #22384A; --banner-info-fg: #9CC6E0;
+    --danger: #F07B6B;
+  }
+}
+/* Force a theme: <html data-theme="light|dark"> */
+[data-theme="dark"] {
+    --bg-canvas: var(--violet-950);
+    --surface-card: var(--violet-900);
+    --surface-sunken: var(--violet-800);
+    --border-subtle: #2A2836;
+    --border-strong: #3B3949;
+    --text-primary: var(--ink-50);
+    --text-secondary: var(--ink-400);
+    --accent: var(--violet-400);
+    --accent-soft: #2E2A4A;
+    --action-primary-bg: var(--ink-50);
+    --action-primary-fg: var(--ink-900);
+    --action-primary-hover: #FFFFFF;
+    --action-secondary-bg: var(--violet-800);
+    --action-secondary-hover: #34323F;
+    --focus-ring: var(--violet-400);
+    --quest-done-bg: var(--violet-800); --quest-done-ink: var(--ink-400);
+    --banner-error-bg: #2E1714; --banner-error-border: #4D231D; --banner-error-fg: #F4A99E;
+    --banner-success-bg: #1E2410; --banner-success-border: #34401A; --banner-success-fg: var(--lime-300);
+    --banner-info-bg: #15212A; --banner-info-border: #22384A; --banner-info-fg: #9CC6E0;
+    --danger: #F07B6B;
+}

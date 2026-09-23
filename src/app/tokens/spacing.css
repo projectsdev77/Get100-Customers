@@ -1,0 +1,9 @@
+:root {
+  --space-1: 4px; --space-2: 6px; --space-3: 8px; --space-4: 10px; --space-5: 12px; --space-6: 14px;
+  --space-7: 16px; --space-8: 18px; --space-9: 20px; --space-10: 24px; --space-12: 32px; --space-14: 40px; --space-16: 48px;
+  --radius-sm: 8px; --radius-md: 14px; --radius-tile: 22px; --radius-panel: 28px; --radius-shell: 32px; --radius-pill: 999px;
+  --shadow-float: 0 12px 32px rgba(26,22,51,.14), 0 2px 6px rgba(26,22,51,.08);
+  --ring-size-lg: 132px; --ring-size-sm: 60px; --ring-thickness-lg: 12px; --ring-thickness-sm: 6px;
+  --control-h: 44px; --control-h-sm: 36px;
+  --ease-out: cubic-bezier(.2,.7,.2,1); --dur-fast: 120ms; --dur-base: 200ms; --dur-slow: 600ms;
+}
