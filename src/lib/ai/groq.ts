@@ -8,7 +8,12 @@ import Groq from "groq-sdk";
 // gymnastics beyond what generate-structured.ts already does. Optional:
 // the app works fine without GROQ_API_KEY set, it just has no fallback
 // when Gemini's quota runs out.
-export const GROQ_MODEL = "llama-3.3-70b-versatile";
+//
+// llama-3.3-70b-versatile was retired by Groq (June 2026, confirmed live
+// via a 404 "model_not_found"); openai/gpt-oss-120b is Groq's current
+// general-purpose model (see console.groq.com/docs/models — check there
+// again if this one also gets retired, Groq's free-tier lineup churns).
+export const GROQ_MODEL = "openai/gpt-oss-120b";
 
 let client: Groq | null = null;
 

@@ -48,7 +48,7 @@ Gemini's 20/day cap (previous step) is genuinely limiting for active testing. `s
 
 1. Create a free account at [console.groq.com](https://console.groq.com) — no card required.
 2. Create an API key and set `GROQ_API_KEY`.
-3. That's it — no other config. The fallback uses `llama-3.3-70b-versatile` and only ever kicks in when Gemini itself fails, so normal usage still gets Gemini's output.
+3. That's it — no other config. The fallback uses `openai/gpt-oss-120b` (see `src/lib/ai/groq.ts` if Groq has since retired that one too — their free-tier lineup changes) and only ever kicks in when Gemini itself fails, so normal usage still gets Gemini's output.
 
 ## 5. Resend (free tier, no card)
 
