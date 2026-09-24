@@ -84,13 +84,26 @@ async function main() {
     process.exit(1);
   }
 
+  // The free tier caps gemini-3.6-flash at 5 requests/minute (confirmed
+  // via a live 429: "limit: 5, model: gemini-3.6-flash"). This script
+  // makes 2 calls per founder with nothing pacing them, which blows
+  // through that in a couple of iterations — a 15s gap between every call
+  // keeps it under 5/minute with room to spare. Real app usage doesn't
+  // need this: a founder naturally paces requests by clicking through
+  // the UI, not by firing 6 calls in a burst.
+  const pause = () => new Promise((resolve) => setTimeout(resolve, 15_000));
+  let first = true;
+
   for (const founder of FOUNDERS) {
     console.log(`\n=== ${founder.company_name} (${founder.stage}) ===`);
 
+    if (!first) await pause();
+    first = false;
     console.log("\n-- personalizeQuestWithAI (template: cold email) --");
     const personalized = await personalizeQuestWithAI(founder, null, SAMPLE_TEMPLATE);
     console.log(personalized ? JSON.stringify(personalized, null, 2) : "FAILED — would fall back to raw template");
 
+    await pause();
     console.log("\n-- generateNetNewQuest (no template fits) --");
     const generated = await generateNetNewQuest(founder, null);
     console.log(generated ? JSON.stringify(generated, null, 2) : "FAILED — no quest generated");
