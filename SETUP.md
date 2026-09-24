@@ -40,14 +40,23 @@ Everything in `PHASES.md` (0–11) is built and pushed to `claude/dazzling-heise
 1. Get a key at [aistudio.google.com](https://aistudio.google.com) (Google AI Studio).
 2. Set `GEMINI_API_KEY`.
 3. Once set, run `npm run golden-set` — prints personalized/generated quest output for 3 sample founders so you can eyeball AI quality (SPEC §17). Costs a handful of free-tier calls.
+4. **Know the limit before you test:** Gemini's free tier caps `gemini-3.6-flash` (the model this app uses for both tiers — see `src/lib/ai/gemini.ts`) at **20 requests/day per model**. That's tight — the golden-set script alone uses 6 of those in one run. Don't run it and do heavy manual testing (quest generation, chat) on the same day, or you'll hit the cap. If you do, the app itself won't break (see step 5 below) — it just won't have real AI output until the quota resets (roughly midnight Pacific time) or you set up the fallback below.
 
-## 4. Resend (free tier, no card)
+## 4. Groq (optional, free) — fallback for Gemini's tight quota
+
+Gemini's 20/day cap (previous step) is genuinely limiting for active testing. `src/lib/ai/generate-structured.ts` automatically falls back to Groq (free tier: ~1,000 requests/day, far more headroom) whenever Gemini returns a quota (429) or availability (503) error — but only if `GROQ_API_KEY` is set. Skip this section entirely and the app still works exactly as it did before: a Gemini failure just falls back to the raw template / a "try again" chat message.
+
+1. Create a free account at [console.groq.com](https://console.groq.com) — no card required.
+2. Create an API key and set `GROQ_API_KEY`.
+3. That's it — no other config. The fallback uses `llama-3.3-70b-versatile` and only ever kicks in when Gemini itself fails, so normal usage still gets Gemini's output.
+
+## 5. Resend (free tier, no card)
 
 1. Create an account at [resend.com](https://resend.com).
 2. For local testing you can send from Resend's onboarding test domain; add/verify your own sending domain before real users.
 3. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL`.
 
-## 5. Stripe (test mode, free)
+## 6. Stripe (test mode, free)
 
 1. Create a Stripe account — test mode is on by default, no business verification needed yet.
 2. Products → create one Product with one recurring Price (SPEC §3 single tier). Copy the Price id → `STRIPE_PRICE_ID`.
@@ -57,7 +66,7 @@ Everything in `PHASES.md` (0–11) is built and pushed to `claude/dazzling-heise
    - **Deployed:** Developers → Webhooks → add endpoint `https://<your-app-url>/api/webhooks/stripe`, subscribe to `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`, `invoice.payment_succeeded`. Copy its signing secret.
 5. Test card for checkout: `4242 4242 4242 4242`, any future expiry, any CVC.
 
-## 6. Weekly recap cron (GitHub Actions — free)
+## 7. Weekly recap cron (GitHub Actions — free)
 
 1. Generate any random string for `CRON_SECRET` (e.g. `openssl rand -hex 32`) and set it in your env.
 2. In the GitHub repo settings → Secrets and variables → Actions, add two repo secrets:
@@ -65,12 +74,12 @@ Everything in `PHASES.md` (0–11) is built and pushed to `claude/dazzling-heise
    - `APP_URL` — your deployed app's base URL (this step needs a real deployment; skip until you deploy)
 3. `.github/workflows/weekly-recap.yml` fires every Monday 14:00 UTC, or trigger it manually anytime from the Actions tab ("Run workflow").
 
-## 7. App environment
+## 8. App environment
 
-1. `cp .env.example .env.local` and fill in everything from steps 1, 3–6 (Google sign-in in step 2 doesn't need any env vars).
+1. `cp .env.example .env.local` and fill in everything from steps 1, 3, 5–7 (Google sign-in in step 2 and Groq in step 4 are both optional).
 2. `NEXT_PUBLIC_APP_URL` — `http://localhost:3000` for local dev, your real URL once deployed.
 
-## 8. Run it locally
+## 9. Run it locally
 
 ```bash
 npm install
@@ -90,7 +99,7 @@ Open `http://localhost:3000` and:
 
 Once all of the above is wired up and `.env.local` is filled in, `npm run test:e2e` automates the same core walkthrough (signup→onboarding→dashboard→quest→settings→logout) with Playwright — see `e2e/golden-path.spec.ts`. It hits your real Supabase/Gemini/Stripe setup (no mocks), so it needs everything above done first. It creates and tears down its own test founder (`e2e/global-setup.ts`, `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` if you want to override the defaults) rather than touching whatever account you signed up with by hand.
 
-## 9. Make yourself an admin
+## 10. Make yourself an admin
 
 `/admin` is empty until at least one `admin_users` row exists. After your first signup, run in Supabase's SQL editor:
 
@@ -101,7 +110,7 @@ values ('<your auth.users id from the Authentication tab>', 'owner');
 
 Then visit `/admin` — you should see your own founder row and be able to use the support overrides.
 
-## 10. Deploy (when ready to test for real, or to unlock the cron)
+## 11. Deploy (when ready to test for real, or to unlock the cron)
 
 1. Push to Vercel (free Hobby tier) — connect the repo, set every env var from `.env.local` in the Vercel project settings.
 2. Point Stripe's webhook and the `APP_URL` GitHub secret at the deployed URL.

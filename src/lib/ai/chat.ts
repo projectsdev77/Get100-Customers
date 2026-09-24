@@ -1,5 +1,6 @@
 import { Type } from "@google/genai";
-import { GEMINI_MODELS, generateContentWithRetry } from "./gemini";
+import { GEMINI_MODELS } from "./gemini";
+import { generateStructuredContent } from "./generate-structured";
 import type { Founder, GrowthProfile, Quest } from "@/types/database";
 
 export interface ChatTurn {
@@ -85,14 +86,11 @@ export async function sendChatMessage(
       { role: "user" as const, parts: [{ text: message }] },
     ];
 
-    const response = await generateContentWithRetry({
+    const response = await generateStructuredContent({
       model: GEMINI_MODELS.capable,
       contents,
-      config: {
-        systemInstruction: buildSystemInstruction(founder, growth, quests),
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-      },
+      systemInstruction: buildSystemInstruction(founder, growth, quests),
+      schema: RESPONSE_SCHEMA,
     });
 
     const raw = response.text;

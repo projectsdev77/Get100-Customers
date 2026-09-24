@@ -1,4 +1,5 @@
-import { GEMINI_MODELS, generateContentWithRetry } from "./gemini";
+import { GEMINI_MODELS } from "./gemini";
+import { generateStructuredContent } from "./generate-structured";
 
 // Free-text result summarization (SPEC §8, §15) — fast tier, one short
 // sentence, feeds quest_results.ai_summary and growth-profile evidence.
@@ -11,7 +12,7 @@ export async function summarizeResultNotes(
   if (!notes.trim()) return null;
 
   try {
-    const response = await generateContentWithRetry({
+    const response = await generateStructuredContent({
       model: GEMINI_MODELS.fast,
       contents: `Quest: "${questTitle}"
 Founder's notes: """${notes}"""

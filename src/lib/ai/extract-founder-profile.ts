@@ -1,5 +1,6 @@
 import { Type } from "@google/genai";
-import { GEMINI_MODELS, generateContentWithRetry } from "./gemini";
+import { GEMINI_MODELS } from "./gemini";
+import { generateStructuredContent } from "./generate-structured";
 
 export interface ExtractedFounderProfile {
   company_name: string | null;
@@ -45,13 +46,10 @@ Source text:
 export async function extractFounderProfile(
   sourceText: string,
 ): Promise<ExtractedFounderProfile> {
-  const response = await generateContentWithRetry({
+  const response = await generateStructuredContent({
     model: GEMINI_MODELS.capable,
     contents: PROMPT.replace("{{TEXT}}", sourceText.slice(0, 20000)),
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: RESPONSE_SCHEMA,
-    },
+    schema: RESPONSE_SCHEMA,
   });
 
   const raw = response.text;

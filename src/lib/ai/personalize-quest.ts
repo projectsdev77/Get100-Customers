@@ -1,5 +1,6 @@
 import { Type } from "@google/genai";
-import { GEMINI_MODELS, generateContentWithRetry } from "./gemini";
+import { GEMINI_MODELS } from "./gemini";
+import { generateStructuredContent } from "./generate-structured";
 import type { Founder, GrowthProfile, QuestTemplate } from "@/types/database";
 
 export interface PersonalizedQuestContent {
@@ -89,13 +90,10 @@ export async function personalizeQuestWithAI(
   template: QuestTemplate,
 ): Promise<PersonalizedQuestContent | null> {
   try {
-    const response = await generateContentWithRetry({
+    const response = await generateStructuredContent({
       model: GEMINI_MODELS.fast,
       contents: buildPrompt(founder, growth, template),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-      },
+      schema: RESPONSE_SCHEMA,
     });
 
     const raw = response.text;

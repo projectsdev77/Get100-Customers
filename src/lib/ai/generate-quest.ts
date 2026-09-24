@@ -1,5 +1,6 @@
 import { Type } from "@google/genai";
-import { GEMINI_MODELS, generateContentWithRetry } from "./gemini";
+import { GEMINI_MODELS } from "./gemini";
+import { generateStructuredContent } from "./generate-structured";
 import type { Founder, GrowthProfile } from "@/types/database";
 
 export interface GeneratedQuest {
@@ -119,13 +120,10 @@ one, otherwise their stage/ICP/channels tried. Shown behind a "Why this?"
 toggle in the app.`;
 
   try {
-    const response = await generateContentWithRetry({
+    const response = await generateStructuredContent({
       model: GEMINI_MODELS.capable,
       contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-      },
+      schema: RESPONSE_SCHEMA,
     });
 
     const raw = response.text;
