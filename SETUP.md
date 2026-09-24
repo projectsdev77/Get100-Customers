@@ -66,6 +66,8 @@ Open `http://localhost:3000` and:
 7. Go to `/billing`, click Subscribe, complete Stripe test checkout, confirm status flips to "active."
 8. Trigger the weekly recap manually from GitHub Actions once deployed, or `curl` the route locally with your `CRON_SECRET` to sanity-check it.
 
+Once all of the above is wired up and `.env.local` is filled in, `npm run test:e2e` automates the same core walkthrough (signup→onboarding→dashboard→quest→settings→logout) with Playwright — see `e2e/golden-path.spec.ts`. It hits your real Supabase/Gemini/Stripe setup (no mocks), so it needs everything above done first. It creates and tears down its own test founder (`e2e/global-setup.ts`, `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` if you want to override the defaults) rather than touching whatever account you signed up with by hand.
+
 ## 8. Make yourself an admin
 
 `/admin` is empty until at least one `admin_users` row exists. After your first signup, run in Supabase's SQL editor:
