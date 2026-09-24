@@ -99,16 +99,23 @@ Open `http://localhost:3000` and:
 
 Once all of the above is wired up and `.env.local` is filled in, `npm run test:e2e` automates the same core walkthrough (signup→onboarding→dashboard→quest→settings→logout) with Playwright — see `e2e/golden-path.spec.ts`. It hits your real Supabase/Gemini/Stripe setup (no mocks), so it needs everything above done first. It creates and tears down its own test founder (`e2e/global-setup.ts`, `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` if you want to override the defaults) rather than touching whatever account you signed up with by hand.
 
-## 10. Make yourself an admin
+## 10. Test accounts (a normal founder + an admin)
 
-`/admin` is empty until at least one `admin_users` row exists. After your first signup, run in Supabase's SQL editor:
+`/admin` is empty until at least one `admin_users` row exists. Two ways to get test accounts:
 
+**Shortcut — one command creates both:**
+```bash
+npm run create-test-accounts
+```
+Creates (or reuses, if run again) a normal founder account and an admin account, and grants the admin one an `admin_users` row — no Supabase dashboard clicking needed. It prints both accounts' emails/passwords when done (defaults: `founder@test.local` / `admin@test.local`, both password `TestPassword123!` — override via `TEST_USER_EMAIL`/`TEST_USER_PASSWORD`/`TEST_ADMIN_EMAIL`/`TEST_ADMIN_PASSWORD` env vars if you want different ones). Log in with either at `/login`.
+
+**Manual — grant an existing account admin access:** if you'd rather use an account you already signed up with by hand, run in Supabase's SQL editor:
 ```sql
 insert into admin_users (auth_user_id, role)
 values ('<your auth.users id from the Authentication tab>', 'owner');
 ```
 
-Then visit `/admin` — you should see your own founder row and be able to use the support overrides.
+Either way, visit `/admin` with the admin account — you should see the founders list and be able to use the support overrides.
 
 ## 11. Deploy (when ready to test for real, or to unlock the cron)
 

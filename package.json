@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "golden-set": "tsx scripts/golden-set-check.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "create-test-accounts": "tsx scripts/create-test-accounts.ts"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
