@@ -1,4 +1,4 @@
-import { GEMINI_MODELS, getGeminiClient } from "./gemini";
+import { GEMINI_MODELS, generateContentWithRetry } from "./gemini";
 
 // Free-text result summarization (SPEC §8, §15) — fast tier, one short
 // sentence, feeds quest_results.ai_summary and growth-profile evidence.
@@ -11,8 +11,7 @@ export async function summarizeResultNotes(
   if (!notes.trim()) return null;
 
   try {
-    const client = getGeminiClient();
-    const response = await client.models.generateContent({
+    const response = await generateContentWithRetry({
       model: GEMINI_MODELS.fast,
       contents: `Quest: "${questTitle}"
 Founder's notes: """${notes}"""
@@ -23,7 +22,8 @@ no generic advice.`,
     });
 
     return response.text?.trim() || null;
-  } catch {
+  } catch (err) {
+    console.error("summarizeResultNotes failed:", err);
     return null;
   }
 }

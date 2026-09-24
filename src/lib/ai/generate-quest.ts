@@ -1,5 +1,5 @@
 import { Type } from "@google/genai";
-import { GEMINI_MODELS, getGeminiClient } from "./gemini";
+import { GEMINI_MODELS, generateContentWithRetry } from "./gemini";
 import type { Founder, GrowthProfile } from "@/types/database";
 
 export interface GeneratedQuest {
@@ -119,8 +119,7 @@ one, otherwise their stage/ICP/channels tried. Shown behind a "Why this?"
 toggle in the app.`;
 
   try {
-    const client = getGeminiClient();
-    const response = await client.models.generateContent({
+    const response = await generateContentWithRetry({
       model: GEMINI_MODELS.capable,
       contents: prompt,
       config: {

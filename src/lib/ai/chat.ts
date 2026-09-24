@@ -1,5 +1,5 @@
 import { Type } from "@google/genai";
-import { GEMINI_MODELS, getGeminiClient } from "./gemini";
+import { GEMINI_MODELS, generateContentWithRetry } from "./gemini";
 import type { Founder, GrowthProfile, Quest } from "@/types/database";
 
 export interface ChatTurn {
@@ -80,13 +80,12 @@ export async function sendChatMessage(
   message: string,
 ): Promise<ChatReply | null> {
   try {
-    const client = getGeminiClient();
     const contents = [
       ...history.map((turn) => ({ role: turn.role, parts: [{ text: turn.text }] })),
       { role: "user" as const, parts: [{ text: message }] },
     ];
 
-    const response = await client.models.generateContent({
+    const response = await generateContentWithRetry({
       model: GEMINI_MODELS.capable,
       contents,
       config: {
@@ -116,7 +115,8 @@ export async function sendChatMessage(
       proposedSwapQuestId: validId,
       proposedSwapReason: validId ? (parsed.proposed_swap_reason ?? null) : null,
     };
-  } catch {
+  } catch (err) {
+    console.error("sendChatMessage failed:", err);
     return null;
   }
 }
