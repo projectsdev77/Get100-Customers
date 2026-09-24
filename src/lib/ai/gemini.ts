@@ -11,11 +11,14 @@ export const GEMINI_MODELS = {
   // gemini-2.5-flash was retired for new API keys (404 "no longer
   // available to new users") — Google's own error names this replacement.
   fast: "gemini-3.6-flash",
-  // More capable tier — onboarding extraction, growth-profile synthesis,
-  // chat (SPEC §15). Same retirement as above; gemini-3.1-pro-preview is
-  // Google's named replacement for gemini-2.5-pro. Being a "preview"
-  // model, watch for it being renamed/retired again.
-  capable: "gemini-3.1-pro-preview",
+  // Both tiers point at the same model for now: gemini-3.1-pro-preview
+  // (Google's named replacement for the also-retired gemini-2.5-pro) has
+  // a hard `limit: 0` free-tier quota (RESOURCE_EXHAUSTED, not a
+  // transient rate limit — confirmed via golden-set-check.ts), so it's
+  // simply not usable without billing enabled. Swap `capable` to a real
+  // pro-tier model once Phase 12's paid Gemini tier is turned on — see
+  // PHASES.md §0.
+  capable: "gemini-3.6-flash",
 } as const;
 
 let client: GoogleGenAI | null = null;

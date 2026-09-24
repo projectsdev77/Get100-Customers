@@ -12,7 +12,7 @@ Rule of thumb used throughout: **build and test on free tiers now, budget line i
 |---|---|---|---|
 | Hosting | Vercel Hobby (free) | Vercel Pro (~$20/mo) | Hobby tier's terms are non-commercial; also raises function execution/bandwidth limits |
 | Database/Auth/Storage | Supabase Free tier | Supabase Pro (~$25/mo) | Free tier pauses projects after 1 week idle, no daily backups, 500MB DB / 1GB storage caps |
-| LLM (AI coaching engine) | Gemini API free tier (Google AI Studio) during dev — confirmed provider per SPEC §18/docs/10 | Gemini API paid tier at production rate limits/quotas | Free tier is rate-limited (requests/day caps) — fine for building/testing prompts, not for real concurrent founders |
+| LLM (AI coaching engine) | Gemini API free tier (Google AI Studio) during dev — confirmed provider per SPEC §18/docs/10 | Gemini API paid tier at production rate limits/quotas | Free tier is rate-limited (requests/day caps) — fine for building/testing prompts, not for real concurrent founders. It also has a **hard `limit: 0` quota on pro-tier models** (not just a rate cap), so `src/lib/ai/gemini.ts`'s "capable" tier currently points at the same flash model as "fast" rather than a real pro model — swap it to one once billing is enabled |
 | Transactional email | Resend free tier (3,000 emails/mo) | Resend paid tier or equivalent | Free tier volume caps out once notification volume grows |
 | Payments | Stripe test mode (free) | Stripe live mode (no upfront cost, just requires business verification) | Not a budget cost, but a required launch step — flagged so it isn't missed |
 | Domain | Vercel's free `*.vercel.app` subdomain | Custom domain (~$10–15/yr) | Needed for a professional/trustworthy launch |
