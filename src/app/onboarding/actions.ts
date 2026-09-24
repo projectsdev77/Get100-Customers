@@ -118,7 +118,7 @@ export async function completeOnboarding(formData: FormData) {
     parseInt(String(formData.get("current_customer_count") || "0"), 10) || 0,
   );
 
-  await supabase
+  const { error, data } = await supabase
     .from("founders")
     .update({
       name: String(formData.get("name") || "") || null,
@@ -132,7 +132,14 @@ export async function completeOnboarding(formData: FormData) {
       current_customer_count: customerCount,
       updated_at: new Date().toISOString(),
     })
-    .eq("auth_user_id", user.id);
+    .eq("auth_user_id", user.id)
+    .select();
+
+  if (error) {
+    console.error("completeOnboarding: update failed:", error);
+  } else if (!data || data.length === 0) {
+    console.error("completeOnboarding: update matched 0 rows for auth_user_id", user.id);
+  }
 
   redirect("/dashboard");
 }
