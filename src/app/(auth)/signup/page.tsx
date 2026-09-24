@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signup } from "../actions";
+import { GoogleButton } from "../google-button";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { Input } from "@/components/ui/forms/Input";
@@ -20,6 +21,14 @@ export default async function SignupPage({
         </h1>
 
         {params.error && <Banner tone="error">{params.error}</Banner>}
+
+        <GoogleButton />
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-subtle" />
+          <span className="text-xs text-secondary">or</span>
+          <div className="h-px flex-1 bg-subtle" />
+        </div>
 
         <form action={signup} className="flex flex-col gap-4">
           <Input label="Email" type="email" name="email" required />

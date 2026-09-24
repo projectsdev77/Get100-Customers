@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { login } from "../actions";
+import { GoogleButton } from "../google-button";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { Input } from "@/components/ui/forms/Input";
@@ -23,6 +24,14 @@ export default async function LoginPage({
           <Banner tone="success">Check your email to confirm your account, then log in.</Banner>
         )}
         {params.error && <Banner tone="error">{params.error}</Banner>}
+
+        <GoogleButton next={params.next ?? "/dashboard"} />
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-subtle" />
+          <span className="text-xs text-secondary">or</span>
+          <div className="h-px flex-1 bg-subtle" />
+        </div>
 
         <form action={login} className="flex flex-col gap-4">
           <input type="hidden" name="next" value={params.next ?? "/dashboard"} />
