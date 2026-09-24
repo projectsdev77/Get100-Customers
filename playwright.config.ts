@@ -14,10 +14,20 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: "list",
+  // Playwright's 5s default expect() timeout is tuned for a warm
+  // production build on localhost. Here every navigation is a real round
+  // trip to a live Supabase project, and `next dev` compiles each route
+  // on first visit (can itself take several seconds) — both push well
+  // past 5s, especially for the first page hit after the dev server
+  // just started.
+  expect: {
+    timeout: 15_000,
+  },
   use: {
     baseURL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    navigationTimeout: 20_000,
   },
   projects: [
     {
