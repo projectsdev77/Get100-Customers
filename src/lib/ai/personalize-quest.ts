@@ -111,7 +111,8 @@ export async function personalizeQuestWithAI(
     if (/\{\{.*?\}\}/.test(JSON.stringify(parsed))) return null;
 
     return parsed;
-  } catch {
+  } catch (err) {
+    console.error("personalizeQuestWithAI failed:", err);
     return null;
   }
 }

@@ -155,7 +155,8 @@ toggle in the app.`;
       window_days: Math.min(7, Math.max(1, parsed.window_days || 3)),
       tools_provided: parsed.tools_provided ?? [],
     };
-  } catch {
+  } catch (err) {
+    console.error("generateNetNewQuest failed:", err);
     return null;
   }
 }
