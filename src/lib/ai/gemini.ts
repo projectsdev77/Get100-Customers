@@ -8,10 +8,14 @@ import { GoogleGenAI } from "@google/genai";
 export const GEMINI_MODELS = {
   // Cheaper/faster tier — routine quest selection/adaptation from the
   // template library (SPEC §7.1, §15).
-  fast: "gemini-2.5-flash",
+  // gemini-2.5-flash was retired for new API keys (404 "no longer
+  // available to new users") — Google's own error names this replacement.
+  fast: "gemini-3.6-flash",
   // More capable tier — onboarding extraction, growth-profile synthesis,
-  // chat (SPEC §15).
-  capable: "gemini-2.5-pro",
+  // chat (SPEC §15). Same retirement as above; gemini-3.1-pro-preview is
+  // Google's named replacement for gemini-2.5-pro. Being a "preview"
+  // model, watch for it being renamed/retired again.
+  capable: "gemini-3.1-pro-preview",
 } as const;
 
 let client: GoogleGenAI | null = null;
