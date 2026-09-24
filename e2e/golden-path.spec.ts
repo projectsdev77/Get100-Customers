@@ -33,37 +33,37 @@ test.describe("founder golden path", () => {
       // Step 1: company name (plain text input, no accessible label —
       // it's the only textbox visible for this step).
       await page.getByRole("textbox").fill("Acme Analytics");
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
 
       // Step 2: industry.
       await page.getByRole("textbox").fill("SaaS");
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
 
       // Step 3: product description (textarea).
       await page
         .getByRole("textbox")
         .fill("Month-end reporting for seed-stage SaaS finance teams.");
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
 
       // Step 4: target customer / ICP.
       await page.getByRole("textbox").fill("Finance leads at seed-stage SaaS companies");
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
 
       // Step 5: stage (single-select chip group).
       await page.getByRole("button", { name: "Idea", exact: true }).click();
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
 
       // Step 6: channels tried (multi-select chip group) — pick one.
       await page.getByRole("button", { name: "Cold email", exact: true }).click();
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
 
       // Step 7: customers today.
       await page.getByRole("spinbutton").fill("0");
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
 
       // Step 8: hours a week (single-select chip group; note the en dash).
       await page.getByRole("button", { name: "3–5", exact: true }).click();
-      await page.getByRole("button", { name: "Next" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
 
       // Step 9: review and submit.
       await page.getByRole("button", { name: "Start my quest log" }).click();
