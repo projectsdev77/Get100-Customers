@@ -29,6 +29,8 @@
   --tile-level: var(--lime-200); --tile-level-ink: var(--lime-700); --ring-level: var(--ink-900);
   --tile-streak: var(--sky-200); --tile-streak-ink: var(--sky-700);
   --ring-track: rgba(255,255,255,.75);
+  --ring-track-customers: color-mix(in srgb, var(--tile-customers-ink) 18%, transparent);
+  --ring-track-level: color-mix(in srgb, var(--tile-level-ink) 20%, transparent);
 
   --quest-suggested-bg: var(--sky-200); --quest-suggested-ink: var(--sky-700);
   --quest-active-bg: var(--violet-200); --quest-active-ink: var(--violet-700);
