@@ -156,7 +156,7 @@ function Hero() {
   return (
     <section
       data-screen-label="Hero"
-      className="flex flex-col justify-center gap-6 rounded-shell bg-sunken px-6 py-12 sm:px-10 sm:py-16 lg:px-16 lg:py-20"
+      className="flex flex-1 flex-col justify-center gap-6 rounded-shell bg-sunken px-6 py-12 sm:px-10 sm:py-16 lg:px-16 lg:py-20"
     >
       <span className="inline-flex w-fit items-center gap-2 self-start rounded-full bg-card px-3 py-1.5 text-[13px] font-medium text-secondary">
         <span className="h-2 w-2 rounded-full bg-accent" />
@@ -528,9 +528,7 @@ export function LandingPage() {
       <div className="mx-auto max-w-[1400px] px-5 sm:px-8 lg:px-12">
         <div className="flex min-h-[100svh] flex-col pb-6">
           <Nav />
-          <div className="flex flex-1 flex-col">
-            <Hero />
-          </div>
+          <Hero />
         </div>
         <ProductShowcase />
         <Band />
