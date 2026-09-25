@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 // Demo numbers for the product showcase ring — purely illustrative
@@ -156,45 +157,65 @@ function Hero() {
   return (
     <section
       data-screen-label="Hero"
-      className="flex flex-1 flex-col justify-center gap-6 rounded-shell bg-sunken px-6 py-12 sm:px-10 sm:py-16 lg:px-16 lg:py-20"
+      className="grid flex-1 items-stretch overflow-hidden rounded-shell bg-sunken lg:grid-cols-2"
     >
-      <span className="inline-flex w-fit items-center gap-2 self-start rounded-full bg-card px-3 py-1.5 text-[13px] font-medium text-secondary">
-        <span className="h-2 w-2 rounded-full bg-accent" />
-        An AI growth coach for early-stage founders
-      </span>
-      <h1 className="text-balance text-[44px] font-medium leading-[1.04] tracking-[-0.04em] text-primary sm:text-6xl lg:text-7xl">
-        Your first
-        <br />
-        <span className="inline-block rounded-[0.35em] bg-tile-level px-[0.22em] py-0 text-on-tile">
-          100 customers,
+      <div className="flex flex-col items-center justify-center gap-6 px-6 py-12 text-center sm:px-10 sm:py-16 lg:items-start lg:px-16 lg:py-20 lg:text-left">
+        <span className="inline-flex w-fit items-center gap-2 self-center rounded-full bg-card px-3 py-1.5 text-[13px] font-medium text-secondary lg:self-start">
+          <span className="h-2 w-2 rounded-full bg-accent" />
+          An AI growth coach for early-stage founders
         </span>
-        <br />
-        one quest at a time.
-      </h1>
-      <p className="max-w-[480px] text-balance text-base text-secondary sm:text-xl">
-        Tell us what you sell and who it&apos;s for. Every week your coach hands you a few small,
-        specific quests — and you watch the ring fill.
-      </p>
-      <div className="flex flex-wrap items-center gap-2.5">
-        <Link
-          href="/signup"
-          className="inline-flex h-[52px] items-center gap-3 rounded-full bg-action py-0 pl-6 pr-2 text-base font-medium text-action-fg transition-colors duration-200 hover:bg-action-hover"
-        >
-          Start my quest log
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-tile-level text-on-tile">
-            &rarr;
+        <h1 className="text-balance text-[44px] font-medium leading-[1.04] tracking-[-0.04em] text-primary sm:text-6xl lg:text-7xl">
+          Your first
+          <br />
+          <span className="inline-block rounded-[0.35em] bg-tile-level px-[0.22em] py-0 text-on-tile">
+            100 customers,
           </span>
-        </Link>
-        <a
-          href="#how"
-          className="inline-flex h-[52px] items-center rounded-full px-5 text-base font-medium text-primary transition-colors duration-200 hover:bg-card"
-        >
-          See how it works
-        </a>
+          <br />
+          one quest at a time.
+        </h1>
+        <p className="max-w-[480px] text-balance text-base text-secondary sm:text-xl">
+          Tell us what you sell and who it&apos;s for. Every week your coach hands you a few
+          small, specific quests — and you watch the ring fill.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
+          <Link
+            href="/signup"
+            className="inline-flex h-[52px] items-center gap-3 rounded-full bg-action py-0 pl-6 pr-2 text-base font-medium text-action-fg transition-colors duration-200 hover:bg-action-hover"
+          >
+            Start my quest log
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-tile-level text-on-tile">
+              &rarr;
+            </span>
+          </Link>
+          <a
+            href="#how"
+            className="inline-flex h-[52px] items-center rounded-full px-5 text-base font-medium text-primary transition-colors duration-200 hover:bg-card"
+          >
+            See how it works
+          </a>
+        </div>
+        <span className="text-[13px] text-secondary">
+          Setup takes about 3 minutes. Skip any quest, any time.
+        </span>
       </div>
-      <span className="text-[13px] text-secondary">
-        Setup takes about 3 minutes. Skip any quest, any time.
-      </span>
+      <div className="relative hidden min-h-[320px] lg:block">
+        <Image
+          src="/illustrations/hero-light.png"
+          alt=""
+          fill
+          priority
+          sizes="(min-width: 1024px) 50vw, 0px"
+          className="hero-illustration-light object-contain object-bottom p-8"
+        />
+        <Image
+          src="/illustrations/hero-dark.png"
+          alt=""
+          fill
+          priority
+          sizes="(min-width: 1024px) 50vw, 0px"
+          className="hero-illustration-dark object-contain object-bottom p-8"
+        />
+      </div>
     </section>
   );
 }
