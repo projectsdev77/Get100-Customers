@@ -39,12 +39,15 @@ export async function signup(formData: FormData) {
 // one-time Google Cloud + Supabase dashboard setup this depends on.
 export async function signInWithGoogle(formData: FormData) {
   const next = String(formData.get("next") || "/dashboard");
+  // "login" vs "signup" only changes what /auth/callback does with a
+  // brand-new Google account — see the callback route for why.
+  const flow = String(formData.get("flow") || "signup");
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(next)}`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(next)}&flow=${flow}`,
     },
   });
 

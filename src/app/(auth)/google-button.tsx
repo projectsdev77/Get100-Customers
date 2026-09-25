@@ -1,12 +1,20 @@
 import { signInWithGoogle } from "./actions";
 import { buttonClasses } from "@/components/ui/actions/Button";
 
-// Shared by the login and signup pages — Google OAuth treats both as the
-// same "sign in or create an account" action (see signInWithGoogle).
-export function GoogleButton({ next = "/dashboard" }: { next?: string }) {
+// Shared by the login and signup pages. `flow` matters for the callback:
+// "login" rejects a Google account that doesn't already exist here rather
+// than silently creating one (see /auth/callback), "signup" allows either.
+export function GoogleButton({
+  next = "/dashboard",
+  flow = "signup",
+}: {
+  next?: string;
+  flow?: "login" | "signup";
+}) {
   return (
     <form action={signInWithGoogle}>
       <input type="hidden" name="next" value={next} />
+      <input type="hidden" name="flow" value={flow} />
       <button type="submit" className={buttonClasses("outline", "md", true)}>
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
           <path

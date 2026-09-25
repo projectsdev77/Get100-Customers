@@ -25,7 +25,7 @@ export default async function LoginPage({
         )}
         {params.error && <Banner tone="error">{params.error}</Banner>}
 
-        <GoogleButton next={params.next ?? "/dashboard"} />
+        <GoogleButton next={params.next ?? "/dashboard"} flow="login" />
 
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-subtle" />

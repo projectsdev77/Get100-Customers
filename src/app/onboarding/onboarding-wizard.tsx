@@ -68,16 +68,12 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
 
   function handleAnalyze() {
     setAnalyzeError(null);
-    const formData = new FormData();
-    const fileInput = document.getElementById("onboarding-file") as HTMLInputElement | null;
-    if (url.trim()) {
-      formData.set("url", url.trim());
-    } else if (fileInput?.files?.[0]) {
-      formData.set("file", fileInput.files[0]);
-    } else {
-      setAnalyzeError("Paste a URL or choose a file first.");
+    if (!url.trim()) {
+      setAnalyzeError("Paste a URL first.");
       return;
     }
+    const formData = new FormData();
+    formData.set("url", url.trim());
 
     startAnalyzing(async () => {
       const result = await analyzeSource(formData);
@@ -113,8 +109,6 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
-          <p className="text-sm text-secondary">or</p>
-          <input id="onboarding-file" type="file" accept=".txt,.md" />
           {analyzeError && <Banner tone="error">{analyzeError}</Banner>}
           {analyzed && (
             <Banner tone="success">
@@ -222,7 +216,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
           {reviewRows.map(([label, value], i) => (
             <div
               key={label}
-              className={`grid grid-cols-[140px_minmax(0,1fr)] gap-3 py-2.5 ${i ? "border-t border-subtle" : ""}`}
+              className={`grid grid-cols-[140px_minmax(0,1fr)] items-baseline gap-3 py-4 ${i ? "border-t border-strong" : ""}`}
             >
               <span className="text-[13px] font-medium text-secondary">{label}</span>
               <span className="text-sm text-primary">{value || "—"}</span>
@@ -277,7 +271,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
             Back
           </Button>
           <Button type="button" onClick={() => setStep(step + 1)}>
-            {step === 0 ? "Skip" : "Next"}
+            {step === 0 ? "Continue" : "Next"}
           </Button>
         </div>
       )}
