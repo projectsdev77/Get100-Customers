@@ -15,6 +15,12 @@ export interface ExtractedFields {
   product_description: string | null;
   icp: string | null;
   stage_guess: FounderStage | null;
+  // The AI's own summary of what it read — always present (it's the one
+  // required field in the extraction schema). Surfaced to the founder when
+  // every structured field comes back null, as a diagnostic: it shows
+  // whether the AI genuinely saw nothing useful, or saw the business fine
+  // but failed to map it onto the structured fields (a schema/prompt bug).
+  summary: string;
 }
 
 type AnalyzeResult = { error?: string; extracted?: ExtractedFields };
@@ -99,6 +105,7 @@ export async function analyzeSource(formData: FormData): Promise<AnalyzeResult> 
       product_description: extracted.product_description,
       icp: extracted.icp,
       stage_guess: stageGuess,
+      summary: extracted.summary,
     },
   };
 }

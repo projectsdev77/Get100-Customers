@@ -90,11 +90,19 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
         // The AI can run successfully and still find nothing worth extracting
         // (thin or JS-rendered marketing sites) — that's not an error, but it's
         // not a "pre-filled" success either, so it gets its own message rather
-        // than the misleading green banner.
-        const foundAnything = Object.values(result.extracted).some((value) => value !== null);
+        // than the misleading green banner. `summary` is excluded here since
+        // it's always present (the one required field in the schema) and
+        // would otherwise always make this look like a match.
+        const { company_name, industry, product_description, icp, stage_guess, summary } =
+          result.extracted;
+        const foundAnything = [company_name, industry, product_description, icp, stage_guess].some(
+          (value) => value !== null,
+        );
         if (!foundAnything) {
           setAnalyzeNotice(
-            "Couldn't find enough on that page to pre-fill anything. No worries — just fill in the fields on the next steps.",
+            `Couldn't find enough on that page to pre-fill anything. No worries — just fill in the fields on the next steps.${
+              summary ? ` (What the AI read from it: "${summary}")` : ""
+            }`,
           );
           return;
         }
