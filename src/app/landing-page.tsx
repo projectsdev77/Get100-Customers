@@ -205,7 +205,7 @@ function Hero() {
           fill
           priority
           sizes="(min-width: 1024px) 50vw, 0px"
-          className="hero-illustration-light object-contain object-bottom p-8"
+          className="hero-illustration-light object-contain object-center p-8"
         />
         <Image
           src="/illustrations/hero-dark.png"
@@ -213,7 +213,7 @@ function Hero() {
           fill
           priority
           sizes="(min-width: 1024px) 50vw, 0px"
-          className="hero-illustration-dark object-contain object-bottom p-8"
+          className="hero-illustration-dark object-contain object-center p-8"
         />
       </div>
     </section>
