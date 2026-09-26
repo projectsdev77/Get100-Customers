@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPasswordValid } from "@/lib/auth/password";
 import { findAuthUserByEmail, hasIdentityProvider } from "@/lib/auth/find-user-by-email";
+import { authErrorMessage } from "@/lib/auth/error-message";
 
 export async function login(formData: FormData) {
   const email = String(formData.get("email"));
@@ -32,7 +33,7 @@ export async function login(formData: FormData) {
         )}`,
       );
     }
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    redirect(`/login?error=${encodeURIComponent(authErrorMessage(error))}`);
   }
 
   redirect(next);
@@ -68,7 +69,7 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/signup?error=${encodeURIComponent(error.message)}`);
+    redirect(`/signup?error=${encodeURIComponent(authErrorMessage(error))}`);
   }
 
   // Supabase doesn't return an error for an email that's already
@@ -110,7 +111,7 @@ export async function signInWithGoogle(formData: FormData) {
 
   if (error || !data.url) {
     redirect(
-      `/login?error=${encodeURIComponent(error?.message ?? "Could not start Google sign-in.")}`,
+      `/login?error=${encodeURIComponent(error ? authErrorMessage(error) : "Could not start Google sign-in.")}`,
     );
   }
 
