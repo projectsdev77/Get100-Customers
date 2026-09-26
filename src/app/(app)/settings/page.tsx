@@ -8,6 +8,7 @@ import { AccountForm } from "./account-form";
 import { BillingSection } from "./billing-section";
 import { NotificationPrefsForm } from "./notification-prefs-form";
 import { DangerZone } from "./danger-zone";
+import { SettingsTabs, type SettingsSection } from "./settings-tabs";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -18,37 +19,68 @@ export default async function SettingsPage() {
 
   const founder = await getCurrentFounder(supabase);
 
+  const sections: SettingsSection[] = [
+    { id: "profile", label: "Business profile", content: <ProfileForm founder={founder} /> },
+    ...(founder
+      ? [
+          {
+            id: "customer-count",
+            label: "Customer count",
+            content: <CustomerCountForm currentCount={founder.current_customer_count} />,
+          },
+        ]
+      : []),
+    {
+      id: "account",
+      label: "Account",
+      content: (
+        <AccountForm
+          email={user.email ?? ""}
+          hasPassword={hasIdentityProvider(user, "email")}
+          hasGoogle={hasIdentityProvider(user, "google")}
+        />
+      ),
+    },
+    ...(founder
+      ? [
+          {
+            id: "billing",
+            label: "Billing",
+            content: <BillingSection supabase={supabase} founder={founder} />,
+          },
+        ]
+      : []),
+    {
+      id: "notifications",
+      label: "Notifications",
+      content: (
+        <NotificationPrefsForm
+          prefs={
+            founder?.email_notification_prefs ?? {
+              new_quest: true,
+              window_approaching: true,
+              re_engagement: true,
+              milestone: true,
+              weekly_recap: true,
+            }
+          }
+        />
+      ),
+    },
+    {
+      id: "danger",
+      label: "Privacy & danger zone",
+      content: <DangerZone />,
+    },
+  ];
+
   return (
-    <div className="flex max-w-[560px] flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-[900px] flex-col gap-6">
       <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
         Settings
       </h1>
 
-      <ProfileForm founder={founder} />
-
-      {founder && <CustomerCountForm currentCount={founder.current_customer_count} />}
-
-      <AccountForm
-        email={user.email ?? ""}
-        hasPassword={hasIdentityProvider(user, "email")}
-        hasGoogle={hasIdentityProvider(user, "google")}
-      />
-
-      {founder && <BillingSection supabase={supabase} founder={founder} />}
-
-      <NotificationPrefsForm
-        prefs={
-          founder?.email_notification_prefs ?? {
-            new_quest: true,
-            window_approaching: true,
-            re_engagement: true,
-            milestone: true,
-            weekly_recap: true,
-          }
-        }
-      />
-
-      <DangerZone />
+      <SettingsTabs sections={sections} />
     </div>
   );
 }
