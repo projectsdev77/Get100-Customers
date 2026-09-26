@@ -69,7 +69,7 @@ export default async function SettingsPage() {
     },
     {
       id: "danger",
-      label: "Privacy & danger zone",
+      label: "Privacy & data",
       content: <DangerZone />,
     },
   ];
