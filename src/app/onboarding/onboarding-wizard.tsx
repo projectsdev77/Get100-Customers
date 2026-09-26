@@ -52,6 +52,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
   const [data, setData] = useState<FormState>(initialState(founder));
   const [url, setUrl] = useState("");
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [analyzeNotice, setAnalyzeNotice] = useState<string | null>(null);
   const [analyzed, setAnalyzed] = useState(false);
   const [isAnalyzing, startAnalyzing] = useTransition();
 
@@ -68,6 +69,8 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
 
   function handleAnalyze() {
     setAnalyzeError(null);
+    setAnalyzeNotice(null);
+    setAnalyzed(false);
     if (!url.trim()) {
       setAnalyzeError("Paste a URL first.");
       return;
@@ -82,6 +85,17 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
         return;
       }
       if (result.extracted) {
+        // The AI can run successfully and still find nothing worth extracting
+        // (thin or JS-rendered marketing sites) — that's not an error, but it's
+        // not a "pre-filled" success either, so it gets its own message rather
+        // than the misleading green banner.
+        const foundAnything = Object.values(result.extracted).some((value) => value !== null);
+        if (!foundAnything) {
+          setAnalyzeNotice(
+            "Couldn't find enough on that page to pre-fill anything. No worries — just fill in the fields on the next steps.",
+          );
+          return;
+        }
         applyExtracted(result.extracted);
         setAnalyzed(true);
       }
@@ -110,6 +124,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
             onChange={(e) => setUrl(e.target.value)}
           />
           {analyzeError && <Banner tone="error">{analyzeError}</Banner>}
+          {analyzeNotice && <Banner tone="info">{analyzeNotice}</Banner>}
           {analyzed && (
             <Banner tone="success">
               Pre-filled what we could find. You&apos;ll review every field next.
