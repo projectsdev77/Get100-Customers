@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { resetPassword } from "../actions";
 import { PasswordField } from "@/components/ui/forms/PasswordField";
-import { Input } from "@/components/ui/forms/Input";
+import { PasswordInput } from "@/components/ui/forms/PasswordInput";
 import { Button } from "@/components/ui/actions/Button";
 import { Banner } from "@/components/ui/surfaces/Banner";
 
@@ -18,9 +18,8 @@ export function ResetPasswordForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <PasswordField label="New password" name="password" />
-      <Input
+      <PasswordInput
         label="Confirm password"
-        type="password"
         name="confirm_password"
         required
         autoComplete="new-password"

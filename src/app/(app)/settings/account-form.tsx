@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { changePassword, changeEmail, signOutEverywhere } from "./actions";
 import { Input } from "@/components/ui/forms/Input";
 import { PasswordField } from "@/components/ui/forms/PasswordField";
+import { PasswordInput } from "@/components/ui/forms/PasswordInput";
 import { Button } from "@/components/ui/actions/Button";
 import { Banner } from "@/components/ui/surfaces/Banner";
 
@@ -97,7 +98,7 @@ function PasswordChangeForm({ hasPassword }: { hasPassword: boolean }) {
         </p>
       )}
       {hasPassword && (
-        <Input label="Current password" type="password" name="current_password" autoComplete="current-password" />
+        <PasswordInput label="Current password" name="current_password" autoComplete="current-password" />
       )}
       <PasswordField label={hasPassword ? "New password" : "Password"} name="new_password" />
 

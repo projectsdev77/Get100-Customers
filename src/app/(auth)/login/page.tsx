@@ -4,6 +4,7 @@ import { GoogleButton } from "../google-button";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { Input } from "@/components/ui/forms/Input";
+import { PasswordInput } from "@/components/ui/forms/PasswordInput";
 import { Button } from "@/components/ui/actions/Button";
 
 export default async function LoginPage({
@@ -36,7 +37,7 @@ export default async function LoginPage({
         <form action={login} className="flex flex-col gap-4">
           <input type="hidden" name="next" value={params.next ?? "/dashboard"} />
           <Input label="Email" type="email" name="email" required />
-          <Input label="Password" type="password" name="password" required />
+          <PasswordInput label="Password" name="password" required autoComplete="current-password" />
           <div className="flex items-center justify-between gap-3">
             <label className="flex items-center gap-2.5 text-sm text-primary">
               <input

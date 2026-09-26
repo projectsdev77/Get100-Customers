@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { fieldClasses } from "@/components/ui/forms/Field";
+import { PasswordVisibilityToggle } from "@/components/ui/forms/PasswordVisibilityToggle";
 import { PASSWORD_REQUIREMENTS } from "@/lib/auth/password";
 
 // Signup's password input. Requirements stay hidden until the founder
@@ -16,6 +17,7 @@ export function PasswordField({
 }) {
   const [value, setValue] = useState("");
   const [touched, setTouched] = useState(false);
+  const [visible, setVisible] = useState(false);
   const id = useId();
 
   return (
@@ -23,20 +25,23 @@ export function PasswordField({
       <label htmlFor={id} className="text-[13px] font-medium text-primary">
         {label}
       </label>
-      <input
-        id={id}
-        type="password"
-        name={name}
-        required
-        minLength={8}
-        autoComplete="new-password"
-        value={value}
-        onChange={(e) => {
-          setValue(e.target.value);
-          if (!touched) setTouched(true);
-        }}
-        className={fieldClasses(false)}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          type={visible ? "text" : "password"}
+          name={name}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            if (!touched) setTouched(true);
+          }}
+          className={`${fieldClasses(false)} pr-11`}
+        />
+        <PasswordVisibilityToggle visible={visible} onToggle={() => setVisible((v) => !v)} />
+      </div>
       {touched && (
         <ul className="flex flex-col gap-1 pt-1">
           {PASSWORD_REQUIREMENTS.map((requirement) => {
