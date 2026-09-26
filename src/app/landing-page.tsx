@@ -350,7 +350,7 @@ function ProductShowcase() {
               <span className="text-xl font-medium leading-[1.3] tracking-[-0.01em] text-primary">
                 {f.title}
               </span>
-              <span className="max-w-[440px] text-[15px] leading-[1.6] text-secondary text-balance">
+              <span className="max-w-[560px] text-[15px] leading-[1.6] text-secondary text-balance">
                 {f.body}
               </span>
             </div>
