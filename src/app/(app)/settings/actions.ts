@@ -132,6 +132,11 @@ export async function changePassword(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) return { error: authErrorMessage(error) };
 
+  // Setting a password for the first time adds an "email" identity to
+  // the account — without this, the page would keep showing "Set a
+  // password" (computed from the now-stale hasPassword prop) until a
+  // manual refresh, even though a Google-only founder just added one.
+  revalidatePath("/settings");
   return { success: true as const };
 }
 
