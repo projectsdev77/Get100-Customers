@@ -43,7 +43,7 @@ export async function signup(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
 
-  // Mirrors the client-side checklist in password-field.tsx — enforced
+  // Mirrors the client-side checklist in components/ui/forms/PasswordField.tsx — enforced
   // here too since a form can be submitted without JS ever running.
   if (!isPasswordValid(password)) {
     redirect(

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { signup } from "../actions";
 import { GoogleButton } from "../google-button";
-import { PasswordField } from "../password-field";
+import { PasswordField } from "@/components/ui/forms/PasswordField";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { Input } from "@/components/ui/forms/Input";

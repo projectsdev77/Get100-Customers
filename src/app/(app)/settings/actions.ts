@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { appendStrategyHistory } from "@/lib/growth-profile/append-strategy-history";
+import { isPasswordValid } from "@/lib/auth/password";
+import { hasIdentityProvider } from "@/lib/auth/find-user-by-email";
+import { authErrorMessage } from "@/lib/auth/error-message";
 import type {
   EmailNotificationPrefs,
   FounderStage,
@@ -86,6 +89,80 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/settings");
   revalidatePath("/dashboard");
   return { success: true, pivotDetected };
+}
+
+// Verifies the current password ourselves (rather than relying on
+// Supabase's own optional GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_CURRENT_PASSWORD
+// project setting, which this app doesn't control) by attempting a real
+// sign-in with it before applying the change. A founder who signed up
+// via Google only has no password identity at all yet, so there's
+// nothing to verify — this lets them set one for the first time instead.
+export async function changePassword(formData: FormData) {
+  const currentPassword = String(formData.get("current_password") || "");
+  const newPassword = String(formData.get("new_password") || "");
+
+  if (!isPasswordValid(newPassword)) {
+    return {
+      error:
+        "Password must be at least 8 characters and include an uppercase letter, a number, and a special character.",
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return { error: "Not signed in." };
+
+  if (hasIdentityProvider(user, "email")) {
+    if (!currentPassword) {
+      return { error: "Enter your current password." };
+    }
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (verifyError) {
+      return { error: "Current password is incorrect." };
+    }
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { error: authErrorMessage(error) };
+
+  return { success: true as const };
+}
+
+// Supabase's "Secure email change" (the project default) requires
+// confirming from both the new address and the current one before the
+// change applies, so this only ever starts the process — nothing
+// changes here until those links are clicked. Reuses /auth/callback
+// (same PKCE code exchange Google OAuth and signup confirmation already
+// use) rather than a dedicated route.
+export async function changeEmail(formData: FormData) {
+  const newEmail = String(formData.get("email") || "").trim();
+  if (!newEmail) return { error: "Enter a new email address." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser(
+    { email: newEmail },
+    {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent("/settings")}`,
+    },
+  );
+  if (error) return { error: authErrorMessage(error) };
+
+  return { success: true as const };
+}
+
+// Revokes every refresh token for this user (scope: "global"), not just
+// the current session — the practical version of "session management"
+// this app can actually offer without a custom session/device-tracking
+// table, which Supabase's client SDK doesn't expose on its own.
+export async function signOutEverywhere() {
+  const supabase = await createClient();
+  await supabase.auth.signOut({ scope: "global" });
+  redirect("/login");
 }
 
 // In-app notifications stay always on (core to the game UI, SPEC §11);

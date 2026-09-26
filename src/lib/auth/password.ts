@@ -1,7 +1,8 @@
-// Single source of truth for password strength — used by the signup
-// form's live checklist (password-field.tsx) and by the signup server
-// action, so the client-side UI and the server-side enforcement can
-// never drift apart.
+// Single source of truth for password strength — used by the shared
+// live checklist (components/ui/forms/PasswordField.tsx, used on both
+// signup and the settings account form) and by every server action that
+// sets a password, so the client-side UI and the server-side
+// enforcement can never drift apart.
 export const PASSWORD_REQUIREMENTS = [
   {
     id: "length",
