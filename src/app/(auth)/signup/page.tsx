@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signup } from "../actions";
 import { GoogleButton } from "../google-button";
+import { PasswordField } from "../password-field";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { Input } from "@/components/ui/forms/Input";
@@ -32,7 +33,7 @@ export default async function SignupPage({
 
         <form action={signup} className="flex flex-col gap-4">
           <Input label="Email" type="email" name="email" required />
-          <Input label="Password" type="password" name="password" required minLength={6} />
+          <PasswordField />
           <Button type="submit" fullWidth>
             Sign up
           </Button>

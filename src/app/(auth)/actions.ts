@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isPasswordValid } from "@/lib/auth/password";
 
 export async function login(formData: FormData) {
   const email = String(formData.get("email"));
@@ -22,8 +23,30 @@ export async function signup(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
 
+  // Mirrors the client-side checklist in password-field.tsx — enforced
+  // here too since a form can be submitted without JS ever running.
+  if (!isPasswordValid(password)) {
+    redirect(
+      `/signup?error=${encodeURIComponent(
+        "Password must be at least 8 characters and include an uppercase letter, a number, and a special character.",
+      )}`,
+    );
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      // Confirmation emails otherwise redirect to Supabase's configured
+      // Site URL (our landing page) with no session established. Routing
+      // through the same callback route as Google OAuth exchanges the
+      // PKCE code for a session and lands the founder on /dashboard; if
+      // that exchange fails, the route's own fallback sends them to
+      // /login instead.
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent("/dashboard")}`,
+    },
+  });
 
   if (error) {
     redirect(`/signup?error=${encodeURIComponent(error.message)}`);
