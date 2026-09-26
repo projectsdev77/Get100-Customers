@@ -34,7 +34,7 @@ export async function signup(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -50,6 +50,21 @@ export async function signup(formData: FormData) {
 
   if (error) {
     redirect(`/signup?error=${encodeURIComponent(error.message)}`);
+  }
+
+  // Supabase doesn't return an error for an email that's already
+  // registered and confirmed — it returns a fake success with an empty
+  // identities array instead, specifically to avoid leaking which
+  // emails have accounts. An unconfirmed existing signup (identities
+  // non-empty) legitimately falls through to "check your email" below,
+  // since re-signing up there is how they'd get a fresh confirmation
+  // link.
+  if (data.user && data.user.identities && data.user.identities.length === 0) {
+    redirect(
+      `/signup?error=${encodeURIComponent(
+        "An account with this email already exists. Log in instead.",
+      )}`,
+    );
   }
 
   redirect("/login?message=check-email");
