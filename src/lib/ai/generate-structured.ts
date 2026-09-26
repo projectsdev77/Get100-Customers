@@ -27,6 +27,7 @@ interface JsonSchemaLike {
   items?: JsonSchemaLike;
   enum?: string[];
   required?: string[];
+  nullable?: boolean;
 }
 
 export interface StructuredContentParams {
@@ -45,8 +46,17 @@ function describeSchema(schema: JsonSchemaLike, indent = ""): string {
     case "OBJECT": {
       const required = new Set(schema.required ?? Object.keys(schema.properties ?? {}));
       const lines = Object.entries(schema.properties ?? {}).map(([key, value]) => {
-        const optional = required.has(key) ? "" : "?";
-        return `${indent}  "${key}${optional}": ${describeSchema(value, indent + "  ")}`;
+        // Every key is listed plainly, with no punctuation attached to the
+        // key itself — a "?" suffix here (TypeScript's optional-property
+        // shorthand) was previously used to mark a field as not required,
+        // but a model told to produce JSON "matching this shape" can take
+        // that too literally and copy the "?" into the actual output key
+        // (confirmed: Groq did exactly this). Optionality is expressed
+        // purely through the type instead ("string | null"), which is safe
+        // to reproduce since it can only ever land in a value, not a key.
+        const optional = !required.has(key) || value.nullable;
+        const type = describeSchema(value, indent + "  ");
+        return `${indent}  "${key}": ${optional ? `${type} | null` : type}`;
       });
       return `{\n${lines.join(",\n")}\n${indent}}`;
     }
@@ -89,7 +99,7 @@ async function callGroq(params: StructuredContentParams): Promise<StructuredCont
   if (params.systemInstruction) systemParts.push(params.systemInstruction);
   if (params.schema) {
     systemParts.push(
-      `Respond with ONLY valid JSON (no markdown fences, no commentary) matching this shape:\n${describeSchema(params.schema)}`,
+      `Respond with ONLY valid JSON (no markdown fences, no commentary). Use exactly these key names, unmodified — do not add "?" or any other character to a key. The type shown for each key is a hint for the value only, not part of the key:\n${describeSchema(params.schema)}`,
     );
   }
 
