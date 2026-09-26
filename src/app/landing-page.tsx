@@ -428,39 +428,43 @@ function HowItWorks() {
 
 function Pricing() {
   return (
-    <section id="pricing" data-screen-label="Pricing" className="bg-canvas px-0 py-16 sm:py-24">
-      <div className="grid items-center gap-10 sm:gap-16 lg:grid-cols-2">
-        <div className="flex flex-col gap-3">
-          <span className="text-[13px] font-medium tracking-[0.08em] text-secondary">PRICING</span>
-          <h2 className="text-balance text-4xl font-medium leading-[1.05] tracking-[-0.04em] text-primary sm:text-5xl">
-            One plan. Cancel whenever.
-          </h2>
-          <span className="max-w-[440px] text-lg leading-[1.55] text-secondary text-balance">
-            Everything included, from your first quest to Growth Mode.
-          </span>
-        </div>
-        <div className="w-full max-w-[520px] rounded-shell bg-card p-2.5 justify-self-end">
-          <div className="flex flex-col gap-2 rounded-tile bg-tile-customers p-7 text-on-tile">
-            <span className="text-sm font-medium text-tile-customers-ink">Founder</span>
-            <span className="text-[64px] font-light leading-none tracking-[-0.04em]">
-              $29<span className="text-lg text-tile-customers-ink"> / month</span>
+    <section id="pricing" data-screen-label="Pricing" className="bg-canvas py-16 sm:py-24">
+      <div className="mx-auto max-w-[1400px] px-5 sm:px-8 lg:px-12">
+        <div className="grid items-center gap-10 sm:gap-16 lg:grid-cols-2">
+          <div className="flex flex-col gap-3">
+            <span className="text-[13px] font-medium tracking-[0.08em] text-secondary">
+              PRICING
+            </span>
+            <h2 className="text-balance text-4xl font-medium leading-[1.05] tracking-[-0.04em] text-primary sm:text-5xl">
+              One plan. Cancel whenever.
+            </h2>
+            <span className="max-w-[440px] text-lg leading-[1.55] text-secondary text-balance">
+              Everything included, from your first quest to Growth Mode.
             </span>
           </div>
-          <div className="flex flex-col gap-3 px-4.5 pb-4.5 pt-3.5">
-            {PERKS.map((perk) => (
-              <div key={perk} className="flex items-center gap-3 text-[15px] text-primary">
-                <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-tile-level text-xs font-semibold text-on-tile">
-                  &#10003;
-                </span>
-                {perk}
-              </div>
-            ))}
-            <Link
-              href="/signup"
-              className="mt-2 flex h-[52px] items-center justify-center rounded-full bg-action text-base font-medium text-action-fg transition-colors duration-200 hover:bg-action-hover"
-            >
-              Start my quest log
-            </Link>
+          <div className="w-full max-w-[520px] rounded-shell bg-card p-2.5 justify-self-end">
+            <div className="flex flex-col gap-2 rounded-tile bg-tile-customers p-7 text-on-tile">
+              <span className="text-sm font-medium text-tile-customers-ink">Founder</span>
+              <span className="text-[64px] font-light leading-none tracking-[-0.04em]">
+                $29<span className="text-lg text-tile-customers-ink"> / month</span>
+              </span>
+            </div>
+            <div className="flex flex-col gap-3 px-4.5 pb-4.5 pt-3.5">
+              {PERKS.map((perk) => (
+                <div key={perk} className="flex items-center gap-3 text-[15px] text-primary">
+                  <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-tile-level text-xs font-semibold text-on-tile">
+                    &#10003;
+                  </span>
+                  {perk}
+                </div>
+              ))}
+              <Link
+                href="/signup"
+                className="mt-2 flex h-[52px] items-center justify-center rounded-full bg-action text-base font-medium text-action-fg transition-colors duration-200 hover:bg-action-hover"
+              >
+                Start my quest log
+              </Link>
+            </div>
           </div>
         </div>
       </div>
