@@ -3,6 +3,7 @@
   --violet-100: #EEEDF2; --violet-200: #DCD6F7; --violet-400: #A99CFF; --violet-600: #5B4BC4; --violet-700: #524A8A;
   --violet-800: #2A2836; --violet-900: #1B1A25; --violet-950: #0F0E16;
   --lime-100: #F1F8DA; --lime-200: #E3F1B5; --lime-300: #D6F36A; --lime-700: #5A6B1E;
+  --green-100: #E3F5E8; --green-200: #C2E9CE; --green-600: #1F9D55; --green-700: #167A42;
   --sky-100: #EAF1F6; --sky-200: #D5E4EE; --sky-700: #3F6275;
   --butter-100: #FBF3D6; --butter-200: #F6E6B0; --butter-700: #6E6230;
   --rose-100: #FBEAE7; --rose-200: #F5D0CA; --rose-600: #B83A2B; --rose-700: #8A2E24;
@@ -38,7 +39,7 @@
   --quest-done-bg: var(--violet-100); --quest-done-ink: var(--ink-600);
 
   --banner-error-bg: var(--rose-100); --banner-error-border: var(--rose-200); --banner-error-fg: var(--rose-700);
-  --banner-success-bg: var(--lime-100); --banner-success-border: var(--lime-200); --banner-success-fg: var(--lime-700);
+  --banner-success-bg: var(--green-100); --banner-success-border: var(--green-200); --banner-success-fg: var(--green-700);
   --banner-info-bg: var(--sky-100); --banner-info-border: var(--sky-200); --banner-info-fg: var(--sky-700);
   --danger: var(--rose-600);
 }
@@ -61,7 +62,7 @@
     --focus-ring: var(--violet-400);
     --quest-done-bg: var(--violet-800); --quest-done-ink: var(--ink-400);
     --banner-error-bg: #2E1714; --banner-error-border: #4D231D; --banner-error-fg: #F4A99E;
-    --banner-success-bg: #1E2410; --banner-success-border: #34401A; --banner-success-fg: var(--lime-300);
+    --banner-success-bg: #122A1B; --banner-success-border: #1E4A2E; --banner-success-fg: #7BE0A0;
     --banner-info-bg: #15212A; --banner-info-border: #22384A; --banner-info-fg: #9CC6E0;
     --danger: #F07B6B;
   }
@@ -85,7 +86,7 @@
     --focus-ring: var(--violet-400);
     --quest-done-bg: var(--violet-800); --quest-done-ink: var(--ink-400);
     --banner-error-bg: #2E1714; --banner-error-border: #4D231D; --banner-error-fg: #F4A99E;
-    --banner-success-bg: #1E2410; --banner-success-border: #34401A; --banner-success-fg: var(--lime-300);
+    --banner-success-bg: #122A1B; --banner-success-border: #1E4A2E; --banner-success-fg: #7BE0A0;
     --banner-info-bg: #15212A; --banner-info-border: #22384A; --banner-info-fg: #9CC6E0;
     --danger: #F07B6B;
 }
