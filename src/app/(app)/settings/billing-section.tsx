@@ -1,12 +1,12 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { getSubscription } from "@/lib/subscriptions/status";
 import { daysRemaining } from "@/lib/utils/days-remaining";
 import { listInvoices } from "@/lib/stripe/invoices";
-import { createCheckoutSession, createPortalSession } from "./actions";
+import { createCheckoutSession, createPortalSession } from "../billing/actions";
 import { Button } from "@/components/ui/actions/Button";
-import type { SubscriptionStatus } from "@/types/database";
+import type { Founder, SubscriptionStatus } from "@/types/database";
+import type { createClient } from "@/lib/supabase/server";
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 const STATUS_COPY: Record<SubscriptionStatus, string> = {
   trialing: "You're on a free trial.",
@@ -24,11 +24,16 @@ const STATUS_PILL: Record<SubscriptionStatus, { label: string; dot: string }> = 
   canceled: { label: "Canceled", dot: "bg-strong" },
 };
 
-export default async function BillingPage() {
-  const supabase = await createClient();
-  const founder = await getCurrentFounder(supabase);
-  if (!founder) redirect("/login");
-
+// Moved here from its own /billing page (SPEC calls for billing to live
+// alongside the rest of account settings) — same data, same actions,
+// just rendered as a settings section instead of a standalone route.
+export async function BillingSection({
+  supabase,
+  founder,
+}: {
+  supabase: SupabaseServerClient;
+  founder: Founder;
+}) {
   const subscription = await getSubscription(supabase, founder.id);
   const status = subscription?.status ?? "trialing";
   const hasStripeCustomer = Boolean(subscription?.stripe_customer_id);
@@ -38,19 +43,18 @@ export default async function BillingPage() {
       ? daysRemaining(subscription.trial_ends_at)
       : null;
 
-  const invoices = hasStripeCustomer
-    ? await listInvoices(subscription!.stripe_customer_id!)
-    : [];
+  const invoices = hasStripeCustomer ? await listInvoices(subscription!.stripe_customer_id!) : [];
 
   const pill = STATUS_PILL[status];
 
   return (
-    <div className="flex max-w-[560px] flex-col gap-5">
-      <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
-        Billing
-      </h1>
+    <div className="flex flex-col gap-5 rounded-panel bg-card p-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-base font-medium text-primary">Billing</h2>
+        <p className="text-[13px] text-secondary">Your plan, payment method, and invoices.</p>
+      </div>
 
-      <div className="flex flex-col gap-2 rounded-panel bg-card p-2">
+      <div className="flex flex-col gap-2 rounded-panel bg-sunken p-2">
         <div className="flex flex-wrap items-start justify-between gap-4 rounded-tile bg-tile-customers p-5 text-on-tile">
           <div className="flex flex-col gap-1.5">
             <span className="text-[13px] font-medium text-tile-customers-ink">Your plan</span>
@@ -91,8 +95,8 @@ export default async function BillingPage() {
 
       {invoices.length > 0 && (
         <div className="flex flex-col gap-2.5">
-          <h2 className="text-base font-medium text-primary">Billing history</h2>
-          <div className="rounded-panel bg-card px-5 py-1">
+          <h3 className="text-sm font-medium text-primary">Billing history</h3>
+          <div className="rounded-panel bg-sunken px-5 py-1">
             {invoices.map((invoice, i) => (
               <div
                 key={invoice.id}

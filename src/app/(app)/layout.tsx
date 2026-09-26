@@ -43,7 +43,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Banner
             tone="error"
             action={
-              <LinkButton href="/billing" size="sm" variant="danger">
+              <LinkButton href="/settings" size="sm" variant="danger">
                 Go to billing
               </LinkButton>
             }

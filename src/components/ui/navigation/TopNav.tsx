@@ -7,7 +7,6 @@ const LINKS = [
   { href: "/quests", label: "Quests" },
   { href: "/notifications", label: "Notifications" },
   { href: "/settings", label: "Settings" },
-  { href: "/billing", label: "Billing" },
 ];
 
 export function TopNav({

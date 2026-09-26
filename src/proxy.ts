@@ -8,7 +8,6 @@ const PROTECTED_PATHS = [
   "/quests",
   "/notifications",
   "/admin",
-  "/billing",
 ];
 
 export async function proxy(request: NextRequest) {

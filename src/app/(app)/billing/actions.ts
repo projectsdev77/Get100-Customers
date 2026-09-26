@@ -23,8 +23,8 @@ export async function createCheckoutSession() {
     customer: subscription?.stripe_customer_id ?? undefined,
     customer_email: subscription?.stripe_customer_id ? undefined : (user?.email ?? undefined),
     client_reference_id: founder.id,
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing?checkout=success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing?checkout=cancelled`,
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?checkout=success`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?checkout=cancelled`,
   });
 
   if (session.url) redirect(session.url);
@@ -40,12 +40,12 @@ export async function createPortalSession(flow?: "payment_method_update" | "subs
   if (!founder) redirect("/login");
 
   const subscription = await getSubscription(supabase, founder.id);
-  if (!subscription?.stripe_customer_id) redirect("/billing");
+  if (!subscription?.stripe_customer_id) redirect("/settings");
 
   const stripe = getStripeClient();
   const session = await stripe.billingPortal.sessions.create({
     customer: subscription.stripe_customer_id,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings`,
     ...(flow ? { flow_data: { type: flow } } : {}),
   });
 
