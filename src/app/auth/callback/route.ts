@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // A brand-new Google account's first-ever sign-in has last_sign_in_at
 // essentially equal to created_at (Supabase sets both on account
@@ -25,8 +26,13 @@ function isBrandNewAccount(user: { created_at: string; last_sign_in_at?: string 
 // /login, which should only ever sign an EXISTING founder in — Google
 // OAuth otherwise happily creates a new account on the spot, which would
 // let someone "log in" to an account that never existed. If this turns
-// out to be a brand-new account, undo it: sign back out and send them to
-// sign up instead.
+// out to be a brand-new account, undo it fully: exchangeCodeForSession
+// already created the auth.users row before we ever get a chance to
+// look at it, so signing out alone would leave a real, permanent ghost
+// account squatting on that email — silently blocking that person from
+// ever signing up with it again, and from ever seeing this "brand new"
+// path a second time (their own ghost account would just look like an
+// existing one). Delete it outright instead.
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -40,6 +46,7 @@ export async function GET(request: Request) {
     if (!error && data.user) {
       if (flow === "login" && isBrandNewAccount(data.user)) {
         await supabase.auth.signOut();
+        await createAdminClient().auth.admin.deleteUser(data.user.id);
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent(
             "You don't have an account with this Google account. Sign up instead.",
