@@ -37,22 +37,27 @@ export async function logCustomer() {
 
 // Correcting the count handles both mistakes and real churn (SPEC §14) —
 // sets an absolute total rather than a delta, since that's what a founder
-// actually knows ("I have 23 customers", not "I lost 2").
+// actually knows ("I have 23 customers", not "I lost 2"). Lives here next
+// to logCustomer/notifyIfMilestone, but per SPEC §8 the correction control
+// itself is rendered in Settings, not on the dashboard.
 export async function correctCustomerCount(formData: FormData) {
   const newCount = Math.max(0, parseInt(String(formData.get("count") || "0"), 10) || 0);
+  const reason = String(formData.get("reason") || "").trim();
 
   const supabase = await createClient();
   const founder = await getCurrentFounder(supabase);
-  if (!founder) return;
+  if (!founder) return { error: "Not signed in." };
 
   const delta = newCount - founder.current_customer_count;
-  if (delta === 0) return;
+  if (delta === 0) return { success: true as const };
 
   await supabase.from("customer_events").insert({
     founder_id: founder.id,
     event_type: "corrected",
     delta,
-    note: `Corrected from ${founder.current_customer_count} to ${newCount}`,
+    note: reason
+      ? `Corrected from ${founder.current_customer_count} to ${newCount}: ${reason}`
+      : `Corrected from ${founder.current_customer_count} to ${newCount}`,
   });
 
   await supabase
@@ -66,4 +71,6 @@ export async function correctCustomerCount(formData: FormData) {
   await notifyIfMilestone(founder.id, founder.current_customer_count, newCount);
 
   revalidatePath("/dashboard");
+  revalidatePath("/settings");
+  return { success: true as const };
 }

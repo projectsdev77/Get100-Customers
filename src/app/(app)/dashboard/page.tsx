@@ -2,11 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Founder } from "@/types/database";
 import { refreshQuestLog, OCCUPYING_STATUSES } from "@/lib/quests/lifecycle";
-import { correctCustomerCount, logCustomer } from "./actions";
+import { logCustomer } from "./actions";
 import { isoDaysAgo } from "@/lib/utils/days-remaining";
 import { GrowthHud } from "@/components/ui/game/GrowthHud";
 import { Card } from "@/components/ui/surfaces/Card";
-import { Input } from "@/components/ui/forms/Input";
 import { Button, LinkButton } from "@/components/ui/actions/Button";
 
 export default async function DashboardPage() {
@@ -68,18 +67,9 @@ export default async function DashboardPage() {
                 + I got a new customer
               </Button>
             </form>
-            <form action={correctCustomerCount} className="flex items-center gap-2">
-              <Input
-                type="number"
-                name="count"
-                min={0}
-                defaultValue={founder.current_customer_count}
-                className="flex-1"
-              />
-              <Button type="submit" variant="outline" size="sm">
-                Save
-              </Button>
-            </form>
+            <LinkButton href="/settings" variant="outline" size="sm">
+              Correct your count →
+            </LinkButton>
           </Card>
 
           <Card className="flex flex-col gap-3 p-5">
