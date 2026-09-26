@@ -51,6 +51,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<FormState>(initialState(founder));
   const [url, setUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [analyzeNotice, setAnalyzeNotice] = useState<string | null>(null);
   const [analyzed, setAnalyzed] = useState(false);
@@ -71,12 +72,13 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     setAnalyzeError(null);
     setAnalyzeNotice(null);
     setAnalyzed(false);
-    if (!url.trim()) {
-      setAnalyzeError("Paste a URL first.");
+    if (!url.trim() && !file) {
+      setAnalyzeError("Paste a URL or upload a file first.");
       return;
     }
     const formData = new FormData();
-    formData.set("url", url.trim());
+    if (url.trim()) formData.set("url", url.trim());
+    if (file) formData.set("file", file);
 
     startAnalyzing(async () => {
       const result = await analyzeSource(formData);
@@ -123,6 +125,20 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
+          <div className="flex items-center gap-3 text-xs text-secondary">
+            <div className="h-px flex-1 bg-subtle" />
+            or
+            <div className="h-px flex-1 bg-subtle" />
+          </div>
+          <label className="flex h-11 w-full cursor-pointer items-center justify-center rounded-field border border-dashed border-strong bg-card px-3.5 text-sm text-secondary transition-colors hover:border-accent">
+            {file ? file.name : "Upload notes (.txt or .md)"}
+            <input
+              type="file"
+              accept=".txt,.md,text/plain,text/markdown"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
           {analyzeError && <Banner tone="error">{analyzeError}</Banner>}
           {analyzeNotice && <Banner tone="info">{analyzeNotice}</Banner>}
           {analyzed && (
