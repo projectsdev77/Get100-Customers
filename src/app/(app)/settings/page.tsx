@@ -1,6 +1,11 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Founder } from "@/types/database";
+import { getCurrentFounder } from "@/lib/founders/get-founder";
+import { hasIdentityProvider } from "@/lib/auth/find-user-by-email";
 import { ProfileForm } from "./profile-form";
+import { CustomerCountForm } from "./customer-count-form";
+import { AccountForm } from "./account-form";
+import { BillingSection } from "./billing-section";
 import { NotificationPrefsForm } from "./notification-prefs-form";
 import { DangerZone } from "./danger-zone";
 
@@ -9,12 +14,9 @@ export default async function SettingsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const { data: founder } = await supabase
-    .from("founders")
-    .select("*")
-    .eq("auth_user_id", user!.id)
-    .single<Founder>();
+  const founder = await getCurrentFounder(supabase);
 
   return (
     <div className="flex max-w-[560px] flex-col gap-5">
@@ -22,7 +24,17 @@ export default async function SettingsPage() {
         Settings
       </h1>
 
-      <ProfileForm founder={founder ?? null} />
+      <ProfileForm founder={founder} />
+
+      {founder && <CustomerCountForm currentCount={founder.current_customer_count} />}
+
+      <AccountForm
+        email={user.email ?? ""}
+        hasPassword={hasIdentityProvider(user, "email")}
+        hasGoogle={hasIdentityProvider(user, "google")}
+      />
+
+      {founder && <BillingSection supabase={supabase} founder={founder} />}
 
       <NotificationPrefsForm
         prefs={
