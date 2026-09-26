@@ -72,15 +72,12 @@ export async function updateProfile(formData: FormData) {
   // A materially changed industry or product description is a pivot
   // (SPEC §5/§14) — logged for future coaching, XP/level/customer count
   // untouched since they represent the founder's overall journey, not
-  // just the current idea framing. Non-blocking: the UI offers, not
-  // forces, a revisit to onboarding.
-  let pivotDetected = false;
+  // just the current idea framing.
   if (before) {
     const industryChanged = Boolean(before.industry) && before.industry !== newIndustry;
     const productChanged =
       Boolean(before.product_description) && before.product_description !== newProductDescription;
     if (industryChanged || productChanged) {
-      pivotDetected = true;
       await appendStrategyHistory(
         before.id,
         `Profile pivot: industry "${before.industry}" → "${newIndustry}", product "${before.product_description}" → "${newProductDescription}".`,
@@ -90,7 +87,7 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath("/settings");
   revalidatePath("/dashboard");
-  return { success: true, pivotDetected };
+  return { success: true };
 }
 
 // Verifies the current password ourselves (rather than relying on

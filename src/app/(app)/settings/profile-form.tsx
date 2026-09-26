@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useState } from "react";
 import { updateProfile } from "./actions";
 import type { Founder } from "@/types/database";
@@ -21,7 +20,7 @@ import {
   HOURS_LABELS,
 } from "@/lib/founders/field-options";
 
-type FormState = { error?: string; success?: boolean; pivotDetected?: boolean };
+type FormState = { error?: string; success?: boolean };
 
 export function ProfileForm({ founder }: { founder: Founder | null }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
@@ -92,15 +91,6 @@ export function ProfileForm({ founder }: { founder: Founder | null }) {
 
       {state.error && <Banner tone="error">{state.error}</Banner>}
       {state.success && <Banner tone="success">Saved.</Banner>}
-      {state.pivotDetected && (
-        <Banner tone="info">
-          Looks like your business changed. Your progress carries over, but you can{" "}
-          <Link href="/onboarding" className="underline">
-            revisit onboarding
-          </Link>{" "}
-          to update the rest of your profile.
-        </Banner>
-      )}
 
       <Button type="submit" disabled={pending} className="self-start">
         {pending ? "Saving…" : "Save changes"}
