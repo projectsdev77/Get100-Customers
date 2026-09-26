@@ -102,7 +102,10 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
         const { company_name, industry, product_description, icp, stage_guess, summary } =
           result.extracted;
         const foundAnything = [company_name, industry, product_description, icp, stage_guess].some(
-          (value) => value !== null,
+          // Loose check on purpose: a value that's undefined (a provider
+          // fallback omitting a key instead of returning explicit null)
+          // must count the same as null, not as "found something".
+          (value) => value != null,
         );
 
         // TEMPORARY — see analyzeDebug declaration above.

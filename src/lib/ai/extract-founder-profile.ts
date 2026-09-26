@@ -57,5 +57,21 @@ export async function extractFounderProfile(
     throw new Error("Gemini returned no extraction result");
   }
 
-  return JSON.parse(raw) as ExtractedFounderProfile;
+  const parsed = JSON.parse(raw) as Partial<ExtractedFounderProfile>;
+
+  // Gemini's responseSchema guarantees every property is present (nullable
+  // fields come back as explicit null). The Groq fallback only gets the
+  // schema as a text instruction, not enforced structured output, so it can
+  // just omit a key it has no answer for — which parses as undefined, not
+  // null. Callers (analyzeSource, the onboarding wizard) rely on every
+  // field being exactly string | null, so normalize here rather than let
+  // "undefined" silently pass every `!== null` check as if it were data.
+  return {
+    company_name: parsed.company_name ?? null,
+    industry: parsed.industry ?? null,
+    product_description: parsed.product_description ?? null,
+    icp: parsed.icp ?? null,
+    stage_guess: parsed.stage_guess ?? null,
+    summary: parsed.summary ?? "",
+  };
 }
