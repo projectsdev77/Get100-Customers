@@ -150,6 +150,63 @@ export async function signInWithGoogle(formData: FormData) {
   redirect(data.url);
 }
 
+// Supabase doesn't reveal whether the email has an account either way
+// (error: null even for an address with no account) — same anti-
+// enumeration reasoning as the signup duplicate-email case — so the
+// page always shows the same "check your inbox" message regardless.
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") || "").trim();
+  if (!email) {
+    redirect(`/forgot-password?error=${encodeURIComponent("Enter your email address.")}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // Reuses /auth/callback's existing PKCE code exchange (same as
+    // Google OAuth, signup confirmation, and settings' email change) —
+    // it just establishes a session and lands on /reset-password.
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
+  });
+
+  if (error) {
+    redirect(`/forgot-password?error=${encodeURIComponent(authErrorMessage(error))}`);
+  }
+
+  redirect("/forgot-password?message=check-email");
+}
+
+// Reachable only with the session /auth/callback establishes from a
+// clicked recovery link — no current-password check, since proving
+// control of the inbox is what stands in for it here.
+export async function resetPassword(formData: FormData) {
+  const newPassword = String(formData.get("password") || "");
+  const confirmPassword = String(formData.get("confirm_password") || "");
+
+  if (newPassword !== confirmPassword) {
+    return { error: "Passwords don't match." };
+  }
+
+  if (!isPasswordValid(newPassword)) {
+    return {
+      error:
+        "Password must be at least 8 characters and include an uppercase letter, a number, and a special character.",
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "This reset link has expired. Request a new one." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { error: authErrorMessage(error) };
+
+  redirect("/dashboard");
+}
+
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
