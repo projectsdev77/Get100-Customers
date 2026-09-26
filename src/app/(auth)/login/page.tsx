@@ -37,6 +37,15 @@ export default async function LoginPage({
           <input type="hidden" name="next" value={params.next ?? "/dashboard"} />
           <Input label="Email" type="email" name="email" required />
           <Input label="Password" type="password" name="password" required />
+          <label className="flex items-center gap-2.5 text-sm text-primary">
+            <input
+              type="checkbox"
+              name="remember"
+              defaultChecked
+              className="h-4 w-4 accent-[var(--accent)]"
+            />
+            Remember me
+          </label>
           <Button type="submit" fullWidth>
             Log in
           </Button>

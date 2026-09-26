@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { REMEMBER_ME_COOKIE, stripPersistence } from "@/lib/auth/session-persistence";
 
 const PROTECTED_PATHS = [
   "/dashboard",
@@ -12,6 +13,7 @@ const PROTECTED_PATHS = [
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const dontPersist = request.cookies.get(REMEMBER_ME_COOKIE)?.value === "0";
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,7 +27,7 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(name, value, dontPersist ? stripPersistence(options) : options),
           );
         },
       },

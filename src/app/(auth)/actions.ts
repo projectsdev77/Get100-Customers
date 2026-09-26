@@ -1,15 +1,40 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { isPasswordValid } from "@/lib/auth/password";
 import { findAuthUserByEmail, hasIdentityProvider } from "@/lib/auth/find-user-by-email";
 import { authErrorMessage } from "@/lib/auth/error-message";
+import { REMEMBER_ME_COOKIE } from "@/lib/auth/session-persistence";
+
+// Must run before createClient() reads cookies for this same request —
+// createClient()/proxy.ts key off this marker's presence to decide
+// whether to keep writing the Supabase auth cookies as session-only.
+// Checked (remember=true) clears any marker a previous, unchecked
+// login/signup left behind, so this one goes back to the normal
+// persistent behavior.
+async function applyRememberMePreference(remember: boolean) {
+  const cookieStore = await cookies();
+  if (remember) {
+    cookieStore.delete(REMEMBER_ME_COOKIE);
+  } else {
+    cookieStore.set(REMEMBER_ME_COOKIE, "0", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+}
 
 export async function login(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
   const next = String(formData.get("next") || "/dashboard");
+  const remember = formData.has("remember");
+
+  await applyRememberMePreference(remember);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -42,6 +67,7 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
+  const remember = formData.has("remember");
 
   // Mirrors the client-side checklist in components/ui/forms/PasswordField.tsx — enforced
   // here too since a form can be submitted without JS ever running.
@@ -52,6 +78,12 @@ export async function signup(formData: FormData) {
       )}`,
     );
   }
+
+  // Signup itself usually doesn't establish a session (email confirmation
+  // is required first), but the marker cookie set here persists until the
+  // founder actually confirms via /auth/callback, so their choice still
+  // applies to the session that eventually gets created there.
+  await applyRememberMePreference(remember);
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -121,5 +153,6 @@ export async function signInWithGoogle(formData: FormData) {
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  (await cookies()).delete(REMEMBER_ME_COOKIE);
   redirect("/login");
 }

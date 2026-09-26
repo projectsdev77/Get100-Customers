@@ -2,12 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { appendStrategyHistory } from "@/lib/growth-profile/append-strategy-history";
 import { isPasswordValid } from "@/lib/auth/password";
 import { hasIdentityProvider } from "@/lib/auth/find-user-by-email";
 import { authErrorMessage } from "@/lib/auth/error-message";
+import { REMEMBER_ME_COOKIE } from "@/lib/auth/session-persistence";
 import type {
   EmailNotificationPrefs,
   FounderStage,
@@ -162,6 +164,7 @@ export async function changeEmail(formData: FormData) {
 export async function signOutEverywhere() {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: "global" });
+  (await cookies()).delete(REMEMBER_ME_COOKIE);
   redirect("/login");
 }
 
@@ -209,5 +212,6 @@ export async function deleteAccount(formData: FormData) {
 
   await createAdminClient().auth.admin.deleteUser(user.id);
   await supabase.auth.signOut();
+  (await cookies()).delete(REMEMBER_ME_COOKIE);
   redirect("/");
 }

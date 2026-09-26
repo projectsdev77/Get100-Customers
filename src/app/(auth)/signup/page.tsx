@@ -34,6 +34,15 @@ export default async function SignupPage({
         <form action={signup} className="flex flex-col gap-4">
           <Input label="Email" type="email" name="email" required />
           <PasswordField />
+          <label className="flex items-center gap-2.5 text-sm text-primary">
+            <input
+              type="checkbox"
+              name="remember"
+              defaultChecked
+              className="h-4 w-4 accent-[var(--accent)]"
+            />
+            Remember me
+          </label>
           <Button type="submit" fullWidth>
             Sign up
           </Button>
