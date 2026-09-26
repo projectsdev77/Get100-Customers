@@ -3,6 +3,7 @@ import type { Founder, GrowthProfile, Quest, QuestTemplate } from "@/types/datab
 import { pickTemplate, templateToQuestFields } from "./select-template";
 import { personalizeQuestWithAI } from "@/lib/ai/personalize-quest";
 import { generateNetNewQuest } from "@/lib/ai/generate-quest";
+import { selectNextQuestWithAI } from "@/lib/ai/select-quest";
 import { notify } from "@/lib/notifications/notify";
 import { runLazyNotificationChecks } from "@/lib/notifications/lazy-checks";
 import { applySubscriptionLifecycle, getSubscription, isRestricted } from "@/lib/subscriptions/status";
@@ -50,17 +51,55 @@ export async function getGrowthProfile(
   return data ?? null;
 }
 
-// The hybrid template+AI quest builder (SPEC §7.1). Picks a template via
-// the rule-based ranking (§select-template) and asks Gemini to personalize
-// it; falls back to the raw template on any AI failure or guardrail
-// rejection (SPEC §17 — never show broken output). When no template is
-// eligible at all, generates a net-new quest instead.
+// Quest builder (SPEC §7.1). The AI chooses the quest itself — channel and
+// all — grounded in the founder's growth history and the template library
+// only as a style/shape reference (see select-quest.ts for why this
+// replaces select-template.ts's old random-among-eligible ranking). If that
+// call fails or its output fails the guardrails, this falls back to
+// exactly the previous behavior: a template picked by the deterministic
+// rule-based ranking, personalized by AI (or used raw if that also fails);
+// when no template is eligible at all, a net-new quest. Every tier here can
+// fail independently without quest generation ever breaking (SPEC §17).
 export async function buildQuestInsertFields(
   founder: Founder,
   growth: GrowthProfile | null,
   templates: QuestTemplate[],
   excludeTemplateIds: string[],
+  recentCategories: string[] = [],
+  recentTitles: string[] = [],
 ) {
+  const aiSelected = await selectNextQuestWithAI(
+    founder,
+    growth,
+    templates,
+    recentCategories,
+    recentTitles,
+  );
+  if (aiSelected) {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + aiSelected.window_days);
+
+    return {
+      fields: {
+        template_id: null,
+        title: aiSelected.title,
+        description: null,
+        instructions: aiSelected.instructions,
+        category: aiSelected.category,
+        xp_value: aiSelected.xp_value,
+        reasoning: aiSelected.reasoning,
+        tools_provided: aiSelected.tools_provided,
+        result_questions: aiSelected.result_questions,
+        success_criteria: null,
+        sub_tasks: [],
+        suggested_window: `${aiSelected.window_days} day${aiSelected.window_days === 1 ? "" : "s"}`,
+        expires_at: expiresAt.toISOString(),
+        status: "suggested" as const,
+      },
+      usedTemplateId: null,
+    };
+  }
+
   const template = pickTemplate(founder, templates, excludeTemplateIds);
 
   if (template) {
@@ -124,10 +163,10 @@ export async function ensureQuestSlots(
 
   const { data: occupying } = await supabase
     .from("quests")
-    .select("id, template_id, status")
+    .select("id, template_id, status, category, title")
     .eq("founder_id", founder.id)
     .in("status", OCCUPYING_STATUSES)
-    .returns<Pick<Quest, "id" | "template_id" | "status">[]>();
+    .returns<Pick<Quest, "id" | "template_id" | "status" | "category" | "title">[]>();
 
   const occupyingRows = occupying ?? [];
   const suggestedCount = occupyingRows.filter((q) => q.status === "suggested").length;
@@ -143,8 +182,19 @@ export async function ensureQuestSlots(
   const usedTemplateIds = occupyingRows
     .map((q) => q.template_id)
     .filter((id): id is string => Boolean(id));
+  const recentCategories = occupyingRows
+    .map((q) => q.category)
+    .filter((c): c is string => Boolean(c));
+  const recentTitles = occupyingRows.map((q) => q.title);
 
-  const built = await buildQuestInsertFields(founder, growth, templates, usedTemplateIds);
+  const built = await buildQuestInsertFields(
+    founder,
+    growth,
+    templates,
+    usedTemplateIds,
+    recentCategories,
+    recentTitles,
+  );
   if (!built) return;
 
   await supabase.from("quests").insert({

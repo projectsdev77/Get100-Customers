@@ -89,15 +89,22 @@ export async function regenerateQuest(questId: string) {
 
   const { data: occupying } = await supabase
     .from("quests")
-    .select("template_id")
+    .select("template_id, category, title")
     .eq("founder_id", founder.id)
     .in("status", OCCUPYING_STATUSES)
-    .returns<Pick<Quest, "template_id">[]>();
+    .returns<Pick<Quest, "template_id" | "category" | "title">[]>();
 
-  const excludeIds = [
-    ...(occupying ?? []).map((q) => q.template_id),
-    existing.template_id,
-  ].filter((id): id is string => Boolean(id));
+  const occupyingRows = occupying ?? [];
+  const excludeIds = [...occupyingRows.map((q) => q.template_id), existing.template_id].filter(
+    (id): id is string => Boolean(id),
+  );
+  // The founder explicitly asked for something else, so the swapped-out
+  // suggestion is included here too, not just still-occupying quests.
+  const recentCategories = [
+    ...occupyingRows.map((q) => q.category),
+    existing.category,
+  ].filter((c): c is string => Boolean(c));
+  const recentTitles = [...occupyingRows.map((q) => q.title), existing.title];
 
   const { data: templates } = await supabase
     .from("quest_templates")
@@ -105,7 +112,14 @@ export async function regenerateQuest(questId: string) {
     .returns<QuestTemplate[]>();
 
   const growth = await getGrowthProfile(supabase, founder.id);
-  const built = await buildQuestInsertFields(founder, growth, templates ?? [], excludeIds);
+  const built = await buildQuestInsertFields(
+    founder,
+    growth,
+    templates ?? [],
+    excludeIds,
+    recentCategories,
+    recentTitles,
+  );
   if (!built) return;
 
   await supabase.from("quests").delete().eq("id", questId);

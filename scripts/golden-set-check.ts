@@ -11,6 +11,7 @@
 import "dotenv/config";
 import { personalizeQuestWithAI } from "../src/lib/ai/personalize-quest";
 import { generateNetNewQuest } from "../src/lib/ai/generate-quest";
+import { selectNextQuestWithAI } from "../src/lib/ai/select-quest";
 import type { Founder, QuestTemplate } from "../src/types/database";
 
 const FOUNDERS: Array<
@@ -99,12 +100,17 @@ async function main() {
 
     if (!first) await pause();
     first = false;
-    console.log("\n-- personalizeQuestWithAI (template: cold email) --");
+    console.log("\n-- selectNextQuestWithAI (primary path — AI picks the channel too) --");
+    const selected = await selectNextQuestWithAI(founder, null, [SAMPLE_TEMPLATE], [], []);
+    console.log(selected ? JSON.stringify(selected, null, 2) : "FAILED — would fall back to pickTemplate");
+
+    await pause();
+    console.log("\n-- personalizeQuestWithAI (fallback tier: template: cold email) --");
     const personalized = await personalizeQuestWithAI(founder, null, SAMPLE_TEMPLATE);
     console.log(personalized ? JSON.stringify(personalized, null, 2) : "FAILED — would fall back to raw template");
 
     await pause();
-    console.log("\n-- generateNetNewQuest (no template fits) --");
+    console.log("\n-- generateNetNewQuest (last-resort fallback: no template fits) --");
     const generated = await generateNetNewQuest(founder, null);
     console.log(generated ? JSON.stringify(generated, null, 2) : "FAILED — no quest generated");
   }
