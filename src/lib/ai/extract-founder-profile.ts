@@ -57,6 +57,14 @@ export async function extractFounderProfile(
     throw new Error("Gemini returned no extraction result");
   }
 
+  // TEMPORARY — root-causing a live bug: the summary comes back describing
+  // the business accurately while every structured field is null, which
+  // means either the model is genuinely refusing to fill them or it's using
+  // different key names/shape than expected and this normalization is
+  // silently discarding real data. Logging the untouched raw text is the
+  // only way to tell which, without guessing further. Remove once resolved.
+  console.error("extractFounderProfile raw response:", raw);
+
   const parsed = JSON.parse(raw) as Partial<ExtractedFounderProfile>;
 
   // Gemini's responseSchema guarantees every property is present (nullable
