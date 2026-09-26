@@ -55,6 +55,11 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [analyzeNotice, setAnalyzeNotice] = useState<string | null>(null);
   const [analyzed, setAnalyzed] = useState(false);
+  // TEMPORARY — root-causing a live bug report (success banner shown, but
+  // fields not actually appearing on later steps). Shows exactly what came
+  // back per field so we don't have to keep guessing blind. Remove once
+  // the underlying issue is found and fixed.
+  const [analyzeDebug, setAnalyzeDebug] = useState<string | null>(null);
   const [isAnalyzing, startAnalyzing] = useTransition();
 
   function applyExtracted(extracted: ExtractedFields) {
@@ -72,6 +77,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     setAnalyzeError(null);
     setAnalyzeNotice(null);
     setAnalyzed(false);
+    setAnalyzeDebug(null);
     if (!url.trim() && !file) {
       setAnalyzeError("Paste a URL or upload a file first.");
       return;
@@ -98,6 +104,12 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
         const foundAnything = [company_name, industry, product_description, icp, stage_guess].some(
           (value) => value !== null,
         );
+
+        // TEMPORARY — see analyzeDebug declaration above.
+        setAnalyzeDebug(
+          JSON.stringify({ company_name, industry, product_description, icp, stage_guess }, null, 2),
+        );
+
         if (!foundAnything) {
           setAnalyzeNotice(
             `Couldn't find enough on that page to pre-fill anything. No worries — just fill in the fields on the next steps.${
@@ -153,6 +165,11 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
             <Banner tone="success">
               Pre-filled what we could find. You&apos;ll review every field next.
             </Banner>
+          )}
+          {analyzeDebug && (
+            <pre className="whitespace-pre-wrap rounded-tile bg-sunken p-3 text-xs text-secondary">
+              DEBUG (temporary): {analyzeDebug}
+            </pre>
           )}
           <Button type="button" variant="outline" onClick={handleAnalyze} disabled={isAnalyzing}>
             {isAnalyzing ? "Analyzing…" : "Analyze"}
