@@ -15,7 +15,7 @@ export interface ChatActionResult {
 }
 
 const FALLBACK: ChatActionResult = {
-  reply: "Sorry, I couldn't process that — try again in a moment.",
+  reply: "Sorry, I couldn't process that. Try again in a moment.",
   proposedSwapQuestId: null,
   proposedSwapReason: null,
 };
@@ -34,7 +34,7 @@ export async function sendMessage(
   if (isRestricted(subscription)) {
     return {
       ...FALLBACK,
-      reply: "Your account is restricted — please update your payment method to keep chatting.",
+      reply: "Your account is restricted. Please update your payment method to keep chatting.",
     };
   }
 

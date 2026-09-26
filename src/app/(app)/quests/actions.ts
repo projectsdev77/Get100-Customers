@@ -221,7 +221,7 @@ export async function submitQuestResult(formData: FormData) {
   if (newLevel > founder.level) {
     await notify(founder.id, "milestone", `Level up! You're now level ${newLevel}.`, {
       emailSubject: "Level up!",
-      emailHtml: `<p>You just reached <strong>level ${newLevel}</strong> — keep going.</p>`,
+      emailHtml: `<p>You just reached <strong>level ${newLevel}</strong>. Keep going.</p>`,
     });
   }
   const milestone = crossedCustomerMilestone(founder.current_customer_count, newCustomerCount);

@@ -47,13 +47,13 @@ export default async function AdminFounderDetailPage({
         <h2 className="text-base font-medium text-primary">Profile</h2>
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <dt className="text-secondary">Industry</dt>
-          <dd className="text-primary">{founder.industry ?? "—"}</dd>
+          <dd className="text-primary">{founder.industry ?? "-"}</dd>
           <dt className="text-secondary">Stage</dt>
-          <dd className="text-primary">{founder.stage ?? "—"}</dd>
+          <dd className="text-primary">{founder.stage ?? "-"}</dd>
           <dt className="text-secondary">ICP</dt>
-          <dd className="text-primary">{founder.icp ?? "—"}</dd>
+          <dd className="text-primary">{founder.icp ?? "-"}</dd>
           <dt className="text-secondary">Product</dt>
-          <dd className="text-primary">{founder.product_description ?? "—"}</dd>
+          <dd className="text-primary">{founder.product_description ?? "-"}</dd>
           <dt className="text-secondary">Level / XP</dt>
           <dd className="font-mono text-primary">
             {founder.level} / {founder.xp} XP
@@ -70,7 +70,7 @@ export default async function AdminFounderDetailPage({
         {growth ? (
           <dl className="flex flex-col gap-3 text-sm">
             <dt className="text-secondary">Bottleneck hypothesis</dt>
-            <dd className="text-primary">{growth.bottleneck_hypothesis ?? "—"}</dd>
+            <dd className="text-primary">{growth.bottleneck_hypothesis ?? "-"}</dd>
             <dt className="text-secondary">What&apos;s working</dt>
             <dd className="font-mono text-[13px] text-primary">
               {JSON.stringify(growth.what_working)}

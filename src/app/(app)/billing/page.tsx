@@ -11,7 +11,7 @@ import type { SubscriptionStatus } from "@/types/database";
 const STATUS_COPY: Record<SubscriptionStatus, string> = {
   trialing: "You're on a free trial.",
   active: "Your subscription is active.",
-  past_due: "Your last payment failed — please update your payment method.",
+  past_due: "Your last payment failed. Please update your payment method.",
   restricted: "Your account is restricted. Subscribe to get new quests and chat back.",
   canceled: "Your subscription is canceled.",
 };

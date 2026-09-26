@@ -35,7 +35,7 @@ export function buildFallbackReasoning(
   template: QuestTemplate,
 ): string {
   if (!founder.channels_tried.includes(template.category)) {
-    return `You haven't tried ${template.category.replace(/_/g, " ")} yet — worth testing at your stage.`;
+    return `You haven't tried ${template.category.replace(/_/g, " ")} yet. Worth testing at your stage.`;
   }
   return `${template.category.replace(/_/g, " ")} is a channel you've already tried, so we're giving it another pass.`;
 }

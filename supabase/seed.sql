@@ -21,7 +21,7 @@ values
  '[{"id":"sent_count","prompt":"How many emails did you send?","type":"number"},
    {"id":"response_count","prompt":"How many people replied?","type":"number"},
    {"id":"converted","prompt":"Did any of them become a customer?","type":"boolean"}]',
- '[{"label":"Cold email opener","content":"Subject: quick question about {{icp_pain_point}}\n\nHi {{first_name}},\n\nI noticed you work on {{icp_context}} — I''m building {{product_name}} to help with exactly that. Would you be open to a 15-minute call this week?"}]'),
+ '[{"label":"Cold email opener","content":"Subject: quick question about {{icp_pain_point}}\n\nHi {{first_name}},\n\nI noticed you work on {{icp_context}}. I''m building {{product_name}} to help with exactly that. Would you be open to a 15-minute call this week?"}]'),
 
 ('cold_email', '{}', '{}',
  'Follow up on your last outreach batch',
@@ -30,7 +30,7 @@ values
  '[{"id":"followups_sent","prompt":"How many follow-ups did you send?","type":"number"},
    {"id":"response_count","prompt":"How many replied this time?","type":"number"},
    {"id":"converted","prompt":"Did any convert to a customer?","type":"boolean"}]',
- '[{"label":"Follow-up template","content":"Hi {{first_name}} — following up in case this got buried. Still happy to share how {{product_name}} could help with {{icp_pain_point}} if useful. No worries if not!"}]'),
+ '[{"label":"Follow-up template","content":"Hi {{first_name}}, following up in case this got buried. Still happy to share how {{product_name}} could help with {{icp_pain_point}} if useful. No worries if not!"}]'),
 
 -- --- warm_intros ---
 ('warm_intros', '{}', '{}',
@@ -40,12 +40,12 @@ values
  '[{"id":"asks_sent","prompt":"How many intro requests did you send?","type":"number"},
    {"id":"intros_received","prompt":"How many intros did you actually get?","type":"number"},
    {"id":"converted","prompt":"Did any lead to a customer?","type":"boolean"}]',
- '[{"label":"Intro request","content":"Hey {{contact_name}} — random ask, but do you know anyone who fits {{icp}}? I''m building {{product_name}} and would love an intro if you''re comfortable making one. Happy to send a forwardable blurb."}]'),
+ '[{"label":"Intro request","content":"Hey {{contact_name}}, random ask, but do you know anyone who fits {{icp}}? I''m building {{product_name}} and would love an intro if you''re comfortable making one. Happy to send a forwardable blurb."}]'),
 
 -- --- communities ---
 ('communities', '{}', '{}',
  'Post a helpful answer in 3 relevant communities',
- 'Find 3 online communities (Slack, Discord, subreddit, forum) where {{icp}} hangs out. Answer a real question genuinely — no pitching — and mention {{product_name}} only if it truly fits.',
+ 'Find 3 online communities (Slack, Discord, subreddit, forum) where {{icp}} hangs out. Answer a real question genuinely, no pitching, and mention {{product_name}} only if it truly fits.',
  10, 3,
  '[{"id":"posts_made","prompt":"How many posts/answers did you make?","type":"number"},
    {"id":"replies_or_dms","prompt":"How many replies or DMs did you get?","type":"number"},
@@ -59,7 +59,7 @@ values
  '[{"id":"interviews_done","prompt":"How many interviews did you complete?","type":"number"},
    {"id":"pain_confirmed","prompt":"Did most of them confirm this is a real, painful problem?","type":"boolean"},
    {"id":"converted","prompt":"Did any become an early customer?","type":"boolean"}]',
- '[{"label":"Interview ask","content":"I''m researching how {{icp}} handle {{icp_pain_point}} — would you have 15 min this week to share your experience? Not selling anything, just learning."}]'),
+ '[{"label":"Interview ask","content":"I''m researching how {{icp}} handle {{icp_pain_point}}. Would you have 15 min this week to share your experience? Not selling anything, just learning."}]'),
 
 -- --- content ---
 ('content', '{}', '{}',
@@ -69,11 +69,11 @@ values
  '[{"id":"published","prompt":"Did you publish it?","type":"boolean"},
    {"id":"engagement_count","prompt":"How many likes/comments/replies did it get?","type":"number"},
    {"id":"converted","prompt":"Did it lead to a customer conversation?","type":"boolean"}]',
- '[{"label":"Post outline","content":"Hook: a specific, relatable moment of {{icp_pain_point}}\nBody: what you learned building {{product_name}} to solve it\nCTA: a soft ask (reply, DM, or link) — not a hard sell"}]'),
+ '[{"label":"Post outline","content":"Hook: a specific, relatable moment of {{icp_pain_point}}\nBody: what you learned building {{product_name}} to solve it\nCTA: a soft ask (reply, DM, or link), not a hard sell"}]'),
 
 ('content', '{}', '{}',
  'Share a build-in-public update',
- 'Post a short, honest update about {{product_name}} — a number, a lesson, or a screenshot. Founders who follow along convert better later.',
+ 'Post a short, honest update about {{product_name}}: a number, a lesson, or a screenshot. Founders who follow along convert better later.',
  6, 2,
  '[{"id":"published","prompt":"Did you publish it?","type":"boolean"},
    {"id":"engagement_count","prompt":"How many likes/comments/replies did it get?","type":"number"}]',
@@ -97,7 +97,7 @@ values
  '[{"id":"outreach_sent","prompt":"Did you send the outreach?","type":"boolean"},
    {"id":"response_received","prompt":"Did they respond?","type":"boolean"},
    {"id":"converted","prompt":"Did it lead to any customers?","type":"boolean"}]',
- '[{"label":"Partnership pitch","content":"Hi {{contact_name}} — you reach a lot of {{icp}}, and I think {{product_name}} could genuinely help your audience with {{icp_pain_point}}. Open to a quick chat about a simple partnership?"}]'),
+ '[{"label":"Partnership pitch","content":"Hi {{contact_name}}, you reach a lot of {{icp}}, and I think {{product_name}} could genuinely help your audience with {{icp_pain_point}}. Open to a quick chat about a simple partnership?"}]'),
 
 -- --- generic quick-win ---
 ('communities', '{}', '{}',

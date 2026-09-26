@@ -14,7 +14,7 @@ const FEATURES = [
   {
     dot: "bg-tile-customers",
     title: "Every quest says why",
-    body: "Tap “Why this?” to see the reasoning, pulled from what you told us — never generic advice.",
+    body: "Tap “Why this?” to see the reasoning. It's pulled from what you told us, not generic advice.",
   },
   {
     dot: "bg-tile-level",
@@ -24,12 +24,12 @@ const FEATURES = [
   {
     dot: "bg-tile-streak",
     title: "Ask your coach anything",
-    body: "Stuck on a quest? Chat it through. Your coach can suggest a swap — you decide.",
+    body: "Stuck on a quest? Chat it through. Your coach can suggest a swap, but you decide.",
   },
   {
     dot: "bg-accent",
     title: "Past 100? Keep going.",
-    body: "Growth Mode sets your next target — 250, 500, 1,000 — with the same quest loop.",
+    body: "Growth Mode sets your next target (250, then 500, then 1,000) with the same quest loop.",
   },
 ];
 
@@ -44,7 +44,7 @@ const STEPS = [
   {
     n: "02",
     t: "Get quests sized to your week",
-    d: "Up to three at a time, each with a ready-to-use tool — an email draft, a post, a call script.",
+    d: "Up to three at a time, each with a ready-to-use tool: an email draft, a post, a call script.",
   },
   {
     n: "03",
@@ -63,7 +63,7 @@ const PERKS = [
 const FAQS = [
   {
     q: "Is this just ChatGPT with a coat of paint?",
-    a: "No. Your coach works from your onboarding answers and every quest report, and each quest comes with a specific tool — not a wall of generic advice.",
+    a: "No. Your coach works from your onboarding answers and every quest report, and each quest comes with a specific tool instead of a wall of generic advice.",
   },
   {
     q: "How much time does it take?",
@@ -175,7 +175,7 @@ function Hero() {
         </h1>
         <p className="max-w-[480px] text-balance text-base text-secondary sm:text-xl">
           Tell us what you sell and who it&apos;s for. Every week your coach hands you a few
-          small, specific quests — and you watch the ring fill.
+          small, specific quests, and you watch the ring fill.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
           <Link

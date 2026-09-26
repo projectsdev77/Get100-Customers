@@ -194,7 +194,7 @@ export default async function QuestsPage({
         </section>
       )}
 
-      {all.length === 0 && <p className="text-sm text-secondary">No quests yet — check back shortly.</p>}
+      {all.length === 0 && <p className="text-sm text-secondary">No quests yet. Check back shortly.</p>}
     </div>
   );
 }

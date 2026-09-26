@@ -48,7 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </LinkButton>
             }
           >
-            Your account is restricted — subscribe to get new quests and chat back.
+            Your account is restricted. Subscribe to get new quests and chat back.
           </Banner>
         </div>
       )}

@@ -36,7 +36,7 @@ export async function extractUploadedFileText(file: File): Promise<string> {
 
   if (!isTextLike) {
     throw new Error(
-      `Unsupported file type "${file.type || file.name}" — only .txt/.md are supported for now (PDF/DOCX parsing is a fast-follow, see PHASES.md Phase 2).`,
+      `Unsupported file type "${file.type || file.name}". Only .txt/.md are supported for now (PDF/DOCX parsing is a fast-follow, see PHASES.md Phase 2).`,
     );
   }
 

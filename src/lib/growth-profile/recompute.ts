@@ -63,14 +63,14 @@ export async function recomputeGrowthProfile(
   const totalAttempts = Object.values(channels).reduce((sum, s) => sum + s.attempts, 0);
   let bottleneckHypothesis: string;
   if (totalAttempts < 3) {
-    bottleneckHypothesis = "Not enough data yet — complete a few more quests.";
+    bottleneckHypothesis = "Not enough data yet. Complete a few more quests.";
   } else if (whatWorking.length === 0) {
     bottleneckHypothesis =
-      "No channel has converted yet — consider adjusting messaging or target customer.";
+      "No channel has converted yet. Consider adjusting your messaging or target customer.";
   } else if (whatNotWorking.length > 0) {
-    bottleneckHypothesis = `${whatNotWorking[0].insight} — consider dropping or changing that channel.`;
+    bottleneckHypothesis = `${whatNotWorking[0].insight}. Consider dropping or changing that channel.`;
   } else {
-    bottleneckHypothesis = `Keep leaning into ${whatWorking[0].insight.split(" has")[0]} — it's your best-performing channel so far.`;
+    bottleneckHypothesis = `Keep leaning into ${whatWorking[0].insight.split(" has")[0]}. It's your best-performing channel so far.`;
   }
 
   // growth_profiles has a SELECT-only RLS policy (it's system-derived

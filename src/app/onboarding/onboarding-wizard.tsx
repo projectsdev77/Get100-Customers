@@ -112,7 +112,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
           {analyzeError && <Banner tone="error">{analyzeError}</Banner>}
           {analyzed && (
             <Banner tone="success">
-              Pre-filled what we could find — you&apos;ll review every field next.
+              Pre-filled what we could find. You&apos;ll review every field next.
             </Banner>
           )}
           <Button type="button" variant="outline" onClick={handleAnalyze} disabled={isAnalyzing}>
@@ -154,7 +154,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     },
     {
       title: "Who's your target customer?",
-      hint: "Ideal customer profile — be specific.",
+      hint: "Ideal customer profile. Be specific.",
       body: (
         <Input value={data.icp} onChange={(e) => setData({ ...data, icp: e.target.value })} autoFocus />
       ),
@@ -219,7 +219,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
               className={`grid grid-cols-[140px_minmax(0,1fr)] items-baseline gap-3 py-4 ${i ? "border-t border-strong" : ""}`}
             >
               <span className="text-[13px] font-medium text-secondary">{label}</span>
-              <span className="text-sm text-primary">{value || "—"}</span>
+              <span className="text-sm text-primary">{value || "-"}</span>
             </div>
           ))}
         </div>

@@ -29,7 +29,7 @@ export async function runLazyNotificationChecks(
   if (dueSoon && !(await hasRecentNotification(founder.id, "window_approaching", 24))) {
     await notify(founder.id, "window_approaching", `Your quest "${dueSoon.title}" is due soon.`, {
       emailSubject: "A quest is due soon",
-      emailHtml: `<p>Your quest "<strong>${dueSoon.title}</strong>" is due soon — don't lose your streak!</p>`,
+      emailHtml: `<p>Your quest "<strong>${dueSoon.title}</strong>" is due soon. Don't lose your streak!</p>`,
     });
   }
 
@@ -52,8 +52,8 @@ export async function runLazyNotificationChecks(
   );
   if (alreadyNudged) return;
 
-  await notify(founder.id, "re_engagement", "Your quest is still open — need a hand?", {
+  await notify(founder.id, "re_engagement", "Your quest is still open. Need a hand?", {
     emailSubject: "Still there? Your quest is waiting",
-    emailHtml: "<p>You've got an open quest waiting — need a hand getting started?</p>",
+    emailHtml: "<p>You've got an open quest waiting. Need a hand getting started?</p>",
   });
 }

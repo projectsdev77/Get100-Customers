@@ -94,7 +94,7 @@ export function ProfileForm({ founder }: { founder: Founder | null }) {
       {state.success && <Banner tone="success">Saved.</Banner>}
       {state.pivotDetected && (
         <Banner tone="info">
-          Looks like your business changed — your progress carries over, but you can{" "}
+          Looks like your business changed. Your progress carries over, but you can{" "}
           <Link href="/onboarding" className="underline">
             revisit onboarding
           </Link>{" "}

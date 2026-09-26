@@ -36,7 +36,7 @@ export default async function AdminFoundersPage() {
     admin.auth.admin.listUsers({ page: 1, perPage: 200 }),
   ]);
 
-  const emailById = new Map(userList?.users.map((u) => [u.id, u.email ?? "—"]) ?? []);
+  const emailById = new Map(userList?.users.map((u) => [u.id, u.email ?? "-"]) ?? []);
 
   const rows: AdminFounderRow[] = (founders ?? []).map((f) => {
     const sub = Array.isArray(f.subscriptions) ? f.subscriptions[0] : f.subscriptions;
@@ -44,8 +44,8 @@ export default async function AdminFoundersPage() {
     return {
       id: f.id,
       company: f.company_name ?? f.name ?? "Unnamed",
-      email: emailById.get(f.auth_user_id) ?? "—",
-      stage: f.stage ? (STAGE_LABEL[f.stage] ?? f.stage) : "—",
+      email: emailById.get(f.auth_user_id) ?? "-",
+      stage: f.stage ? (STAGE_LABEL[f.stage] ?? f.stage) : "-",
       customers: f.current_customer_count,
       level: f.level,
       subscriptionLabel: meta.label,

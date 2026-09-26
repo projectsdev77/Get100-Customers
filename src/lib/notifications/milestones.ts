@@ -11,15 +11,15 @@ export function crossedCustomerMilestone(oldCount: number, newCount: number): nu
 export function milestoneMessage(milestone: number): { message: string; emailSubject: string; emailHtml: string } {
   if (milestone === 100) {
     return {
-      message: "You've hit 100 customers — welcome to Growth Mode! Next stop: 250.",
-      emailSubject: "100 customers — welcome to Growth Mode",
+      message: "You've hit 100 customers! Welcome to Growth Mode. Next stop: 250.",
+      emailSubject: "100 customers: welcome to Growth Mode",
       emailHtml:
-        "<p>You've reached <strong>100 customers</strong> — the original goal. You're now in <strong>Growth Mode</strong>, with a new stretch target of 250.</p>",
+        "<p>You've reached <strong>100 customers</strong>, the original goal. You're now in <strong>Growth Mode</strong>, with a new stretch target of 250.</p>",
     };
   }
   return {
     message: `You've hit ${milestone} customers!`,
-    emailSubject: `${milestone} customers — nice work`,
+    emailSubject: `${milestone} customers, nice work`,
     emailHtml: `<p>You've reached <strong>${milestone} customers</strong> on your way to 100.</p>`,
   };
 }
