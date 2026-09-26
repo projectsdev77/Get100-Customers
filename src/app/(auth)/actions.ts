@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPasswordValid } from "@/lib/auth/password";
+import { findAuthUserByEmail, hasIdentityProvider } from "@/lib/auth/find-user-by-email";
 
 export async function login(formData: FormData) {
   const email = String(formData.get("email"));
@@ -13,6 +14,24 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    // Supabase returns the same generic error for "wrong password" and
+    // "this account has no password at all" (e.g. signed up via Google
+    // only) — same anti-enumeration reasoning as the signup duplicate-
+    // email case. Look the account up to tell those apart and point a
+    // Google-only founder at the right button instead of a confusing
+    // "invalid credentials" for a password they never set.
+    const existing = await findAuthUserByEmail(email);
+    if (
+      existing &&
+      hasIdentityProvider(existing, "google") &&
+      !hasIdentityProvider(existing, "email")
+    ) {
+      redirect(
+        `/login?error=${encodeURIComponent(
+          "This email is registered with Google. Continue with Google instead.",
+        )}`,
+      );
+    }
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
 
