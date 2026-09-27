@@ -8,10 +8,12 @@ import {
   buildQuestInsertFields,
   countActiveQuests,
   getGrowthProfile,
+  getRecentQuestHistory,
   MAX_ACTIVE_QUESTS,
   OCCUPYING_STATUSES,
   refreshQuestLog,
 } from "@/lib/quests/lifecycle";
+import type { RecentQuestInfo } from "@/lib/ai/select-quest";
 import { recomputeGrowthProfile } from "@/lib/growth-profile/recompute";
 import { summarizeResultNotes } from "@/lib/ai/summarize-result-notes";
 import { computeLevel } from "@/lib/gamification/level";
@@ -89,22 +91,25 @@ export async function regenerateQuest(questId: string) {
 
   const { data: occupying } = await supabase
     .from("quests")
-    .select("template_id, category, title")
+    .select("template_id, category, title, status")
     .eq("founder_id", founder.id)
     .in("status", OCCUPYING_STATUSES)
-    .returns<Pick<Quest, "template_id" | "category" | "title">[]>();
+    .returns<Pick<Quest, "template_id" | "category" | "title" | "status">[]>();
 
+  // `existing` (status "suggested") is already among occupyingRows, since
+  // OCCUPYING_STATUSES includes "suggested" — no need to add it separately.
   const occupyingRows = occupying ?? [];
   const excludeIds = [...occupyingRows.map((q) => q.template_id), existing.template_id].filter(
     (id): id is string => Boolean(id),
   );
-  // The founder explicitly asked for something else, so the swapped-out
-  // suggestion is included here too, not just still-occupying quests.
-  const recentCategories = [
-    ...occupyingRows.map((q) => q.category),
-    existing.category,
-  ].filter((c): c is string => Boolean(c));
-  const recentTitles = [...occupyingRows.map((q) => q.title), existing.title];
+  const occupyingInfo: RecentQuestInfo[] = occupyingRows.map((q) => ({
+    category: q.category,
+    title: q.title,
+    status: q.status,
+    skipReason: null,
+    converted: null,
+  }));
+  const history = await getRecentQuestHistory(supabase, founder.id);
 
   const { data: templates } = await supabase
     .from("quest_templates")
@@ -112,14 +117,10 @@ export async function regenerateQuest(questId: string) {
     .returns<QuestTemplate[]>();
 
   const growth = await getGrowthProfile(supabase, founder.id);
-  const built = await buildQuestInsertFields(
-    founder,
-    growth,
-    templates ?? [],
-    excludeIds,
-    recentCategories,
-    recentTitles,
-  );
+  const built = await buildQuestInsertFields(founder, growth, templates ?? [], excludeIds, [
+    ...occupyingInfo,
+    ...history,
+  ]);
   if (!built) return;
 
   await supabase.from("quests").delete().eq("id", questId);

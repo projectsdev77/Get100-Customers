@@ -1,9 +1,9 @@
 import type { createClient } from "@/lib/supabase/server";
-import type { Founder, GrowthProfile, Quest, QuestTemplate } from "@/types/database";
+import type { Founder, GrowthProfile, Quest, QuestResult, QuestTemplate } from "@/types/database";
 import { pickTemplate, templateToQuestFields } from "./select-template";
 import { personalizeQuestWithAI } from "@/lib/ai/personalize-quest";
 import { generateNetNewQuest } from "@/lib/ai/generate-quest";
-import { selectNextQuestWithAI } from "@/lib/ai/select-quest";
+import { selectNextQuestWithAI, type RecentQuestInfo } from "@/lib/ai/select-quest";
 import { notify } from "@/lib/notifications/notify";
 import { runLazyNotificationChecks } from "@/lib/notifications/lazy-checks";
 import { applySubscriptionLifecycle, getSubscription, isRestricted } from "@/lib/subscriptions/status";
@@ -51,6 +51,46 @@ export async function getGrowthProfile(
   return data ?? null;
 }
 
+const RESOLVED_HISTORY_STATUSES = ["completed", "skipped", "expired"];
+const HISTORY_LIMIT = 8;
+
+// Recently resolved quests, most recent first, for selectNextQuestWithAI —
+// recomputeGrowthProfile only ever looks at completed quests to build its
+// category-level conversion stats, so a skip (and its reason) never reaches
+// the growth profile at all, and a single non-converting attempt is
+// invisible once it's no longer "in flight". This gives the AI the
+// individual recent record — skips, skip reasons, and per-attempt outcomes
+// — on top of those aggregates, so it can actually avoid what was just
+// rejected instead of only what's currently active.
+export async function getRecentQuestHistory(
+  supabase: SupabaseServerClient,
+  founderId: string,
+): Promise<RecentQuestInfo[]> {
+  const { data } = await supabase
+    .from("quests")
+    .select("category, title, status, skip_reason, quest_results(structured_answers)")
+    .eq("founder_id", founderId)
+    .in("status", RESOLVED_HISTORY_STATUSES)
+    .order("resolved_at", { ascending: false })
+    .limit(HISTORY_LIMIT)
+    .returns<
+      Array<
+        Pick<Quest, "category" | "title" | "status" | "skip_reason"> & {
+          quest_results: Pick<QuestResult, "structured_answers">[];
+        }
+      >
+    >();
+
+  return (data ?? []).map((q) => ({
+    category: q.category,
+    title: q.title,
+    status: q.status,
+    skipReason: q.skip_reason,
+    converted:
+      q.status === "completed" ? q.quest_results[0]?.structured_answers?.converted === true : null,
+  }));
+}
+
 // Quest builder (SPEC §7.1). The AI chooses the quest itself — channel and
 // all — grounded in the founder's growth history and the template library
 // only as a style/shape reference (see select-quest.ts for why this
@@ -65,16 +105,9 @@ export async function buildQuestInsertFields(
   growth: GrowthProfile | null,
   templates: QuestTemplate[],
   excludeTemplateIds: string[],
-  recentCategories: string[] = [],
-  recentTitles: string[] = [],
+  recentQuests: RecentQuestInfo[] = [],
 ) {
-  const aiSelected = await selectNextQuestWithAI(
-    founder,
-    growth,
-    templates,
-    recentCategories,
-    recentTitles,
-  );
+  const aiSelected = await selectNextQuestWithAI(founder, growth, templates, recentQuests);
   if (aiSelected) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + aiSelected.window_days);
@@ -182,19 +215,19 @@ export async function ensureQuestSlots(
   const usedTemplateIds = occupyingRows
     .map((q) => q.template_id)
     .filter((id): id is string => Boolean(id));
-  const recentCategories = occupyingRows
-    .map((q) => q.category)
-    .filter((c): c is string => Boolean(c));
-  const recentTitles = occupyingRows.map((q) => q.title);
+  const occupyingInfo: RecentQuestInfo[] = occupyingRows.map((q) => ({
+    category: q.category,
+    title: q.title,
+    status: q.status,
+    skipReason: null,
+    converted: null,
+  }));
+  const history = await getRecentQuestHistory(supabase, founder.id);
 
-  const built = await buildQuestInsertFields(
-    founder,
-    growth,
-    templates,
-    usedTemplateIds,
-    recentCategories,
-    recentTitles,
-  );
+  const built = await buildQuestInsertFields(founder, growth, templates, usedTemplateIds, [
+    ...occupyingInfo,
+    ...history,
+  ]);
   if (!built) return;
 
   await supabase.from("quests").insert({

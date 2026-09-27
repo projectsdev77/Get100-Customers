@@ -101,7 +101,7 @@ async function main() {
     if (!first) await pause();
     first = false;
     console.log("\n-- selectNextQuestWithAI (primary path — AI picks the channel too) --");
-    const selected = await selectNextQuestWithAI(founder, null, [SAMPLE_TEMPLATE], [], []);
+    const selected = await selectNextQuestWithAI(founder, null, [SAMPLE_TEMPLATE], []);
     console.log(selected ? JSON.stringify(selected, null, 2) : "FAILED — would fall back to pickTemplate");
 
     await pause();
