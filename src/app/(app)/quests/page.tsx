@@ -58,7 +58,16 @@ export default async function QuestsPage({
         Quests
       </h1>
 
-      {flash && <Banner tone="error">{flash}</Banner>}
+      {/*
+        The flash message rides a query param from acceptQuest's redirect
+        (see actions.ts), but skipQuest/markQuestDone/etc. only revalidate —
+        they don't navigate — so that param can outlive the "3 active
+        quests" state it describes (e.g. accept blocked at 3 active, then
+        skip one right after: the count drops but the URL still says 3).
+        Re-checking against the live count here makes the banner disappear
+        the moment it's no longer true, instead of trusting a stale string.
+      */}
+      {flash && active.length >= MAX_ACTIVE_QUESTS && <Banner tone="error">{flash}</Banner>}
 
       {awaitingReport.length > 0 && (
         <section className="flex flex-col gap-3">
