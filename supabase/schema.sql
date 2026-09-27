@@ -130,6 +130,27 @@ create table if not exists customer_events (
 );
 
 -- ---------------------------------------------------------------------------
+-- chat_messages — persisted coach conversation (SPEC §10). The chat surface
+-- originally had zero memory — history lived only in the browser tab and
+-- vanished on close/reload, so the AI coach never actually remembered a
+-- founder between sessions. This is that missing persistence.
+-- proposed_swap_* mirrors an assistant turn's optional quest-swap proposal
+-- (see src/lib/ai/chat.ts); swap_resolved tracks whether the founder has
+-- already confirmed or dismissed it, so reopening chat later doesn't show
+-- stale action buttons on an old message.
+-- ---------------------------------------------------------------------------
+create table if not exists chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  founder_id uuid not null references founders (id) on delete cascade,
+  role text not null check (role in ('user', 'model')),
+  text text not null,
+  proposed_swap_quest_id uuid references quests (id) on delete set null,
+  proposed_swap_reason text,
+  swap_resolved boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------
 -- subscriptions — trial/plan/status (SPEC §3)
 -- ---------------------------------------------------------------------------
 create table if not exists subscriptions (
@@ -190,6 +211,7 @@ alter table founder_documents enable row level security;
 alter table growth_profiles enable row level security;
 alter table quests enable row level security;
 alter table quest_results enable row level security;
+alter table chat_messages enable row level security;
 alter table customer_events enable row level security;
 alter table subscriptions enable row level security;
 alter table notifications_log enable row level security;
@@ -212,6 +234,9 @@ create policy "quests_owner" on quests
   for all using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
 create policy "quest_results_owner" on quest_results
+  for all using (founder_id in (select id from founders where auth_user_id = auth.uid()));
+
+create policy "chat_messages_owner" on chat_messages
   for all using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
 create policy "customer_events_owner" on customer_events

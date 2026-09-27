@@ -110,6 +110,17 @@ export interface QuestResult {
   reported_at: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  founder_id: string;
+  role: "user" | "model";
+  text: string;
+  proposed_swap_quest_id: string | null;
+  proposed_swap_reason: string | null;
+  swap_resolved: boolean;
+  created_at: string;
+}
+
 export interface CustomerEvent {
   id: string;
   founder_id: string;

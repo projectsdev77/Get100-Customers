@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { confirmSwap, sendMessage } from "./actions";
+import { useEffect, useState, useTransition } from "react";
+import { confirmSwap, dismissSwap, getChatHistory, sendMessage } from "./actions";
 import { Button, buttonClasses } from "@/components/ui/actions/Button";
 
 interface Message {
+  id: string | null;
   role: "user" | "model";
   text: string;
   proposedSwapQuestId?: string | null;
@@ -14,8 +15,9 @@ interface Message {
 }
 
 // Persistent secondary chat surface (SPEC §10) — a bubble/panel, never the
-// primary UI. Not persisted server-side; history lives for the tab session
-// only, which is enough for a "why did you recommend this?" Q&A surface.
+// primary UI. History is loaded from and written to chat_messages
+// (src/app/(app)/chat/actions.ts) so the coach actually remembers a founder
+// across sessions, rather than resetting every time the tab closes.
 export function ChatWidget({
   restricted = false,
   stuck = false,
@@ -25,26 +27,41 @@ export function ChatWidget({
 }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  useEffect(() => {
+    if (restricted) return;
+    getChatHistory().then((history) => {
+      setMessages(
+        history.map((m) => ({
+          id: m.id,
+          role: m.role,
+          text: m.text,
+          proposedSwapQuestId: m.proposedSwapQuestId,
+          proposedSwapReason: m.proposedSwapReason,
+          swapResolved: m.swapResolved,
+        })),
+      );
+      setHistoryLoaded(true);
+    });
+  }, [restricted]);
 
   function handleSend() {
     const text = input.trim();
     if (!text || restricted) return;
     setInput("");
 
-    const nextMessages: Message[] = [...messages, { role: "user", text }];
-    setMessages(nextMessages);
+    setMessages((prev) => [...prev, { id: null, role: "user", text }]);
 
     startTransition(async () => {
-      const result = await sendMessage(
-        nextMessages.map((m) => ({ role: m.role, text: m.text })),
-        text,
-      );
+      const result = await sendMessage(text);
       setMessages((prev) => [
         ...prev,
         {
+          id: result.id,
           role: "model",
           text: result.reply,
           proposedSwapQuestId: result.proposedSwapQuestId,
@@ -54,22 +71,30 @@ export function ChatWidget({
     });
   }
 
-  function handleConfirmSwap(index: number, questId: string, reason: string | null) {
+  function handleConfirmSwap(
+    index: number,
+    questId: string,
+    reason: string | null,
+    messageId: string | null,
+  ) {
     startTransition(async () => {
-      await confirmSwap(questId, reason);
+      await confirmSwap(questId, reason, messageId);
       setMessages((prev) => [
         ...prev.map((m, i) => (i === index ? { ...m, swapResolved: true } : m)),
-        { role: "model", text: "Done. That quest is swapped." },
+        { id: null, role: "model", text: "Done. That quest is swapped." },
       ]);
       router.refresh();
     });
   }
 
-  function handleKeep(index: number) {
-    setMessages((prev) => [
-      ...prev.map((m, i) => (i === index ? { ...m, swapResolved: true } : m)),
-      { role: "model", text: "Sounds good. Keeping it as is." },
-    ]);
+  function handleKeep(index: number, messageId: string | null) {
+    startTransition(async () => {
+      if (messageId) await dismissSwap(messageId);
+      setMessages((prev) => [
+        ...prev.map((m, i) => (i === index ? { ...m, swapResolved: true } : m)),
+        { id: null, role: "model", text: "Sounds good. Keeping it as is." },
+      ]);
+    });
   }
 
   if (!open) {
@@ -108,7 +133,7 @@ export function ChatWidget({
           </div>
         ) : (
           <>
-            {messages.length === 0 && (
+            {historyLoaded && messages.length === 0 && (
               <p className="text-sm text-secondary">
                 {stuck
                   ? "Looks like a few approaches haven't converted yet. Say hi and let's dig into what might need to change."
@@ -117,7 +142,7 @@ export function ChatWidget({
             )}
             {messages.map((m, i) => (
               <div
-                key={i}
+                key={m.id ?? i}
                 className={`flex max-w-[85%] flex-col gap-2 ${
                   m.role === "user" ? "self-end items-end" : "self-start items-start"
                 }`}
@@ -134,7 +159,12 @@ export function ChatWidget({
                     <Button
                       size="sm"
                       onClick={() =>
-                        handleConfirmSwap(i, m.proposedSwapQuestId!, m.proposedSwapReason ?? null)
+                        handleConfirmSwap(
+                          i,
+                          m.proposedSwapQuestId!,
+                          m.proposedSwapReason ?? null,
+                          m.id,
+                        )
                       }
                       disabled={isPending}
                     >
@@ -143,7 +173,7 @@ export function ChatWidget({
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleKeep(i)}
+                      onClick={() => handleKeep(i, m.id)}
                       disabled={isPending}
                     >
                       Keep it
