@@ -38,15 +38,29 @@ function buildSystemInstruction(
   founder: FounderContext,
   growth: GrowthContext,
   quests: QuestContext[],
+  stuck: boolean,
 ) {
   const questLines =
     quests.map((q) => `${q.id}: ${q.title} — ${q.status}`).join("\n") || "none yet";
+
+  const stuckNote = stuck
+    ? `\nThis founder has completed several quests across multiple channels with zero
+conversions so far. If they ask what to do next, seem unsure, or just say
+hi, proactively raise this rather than waiting to be asked: the real
+question right now probably isn't "which tactic next" but something more
+fundamental — is the target customer actually right, is the message
+resonating with the people they're reaching, is the problem urgent enough
+for someone to pay to solve it. Suggest they walk you through 3-5 recent
+conversations or attempts so you can look for a pattern together, instead
+of immediately recommending another outreach quest.\n`
+    : "";
 
   return `You are an AI growth coach chatting with a startup founder inside a
 gamified app. Chat is a SECONDARY surface here — be concise, concrete, and
 encouraging, not chatty. You can only PROPOSE actions, never execute them;
 the founder always confirms explicitly (never claim you already did
 something).
+${stuckNote}
 
 Founder:
 - Company: ${founder.company_name ?? "unknown"}
@@ -79,6 +93,7 @@ export async function sendChatMessage(
   quests: QuestContext[],
   history: ChatTurn[],
   message: string,
+  stuck: boolean,
 ): Promise<ChatReply | null> {
   try {
     const contents = [
@@ -89,7 +104,7 @@ export async function sendChatMessage(
     const response = await generateStructuredContent({
       model: GEMINI_MODELS.capable,
       contents,
-      systemInstruction: buildSystemInstruction(founder, growth, quests),
+      systemInstruction: buildSystemInstruction(founder, growth, quests, stuck),
       schema: RESPONSE_SCHEMA,
     });
 

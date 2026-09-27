@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { getGrowthProfile, OCCUPYING_STATUSES, refreshQuestLog } from "@/lib/quests/lifecycle";
 import { sendChatMessage, type ChatTurn } from "@/lib/ai/chat";
+import { isFounderStuck } from "@/lib/growth-profile/stuck";
 import { getSubscription, isRestricted } from "@/lib/subscriptions/status";
 import type { Quest } from "@/types/database";
 
@@ -46,7 +47,8 @@ export async function sendMessage(
     .in("status", OCCUPYING_STATUSES)
     .returns<Pick<Quest, "id" | "title" | "status">[]>();
 
-  const result = await sendChatMessage(founder, growth, quests ?? [], history, message);
+  const stuck = isFounderStuck(founder.current_customer_count, growth);
+  const result = await sendChatMessage(founder, growth, quests ?? [], history, message, stuck);
   return result ?? FALLBACK;
 }
 

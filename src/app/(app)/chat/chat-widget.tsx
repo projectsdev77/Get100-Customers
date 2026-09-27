@@ -16,7 +16,13 @@ interface Message {
 // Persistent secondary chat surface (SPEC §10) — a bubble/panel, never the
 // primary UI. Not persisted server-side; history lives for the tab session
 // only, which is enough for a "why did you recommend this?" Q&A surface.
-export function ChatWidget({ restricted = false }: { restricted?: boolean }) {
+export function ChatWidget({
+  restricted = false,
+  stuck = false,
+}: {
+  restricted?: boolean;
+  stuck?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -104,7 +110,9 @@ export function ChatWidget({ restricted = false }: { restricted?: boolean }) {
           <>
             {messages.length === 0 && (
               <p className="text-sm text-secondary">
-                Ask about a quest, or why something was recommended.
+                {stuck
+                  ? "Looks like a few approaches haven't converted yet. Say hi and let's dig into what might need to change."
+                  : "Ask about a quest, or why something was recommended."}
               </p>
             )}
             {messages.map((m, i) => (
