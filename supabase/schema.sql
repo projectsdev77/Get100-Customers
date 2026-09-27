@@ -27,7 +27,7 @@ create table if not exists founders (
   streak_count integer not null default 0,
   last_streak_activity_at timestamptz,
   email_notification_prefs jsonb not null default
-    '{"new_quest":true,"window_approaching":true,"re_engagement":true,"milestone":true,"weekly_recap":true}'::jsonb,
+    '{"new_quest":true,"window_approaching":true,"re_engagement":true,"milestone":true,"weekly_recap":true,"quest_check_in":true}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -100,8 +100,19 @@ create table if not exists quests (
   skip_reason text,
   created_at timestamptz not null default now(),
   resolved_at timestamptz,
-  completed_at timestamptz
+  completed_at timestamptz,
+  activated_at timestamptz,
+  check_in_sent boolean not null default false
 );
+
+-- Additive columns for existing deployments (the create above only applies
+-- to a brand-new table) — a real "accepted at" timestamp, since expires_at
+-- counts down from when a quest was *suggested*, not when the founder
+-- actually committed to it, so it can't be used to gauge time-since-accepted
+-- on its own. check_in_sent dedupes the proactive quest-check-in cron
+-- (src/app/api/cron/quest-check-ins/route.ts) per quest.
+alter table quests add column if not exists activated_at timestamptz;
+alter table quests add column if not exists check_in_sent boolean not null default false;
 
 -- ---------------------------------------------------------------------------
 -- quest_results — structured + free-text outcomes (SPEC §8)

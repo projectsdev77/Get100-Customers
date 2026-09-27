@@ -39,7 +39,7 @@ export async function acceptQuest(questId: string) {
 
   await supabase
     .from("quests")
-    .update({ status: "active" })
+    .update({ status: "active", activated_at: new Date().toISOString() })
     .eq("id", questId)
     .eq("founder_id", founder.id)
     .eq("status", "suggested");

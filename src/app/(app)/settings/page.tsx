@@ -62,6 +62,7 @@ export default async function SettingsPage() {
               re_engagement: true,
               milestone: true,
               weekly_recap: true,
+              quest_check_in: true,
             }
           }
         />

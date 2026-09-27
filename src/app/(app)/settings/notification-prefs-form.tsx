@@ -8,6 +8,7 @@ const LABELS: Record<NotificationType, string> = {
   re_engagement: "Re-engagement nudges",
   milestone: "Milestones (level up, customer count)",
   weekly_recap: "Weekly progress recap",
+  quest_check_in: "Mid-quest check-ins",
 };
 
 export function NotificationPrefsForm({ prefs }: { prefs: EmailNotificationPrefs }) {

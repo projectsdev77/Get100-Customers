@@ -1,0 +1,21 @@
+name: Quest check-in nudges
+
+# Zero-budget "cron" for proactive, per-quest check-ins (same pattern as
+# weekly-recap.yml) — runs daily so a quest crossing the 48-hour
+# activated_at threshold gets followed up on within about a day of hitting
+# it, independent of whether the founder ever opens the app. Requires the
+# same two repo secrets as weekly-recap.yml: APP_URL and CRON_SECRET.
+
+on:
+  schedule:
+    - cron: "0 15 * * *" # daily at 15:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  trigger-quest-check-ins:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call quest check-ins endpoint
+        run: |
+          curl -sf -X POST "${{ secrets.APP_URL }}/api/cron/quest-check-ins" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

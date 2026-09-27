@@ -98,6 +98,8 @@ export interface Quest {
   created_at: string;
   resolved_at: string | null;
   completed_at: string | null;
+  activated_at: string | null;
+  check_in_sent: boolean;
 }
 
 export interface QuestResult {
@@ -150,7 +152,8 @@ export type NotificationType =
   | "window_approaching"
   | "re_engagement"
   | "milestone"
-  | "weekly_recap";
+  | "weekly_recap"
+  | "quest_check_in";
 
 export interface NotificationLogEntry {
   id: string;
