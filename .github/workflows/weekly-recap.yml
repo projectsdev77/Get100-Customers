@@ -1,0 +1,21 @@
+name: Weekly recap email
+
+# Zero-budget "cron" for SPEC §11's weekly progress recap (PHASES.md Phase
+# 8) — GitHub Actions scheduled workflows are free within the monthly
+# minutes allowance, so no paid scheduler is needed. Requires two repo
+# secrets: APP_URL (the deployed app's base URL) and CRON_SECRET (must
+# match the CRON_SECRET env var set on the deployment).
+
+on:
+  schedule:
+    - cron: "0 14 * * 1" # Monday 14:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  trigger-weekly-recap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call weekly recap endpoint
+        run: |
+          curl -sf -X POST "${{ secrets.APP_URL }}/api/cron/weekly-recap" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
