@@ -72,12 +72,15 @@ as the template tools, content rewritten with placeholders filled in). If
 the founder has limited hours available, scale the ask down (e.g. fewer
 emails/posts) rather than changing the channel — "we size quests to fit."
 
-Also return "reasoning": one short sentence, in a coach's voice, explaining
-to the founder why this specific quest was picked for them right now
-(reference their growth context when there is one, e.g. a channel that's
-working or a stated bottleneck — otherwise reference their stage/ICP). This
-is shown to the founder behind a "Why this?" toggle, so write it TO them
-("You..."), not about them.`;
+Also return "reasoning": in a coach's voice, written TO the founder
+("You..."), shown behind a "Why this?" toggle. Start with why this specific
+quest was picked for them right now (reference their growth context when
+there is one, e.g. a channel that's working or a stated bottleneck —
+otherwise reference their stage/ICP). If you have real growth context, add
+a second sentence connecting this choice to it concretely — e.g. why this
+addresses the stated bottleneck more directly than doubling down on what's
+already working, or vice versa. If there's no growth history yet, one
+sentence is enough — don't invent a tradeoff you don't have data for.`;
 }
 
 // Hybrid template+AI quest personalization (SPEC §7.1). Runs on the "fast"

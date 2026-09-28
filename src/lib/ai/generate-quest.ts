@@ -113,11 +113,15 @@ result_questions should be 2-4 short questions to ask when the founder
 reports back, at least one boolean question with id "converted" asking
 whether it led to a new customer. xp_value 6-15. window_days 1-5.
 
-Also return "reasoning": one short sentence, in a coach's voice, written
-TO the founder ("You...") explaining why you designed this particular
-quest for them right now — reference their growth context if there is
-one, otherwise their stage/ICP/channels tried. Shown behind a "Why this?"
-toggle in the app.`;
+Also return "reasoning": in a coach's voice, written TO the founder
+("You..."), shown behind a "Why this?" toggle. Start with why you designed
+this particular quest for them right now — reference their growth context
+if there is one, otherwise their stage/ICP/channels tried. If they've
+already tried other channels or have growth context showing what's not
+working, add a second sentence naming one of those specifically and saying
+why this angle is worth trying instead of repeating it. If there's no such
+history yet, one sentence is enough — don't invent a channel they haven't
+actually tried.`;
 
   try {
     const response = await generateStructuredContent({

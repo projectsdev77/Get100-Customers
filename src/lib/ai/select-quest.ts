@@ -204,11 +204,19 @@ different channel — "we size quests to fit"). result_questions should be
 boolean question with id "converted" asking whether it led to a new
 customer. xp_value 6-15. window_days 1-5.
 
-Also return "reasoning": one short sentence, in a coach's voice, written
-TO the founder ("You...") explaining why you picked this quest and this
-channel for them right now — reference their growth history if there is
-one, otherwise their stage/ICP/channels tried. Shown behind a "Why this?"
-toggle in the app.`;
+Also return "reasoning": 2-3 sentences, in a coach's voice, written TO the
+founder ("You..."). Start with why you picked this quest and channel right
+now — reference their growth history if there is one, otherwise their
+stage/ICP/channels tried. ${
+    founderIntent
+      ? `Since they told you what to focus on, use this reasoning to honor
+their request or explain a deviation from it, as instructed above.`
+      : `Then name ONE specific alternative you considered and passed on —
+another channel from their history, an in-flight quest they could double
+down on instead, or repeating something that already worked — and say
+concretely why this beats it right now. Don't just say "other options
+exist"; name the actual one and the actual reason.`
+  } Shown behind a "Why this?" toggle in the app.`;
 }
 
 // Primary quest-selection path (SPEC §7.1's "Phase 5: AI personalization
