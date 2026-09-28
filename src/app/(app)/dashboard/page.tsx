@@ -1,9 +1,15 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Founder } from "@/types/database";
-import { refreshQuestLog, getGrowthProfile, OCCUPYING_STATUSES } from "@/lib/quests/lifecycle";
+import {
+  refreshQuestLog,
+  getGrowthProfile,
+  getRecentQuestHistory,
+  OCCUPYING_STATUSES,
+} from "@/lib/quests/lifecycle";
 import { logCustomer } from "./actions";
 import { isoDaysAgo } from "@/lib/utils/days-remaining";
+import { detectSkipPattern } from "@/lib/growth-profile/patterns";
 import { GrowthHud } from "@/components/ui/game/GrowthHud";
 import { GrowthInsights } from "@/components/ui/game/GrowthInsights";
 import { Card } from "@/components/ui/surfaces/Card";
@@ -30,7 +36,7 @@ export default async function DashboardPage() {
   await refreshQuestLog(supabase, founder);
 
   const weekAgoIso = isoDaysAgo(7);
-  const [{ data: weekEvents }, { count: questCount }, growth] = await Promise.all([
+  const [{ data: weekEvents }, { count: questCount }, growth, recentQuests] = await Promise.all([
     supabase
       .from("customer_events")
       .select("delta")
@@ -43,8 +49,10 @@ export default async function DashboardPage() {
       .eq("founder_id", founder.id)
       .in("status", OCCUPYING_STATUSES),
     getGrowthProfile(supabase, founder.id),
+    getRecentQuestHistory(supabase, founder.id),
   ]);
   const weekDelta = (weekEvents ?? []).reduce((sum, e) => sum + e.delta, 0);
+  const skipPattern = detectSkipPattern(recentQuests);
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,7 +94,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <GrowthInsights growth={growth} />
+      <GrowthInsights growth={growth} pattern={skipPattern} />
     </div>
   );
 }
