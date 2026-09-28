@@ -217,6 +217,7 @@ create table if not exists admin_users (
 -- client or the Supabase dashboard, never by clients directly.
 alter table admin_users enable row level security;
 
+drop policy if exists "admin_users_self_select" on admin_users;
 create policy "admin_users_self_select" on admin_users
   for select using (auth.uid() = auth_user_id);
 
@@ -237,31 +238,41 @@ alter table subscriptions enable row level security;
 alter table notifications_log enable row level security;
 alter table quest_templates enable row level security;
 
+drop policy if exists "founders_select_own" on founders;
 create policy "founders_select_own" on founders
   for select using (auth.uid() = auth_user_id);
+drop policy if exists "founders_update_own" on founders;
 create policy "founders_update_own" on founders
   for update using (auth.uid() = auth_user_id);
+drop policy if exists "founders_insert_own" on founders;
 create policy "founders_insert_own" on founders
   for insert with check (auth.uid() = auth_user_id);
 
+drop policy if exists "founder_documents_owner" on founder_documents;
 create policy "founder_documents_owner" on founder_documents
   for all using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
+drop policy if exists "growth_profiles_owner" on growth_profiles;
 create policy "growth_profiles_owner" on growth_profiles
   for select using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
+drop policy if exists "quests_owner" on quests;
 create policy "quests_owner" on quests
   for all using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
+drop policy if exists "quest_results_owner" on quest_results;
 create policy "quest_results_owner" on quest_results
   for all using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
+drop policy if exists "chat_messages_owner" on chat_messages;
 create policy "chat_messages_owner" on chat_messages
   for all using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
+drop policy if exists "customer_events_owner" on customer_events;
 create policy "customer_events_owner" on customer_events
   for all using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
+drop policy if exists "subscriptions_owner" on subscriptions;
 create policy "subscriptions_owner" on subscriptions
   for select using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
@@ -269,12 +280,15 @@ create policy "subscriptions_owner" on subscriptions
 -- session; creation always goes through the service-role admin client
 -- instead (system-generated content — see src/lib/notifications/notify.ts),
 -- so no insert policy is needed here.
+drop policy if exists "notifications_log_owner_select" on notifications_log;
 create policy "notifications_log_owner_select" on notifications_log
   for select using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
+drop policy if exists "notifications_log_owner_update" on notifications_log;
 create policy "notifications_log_owner_update" on notifications_log
   for update using (founder_id in (select id from founders where auth_user_id = auth.uid()));
 
+drop policy if exists "quest_templates_read_all" on quest_templates;
 create policy "quest_templates_read_all" on quest_templates
   for select using (auth.role() = 'authenticated');
 
@@ -323,12 +337,14 @@ insert into storage.buckets (id, name, public)
 values ('founder-documents', 'founder-documents', false)
 on conflict (id) do nothing;
 
+drop policy if exists "founder_documents_storage_owner_select" on storage.objects;
 create policy "founder_documents_storage_owner_select" on storage.objects
   for select using (
     bucket_id = 'founder-documents'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+drop policy if exists "founder_documents_storage_owner_insert" on storage.objects;
 create policy "founder_documents_storage_owner_insert" on storage.objects
   for insert with check (
     bucket_id = 'founder-documents'
