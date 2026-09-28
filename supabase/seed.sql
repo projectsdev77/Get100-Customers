@@ -107,4 +107,42 @@ values
  '[{"id":"asks_sent","prompt":"How many people did you ask?","type":"number"},
    {"id":"tried_it","prompt":"How many actually tried it?","type":"number"},
    {"id":"converted","prompt":"Did any become a customer?","type":"boolean"}]',
+ '[]'),
+
+-- --- referrals ---
+('referrals', '{}', '{"launched"}',
+ 'Ask 3 existing customers for a referral',
+ 'Message 3 people who already use {{product_name}} and ask if they know anyone else who fits {{icp}}. Make it easy — draft a short, forwardable blurb they can just send along.',
+ 10, 4,
+ '[{"id":"asks_sent","prompt":"How many customers did you ask?","type":"number"},
+   {"id":"referrals_received","prompt":"How many referrals did you actually get?","type":"number"},
+   {"id":"converted","prompt":"Did any lead to a new customer?","type":"boolean"}]',
+ '[{"label":"Referral ask","content":"Hey {{contact_name}}, glad {{product_name}} has been useful! Quick favor — know anyone else who fits {{icp}} and might want the same? Happy for you to just forward this."}]'),
+
+('referrals', '{}', '{"launched"}',
+ 'Set up a simple referral incentive',
+ 'Offer existing customers a small, concrete perk (discount, extra usage, gift card) for referring someone who becomes a paying customer. Tell your current customers about it directly.',
+ 12, 5,
+ '[{"id":"offer_sent","prompt":"Did you tell your customers about the offer?","type":"boolean"},
+   {"id":"referrals_received","prompt":"How many referrals came in?","type":"number"},
+   {"id":"converted","prompt":"Did any convert to a customer?","type":"boolean"}]',
+ '[{"label":"Incentive announcement","content":"Quick heads up — if you refer someone to {{product_name}} and they sign up, you both get {{incentive}}. Anyone come to mind?"}]'),
+
+-- --- local_events ---
+('local_events', '{}', '{}',
+ 'Show up in person once this week',
+ 'Find one local event, meetup, market, or spot where {{icp}} actually shows up, and go introduce yourself and {{product_name}} in person — no hard selling, just a genuine conversation.',
+ 12, 5,
+ '[{"id":"showed_up","prompt":"Did you go?","type":"boolean"},
+   {"id":"conversations_had","prompt":"How many real conversations did you have?","type":"number"},
+   {"id":"converted","prompt":"Did any lead to a customer?","type":"boolean"}]',
+ '[]'),
+
+('local_events', '{}', '{}',
+ 'Get listed somewhere locals actually look',
+ 'Add {{product_name}} to one place your local {{icp}} would search — a Google Business Profile, a local directory, a neighborhood Facebook/community group, or a local newsletter.',
+ 8, 4,
+ '[{"id":"listed","prompt":"Did you get listed?","type":"boolean"},
+   {"id":"views_or_inquiries","prompt":"Any views, messages, or inquiries so far?","type":"number"},
+   {"id":"converted","prompt":"Did it lead to a customer?","type":"boolean"}]',
  '[]');

@@ -7,6 +7,8 @@ export const CHANNEL_OPTIONS = [
   "Content",
   "Paid ads",
   "Partnerships",
+  "Referrals",
+  "Local & in-person",
 ];
 export const CHANNEL_VALUES: Record<string, string> = {
   "Cold email": "cold_email",
@@ -15,6 +17,8 @@ export const CHANNEL_VALUES: Record<string, string> = {
   Content: "content",
   "Paid ads": "paid",
   Partnerships: "partnerships",
+  Referrals: "referrals",
+  "Local & in-person": "local_events",
 };
 export const CHANNEL_LABELS = Object.fromEntries(
   Object.entries(CHANNEL_VALUES).map(([label, value]) => [value, label]),

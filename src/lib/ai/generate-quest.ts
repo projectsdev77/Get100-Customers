@@ -108,7 +108,8 @@ ${growthNotes}
 Design a single quest completable within a few days, scoped to fit the
 founder's available hours per week ("we size quests to fit" — a smaller
 ask for fewer hours, not a different channel). category should be a
-short snake_case channel label (e.g. cold_email, content, communities).
+short snake_case channel label — one of: cold_email, warm_intros,
+communities, content, paid, partnerships, referrals, local_events.
 result_questions should be 2-4 short questions to ask when the founder
 reports back, at least one boolean question with id "converted" asking
 whether it led to a new customer. xp_value 6-15. window_days 1-5.

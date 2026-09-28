@@ -17,6 +17,8 @@ const CATEGORIES = [
   "content",
   "paid",
   "partnerships",
+  "referrals",
+  "local_events",
 ] as const;
 
 const RESPONSE_SCHEMA = {
