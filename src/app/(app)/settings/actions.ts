@@ -16,10 +16,12 @@ import type {
   Founder,
   NotificationType,
   WeeklyHours,
+  BuyingMotion,
 } from "@/types/database";
 
 const VALID_STAGES: FounderStage[] = ["idea", "prototype", "launched"];
 const VALID_WEEKLY_HOURS: WeeklyHours[] = ["1-2", "3-5", "6-10", "10+"];
+const VALID_BUYING_MOTIONS: BuyingMotion[] = ["self_serve", "sales_led", "local_in_person"];
 const NOTIFICATION_TYPES: NotificationType[] = [
   "new_quest",
   "window_approaching",
@@ -47,6 +49,7 @@ export async function updateProfile(formData: FormData) {
 
   const stage = String(formData.get("stage") || "");
   const weeklyHours = String(formData.get("weekly_hours") || "");
+  const buyingMotion = String(formData.get("buying_motion") || "");
   const channelsRaw = formData.getAll("channels_tried").map(String).filter(Boolean);
   const newIndustry = String(formData.get("industry") || "") || null;
   const newProductDescription = String(formData.get("product_description") || "") || null;
@@ -61,6 +64,9 @@ export async function updateProfile(formData: FormData) {
       icp: String(formData.get("icp") || "") || null,
       stage: VALID_STAGES.includes(stage as FounderStage) ? stage : null,
       weekly_hours: VALID_WEEKLY_HOURS.includes(weeklyHours as WeeklyHours) ? weeklyHours : null,
+      buying_motion: VALID_BUYING_MOTIONS.includes(buyingMotion as BuyingMotion)
+        ? buyingMotion
+        : null,
       channels_tried: channelsRaw,
       updated_at: new Date().toISOString(),
     })

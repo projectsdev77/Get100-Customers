@@ -21,6 +21,7 @@ create table if not exists founders (
   stage text check (stage in ('idea', 'prototype', 'launched')),
   channels_tried text[] default '{}',
   weekly_hours text check (weekly_hours in ('1-2', '3-5', '6-10', '10+')),
+  buying_motion text check (buying_motion in ('self_serve', 'sales_led', 'local_in_person')),
   current_customer_count integer not null default 0,
   level integer not null default 1,
   xp integer not null default 0,
@@ -113,6 +114,14 @@ create table if not exists quests (
 -- (src/app/api/cron/quest-check-ins/route.ts) per quest.
 alter table quests add column if not exists activated_at timestamptz;
 alter table quests add column if not exists check_in_sent boolean not null default false;
+
+-- How this founder's customers actually buy — self-serve signup, a
+-- sales call/demo cycle, or local/in-person — used to size quest windows
+-- and success expectations to match (a sales-led founder's "converted"
+-- signal can legitimately take weeks, not days). Nullable/unknown for
+-- existing founders until they set it in onboarding or settings.
+alter table founders add column if not exists buying_motion text
+  check (buying_motion in ('self_serve', 'sales_led', 'local_in_person'));
 
 -- ---------------------------------------------------------------------------
 -- quest_results — structured + free-text outcomes (SPEC §8)

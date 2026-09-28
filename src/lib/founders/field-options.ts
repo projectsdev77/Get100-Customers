@@ -44,3 +44,17 @@ export const HOURS_VALUES: Record<string, string> = {
 export const HOURS_LABELS = Object.fromEntries(
   Object.entries(HOURS_VALUES).map(([l, v]) => [v, l]),
 );
+
+export const MOTION_OPTIONS = [
+  "They sign up themselves",
+  "I talk to them (calls/demos)",
+  "It's local / in-person",
+];
+export const MOTION_VALUES: Record<string, string> = {
+  "They sign up themselves": "self_serve",
+  "I talk to them (calls/demos)": "sales_led",
+  "It's local / in-person": "local_in_person",
+};
+export const MOTION_LABELS = Object.fromEntries(
+  Object.entries(MOTION_VALUES).map(([l, v]) => [v, l]),
+);

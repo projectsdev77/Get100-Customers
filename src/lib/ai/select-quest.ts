@@ -3,6 +3,7 @@ import { GEMINI_MODELS } from "./gemini";
 import { generateStructuredContent } from "./generate-structured";
 import type { Founder, GrowthProfile, QuestTemplate } from "@/types/database";
 import type { GeneratedQuest } from "./generate-quest";
+import { MOTION_DESCRIPTIONS, windowDaysRange, maxWindowDays, motionPromptNote } from "./buying-motion";
 
 // The fixed channel taxonomy (matches CHANNEL_VALUES in
 // lib/founders/field-options.ts and every quest_templates.category value in
@@ -74,6 +75,7 @@ type FounderContext = Pick<
   | "stage"
   | "channels_tried"
   | "weekly_hours"
+  | "buying_motion"
 >;
 type GrowthContext = Pick<
   GrowthProfile,
@@ -160,6 +162,7 @@ Founder:
 - Stage: ${founder.stage ?? "unknown"}
 - Channels already tried (from onboarding): ${founder.channels_tried.join(", ") || "none yet"}
 - Hours available per week for this: ${founder.weekly_hours ?? "unknown"}
+- How customers buy: ${founder.buying_motion ? MOTION_DESCRIPTIONS[founder.buying_motion] : "unknown"}
 
 Growth history (category-level conversion stats):
 ${growthNotes}
@@ -199,12 +202,13 @@ template library, not something to copy; write your own quest in plain,
 finished language, no placeholders):
 ${buildStyleExamples(templates)}
 
-Design a single quest completable within a few days, scoped to fit the
-founder's available hours per week (a smaller ask for fewer hours, not a
-different channel — "we size quests to fit"). result_questions should be
-2-4 short questions to ask when the founder reports back, at least one
-boolean question with id "converted" asking whether it led to a new
-customer. xp_value 6-15. window_days 1-5.
+Design a single quest scoped to fit the founder's available hours per week
+(a smaller ask for fewer hours, not a different channel — "we size quests
+to fit"). result_questions should be 2-4 short questions to ask when the
+founder reports back, at least one boolean question with id "converted"
+asking whether it led to a new customer. xp_value 6-15. window_days ${windowDaysRange(
+    founder.buying_motion,
+  )}.${motionPromptNote(founder.buying_motion)}
 
 Also return "reasoning": 2-3 sentences, in a coach's voice, written TO the
 founder ("You..."). Start with why you picked this quest and channel right
@@ -279,7 +283,7 @@ export async function selectNextQuestWithAI(
     return {
       ...parsed,
       xp_value: Math.min(20, Math.max(5, parsed.xp_value || 10)),
-      window_days: Math.min(7, Math.max(1, parsed.window_days || 3)),
+      window_days: Math.min(maxWindowDays(founder.buying_motion), Math.max(1, parsed.window_days || 3)),
       tools_provided: parsed.tools_provided ?? [],
     };
   } catch (err) {
