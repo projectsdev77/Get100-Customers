@@ -132,6 +132,75 @@ export async function regenerateQuest(questId: string) {
   revalidatePath("/quests");
 }
 
+// Founder-initiated: "What do you want to focus on next?" — previously
+// every quest was system-initiated and the founder's only levers were
+// accept/skip/regenerate on whatever the AI already decided to hand them.
+// This applies once, immediately, to the very next quest, then is gone —
+// nothing is persisted, so there's no state to reset later. Replaces the
+// current pending suggestion the same way "show other options" does (no
+// decision was made on it, so it's deleted, not recorded as a skip).
+export async function setNextFocus(formData: FormData) {
+  const focus = String(formData.get("focus") || "").trim();
+  if (!focus) return;
+
+  const supabase = await createClient();
+  const founder = await getCurrentFounder(supabase);
+  if (!founder) return;
+
+  const { data: existing } = await supabase
+    .from("quests")
+    .select("id, template_id")
+    .eq("founder_id", founder.id)
+    .eq("status", "suggested")
+    .maybeSingle<Pick<Quest, "id" | "template_id">>();
+
+  const { data: occupying } = await supabase
+    .from("quests")
+    .select("template_id, category, title, status")
+    .eq("founder_id", founder.id)
+    .in("status", OCCUPYING_STATUSES)
+    .returns<Pick<Quest, "template_id" | "category" | "title" | "status">[]>();
+
+  const occupyingRows = occupying ?? [];
+  const excludeIds = [...occupyingRows.map((q) => q.template_id), existing?.template_id ?? null].filter(
+    (id): id is string => Boolean(id),
+  );
+  const occupyingInfo: RecentQuestInfo[] = occupyingRows.map((q) => ({
+    category: q.category,
+    title: q.title,
+    status: q.status,
+    skipReason: null,
+    converted: null,
+  }));
+  const history = await getRecentQuestHistory(supabase, founder.id);
+
+  const { data: templates } = await supabase
+    .from("quest_templates")
+    .select("*")
+    .returns<QuestTemplate[]>();
+
+  const growth = await getGrowthProfile(supabase, founder.id);
+  const built = await buildQuestInsertFields(
+    founder,
+    growth,
+    templates ?? [],
+    excludeIds,
+    [...occupyingInfo, ...history],
+    focus,
+  );
+  if (!built) return;
+
+  if (existing) {
+    await supabase.from("quests").delete().eq("id", existing.id);
+  }
+  await supabase.from("quests").insert({
+    founder_id: founder.id,
+    ...built.fields,
+  });
+
+  revalidatePath("/quests");
+}
+
 // Active → awaiting_report. Structured result questions get answered next
 // (submitQuestResult below), which is what actually completes the quest.
 export async function markQuestDone(questId: string) {
@@ -246,7 +315,7 @@ export async function submitQuestResult(formData: FormData) {
   }
 
   await refreshQuestLog(supabase, founder);
-  await recomputeGrowthProfile(supabase, founder.id);
+  await recomputeGrowthProfile(supabase, founder.id, founder.buying_motion);
 
   revalidatePath("/quests");
   revalidatePath("/dashboard");

@@ -2,6 +2,7 @@ import { Type } from "@google/genai";
 import { GEMINI_MODELS } from "./gemini";
 import { generateStructuredContent } from "./generate-structured";
 import type { Founder, GrowthProfile } from "@/types/database";
+import { MOTION_DESCRIPTIONS, windowDaysRange, maxWindowDays, motionPromptNote } from "./buying-motion";
 
 export interface GeneratedQuest {
   title: string;
@@ -67,6 +68,7 @@ type FounderContext = Pick<
   | "stage"
   | "channels_tried"
   | "weekly_hours"
+  | "buying_motion"
 >;
 type GrowthContext = Pick<
   GrowthProfile,
@@ -101,6 +103,7 @@ Founder:
 - Stage: ${founder.stage ?? "unknown"}
 - Channels already tried: ${founder.channels_tried.join(", ") || "none yet"}
 - Hours available per week for this: ${founder.weekly_hours ?? "unknown"}
+- How customers buy: ${founder.buying_motion ? MOTION_DESCRIPTIONS[founder.buying_motion] : "unknown"}
 
 Growth context:
 ${growthNotes}
@@ -108,16 +111,23 @@ ${growthNotes}
 Design a single quest completable within a few days, scoped to fit the
 founder's available hours per week ("we size quests to fit" — a smaller
 ask for fewer hours, not a different channel). category should be a
-short snake_case channel label (e.g. cold_email, content, communities).
+short snake_case channel label — one of: cold_email, warm_intros,
+communities, content, paid, partnerships, referrals, local_events.
 result_questions should be 2-4 short questions to ask when the founder
 reports back, at least one boolean question with id "converted" asking
-whether it led to a new customer. xp_value 6-15. window_days 1-5.
+whether it led to a new customer. xp_value 6-15. window_days ${windowDaysRange(
+    founder.buying_motion,
+  )}.${motionPromptNote(founder.buying_motion)}
 
-Also return "reasoning": one short sentence, in a coach's voice, written
-TO the founder ("You...") explaining why you designed this particular
-quest for them right now — reference their growth context if there is
-one, otherwise their stage/ICP/channels tried. Shown behind a "Why this?"
-toggle in the app.`;
+Also return "reasoning": in a coach's voice, written TO the founder
+("You..."), shown behind a "Why this?" toggle. Start with why you designed
+this particular quest for them right now — reference their growth context
+if there is one, otherwise their stage/ICP/channels tried. If they've
+already tried other channels or have growth context showing what's not
+working, add a second sentence naming one of those specifically and saying
+why this angle is worth trying instead of repeating it. If there's no such
+history yet, one sentence is enough — don't invent a channel they haven't
+actually tried.`;
 
   try {
     const response = await generateStructuredContent({
@@ -149,7 +159,7 @@ toggle in the app.`;
     return {
       ...parsed,
       xp_value: Math.min(20, Math.max(5, parsed.xp_value || 10)),
-      window_days: Math.min(7, Math.max(1, parsed.window_days || 3)),
+      window_days: Math.min(maxWindowDays(founder.buying_motion), Math.max(1, parsed.window_days || 3)),
       tools_provided: parsed.tools_provided ?? [],
     };
   } catch (err) {

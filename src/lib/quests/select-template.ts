@@ -42,10 +42,18 @@ export function buildFallbackReasoning(
 
 export function templateToQuestFields(
   template: QuestTemplate,
-  founder: Pick<Founder, "channels_tried" | "stage">,
+  founder: Pick<Founder, "channels_tried" | "stage" | "buying_motion">,
 ) {
+  // Templates carry a fixed default_window_days regardless of the founder —
+  // for a sales-led founder that's too short to reach a real "converted"
+  // answer, so it's widened here in code rather than needing motion-specific
+  // template rows (SPEC gap #7's cheap path: sizing, not a new taxonomy).
+  const windowDays =
+    founder.buying_motion === "sales_led"
+      ? Math.max(template.default_window_days * 2, 7)
+      : template.default_window_days;
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + template.default_window_days);
+  expiresAt.setDate(expiresAt.getDate() + windowDays);
 
   return {
     template_id: template.id,
@@ -59,7 +67,7 @@ export function templateToQuestFields(
     result_questions: template.result_question_set,
     success_criteria: null,
     sub_tasks: [],
-    suggested_window: `${template.default_window_days} day${template.default_window_days === 1 ? "" : "s"}`,
+    suggested_window: `${windowDays} day${windowDays === 1 ? "" : "s"}`,
     expires_at: expiresAt.toISOString(),
     status: "suggested" as const,
   };

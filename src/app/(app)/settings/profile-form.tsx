@@ -18,6 +18,9 @@ import {
   HOURS_OPTIONS,
   HOURS_VALUES,
   HOURS_LABELS,
+  MOTION_OPTIONS,
+  MOTION_VALUES,
+  MOTION_LABELS,
 } from "@/lib/founders/field-options";
 
 type FormState = { error?: string; success?: boolean };
@@ -31,6 +34,7 @@ export function ProfileForm({ founder }: { founder: Founder | null }) {
   const [stage, setStage] = useState(founder?.stage ?? "");
   const [channels, setChannels] = useState<string[]>(founder?.channels_tried ?? []);
   const [weeklyHours, setWeeklyHours] = useState(founder?.weekly_hours ?? "");
+  const [buyingMotion, setBuyingMotion] = useState(founder?.buying_motion ?? "");
 
   return (
     <form
@@ -87,6 +91,17 @@ export function ProfileForm({ founder }: { founder: Founder | null }) {
           onChange={(v) => setWeeklyHours(HOURS_VALUES[v as string])}
         />
         <input type="hidden" name="weekly_hours" value={weeklyHours} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-[13px] font-medium text-primary">How customers buy</span>
+        <ChipGroup
+          options={MOTION_OPTIONS}
+          multi={false}
+          value={MOTION_LABELS[buyingMotion] ?? ""}
+          onChange={(v) => setBuyingMotion(MOTION_VALUES[v as string])}
+        />
+        <input type="hidden" name="buying_motion" value={buyingMotion} />
       </div>
 
       {state.error && <Banner tone="error">{state.error}</Banner>}

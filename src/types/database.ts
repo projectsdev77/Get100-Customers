@@ -15,6 +15,8 @@ export type FounderStage = "idea" | "prototype" | "launched";
 
 export type WeeklyHours = "1-2" | "3-5" | "6-10" | "10+";
 
+export type BuyingMotion = "self_serve" | "sales_led" | "local_in_person";
+
 export type SubscriptionStatus =
   | "trialing"
   | "active"
@@ -33,6 +35,7 @@ export interface Founder {
   stage: FounderStage | null;
   channels_tried: string[];
   weekly_hours: WeeklyHours | null;
+  buying_motion: BuyingMotion | null;
   current_customer_count: number;
   level: number;
   xp: number;

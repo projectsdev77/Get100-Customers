@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/surfaces/Card";
 import type { GrowthProfile } from "@/types/database";
+import type { SkipPattern } from "@/lib/growth-profile/patterns";
 
 // Founder-facing surface for growth_profiles (SPEC §16 — "a simple growth
 // insights panel surfaced from the growth profile"). The data itself
@@ -9,8 +10,10 @@ import type { GrowthProfile } from "@/types/database";
 // is that missing display, not new logic.
 export function GrowthInsights({
   growth,
+  pattern = null,
 }: {
   growth: Pick<GrowthProfile, "bottleneck_hypothesis" | "what_working" | "what_not_working"> | null;
+  pattern?: SkipPattern | null;
 }) {
   const bottleneck =
     growth?.bottleneck_hypothesis ??
@@ -46,6 +49,13 @@ export function GrowthInsights({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {pattern && (
+        <div className="flex flex-col gap-1 rounded-panel bg-canvas p-3">
+          <span className="text-[13px] font-medium text-secondary">Worth noticing</span>
+          <p className="text-sm text-primary">{pattern.message}</p>
         </div>
       )}
     </Card>

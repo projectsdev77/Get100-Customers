@@ -19,6 +19,9 @@ import {
   HOURS_OPTIONS,
   HOURS_VALUES,
   HOURS_LABELS,
+  MOTION_OPTIONS,
+  MOTION_VALUES,
+  MOTION_LABELS,
 } from "@/lib/founders/field-options";
 
 interface FormState {
@@ -31,6 +34,7 @@ interface FormState {
   channels_tried: string[];
   current_customer_count: string;
   weekly_hours: string;
+  buying_motion: string;
 }
 
 function initialState(founder: Founder | null): FormState {
@@ -44,6 +48,7 @@ function initialState(founder: Founder | null): FormState {
     channels_tried: founder?.channels_tried ?? [],
     current_customer_count: String(founder?.current_customer_count ?? 0),
     weekly_hours: founder?.weekly_hours ?? "",
+    buying_motion: founder?.buying_motion ?? "",
   };
 }
 
@@ -125,6 +130,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     ["Channels tried", data.channels_tried.map((c) => CHANNEL_LABELS[c] ?? c).join(", ")],
     ["Customers today", data.current_customer_count],
     ["Hours a week", HOURS_LABELS[data.weekly_hours] ?? data.weekly_hours],
+    ["How customers buy", MOTION_LABELS[data.buying_motion] ?? data.buying_motion],
   ];
 
   const steps = [
@@ -252,6 +258,18 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
       ),
     },
     {
+      title: "How do people actually buy from you?",
+      hint: "We size quest deadlines and success questions to match — a sales cycle needs a longer runway than a self-serve signup.",
+      body: (
+        <ChipGroup
+          options={MOTION_OPTIONS}
+          multi={false}
+          value={MOTION_LABELS[data.buying_motion] ?? ""}
+          onChange={(v) => setData({ ...data, buying_motion: MOTION_VALUES[v as string] })}
+        />
+      ),
+    },
+    {
       title: "Does this look right?",
       hint: "You can change any of this later in Settings.",
       body: (
@@ -297,6 +315,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
           ))}
           <input type="hidden" name="current_customer_count" value={data.current_customer_count} />
           <input type="hidden" name="weekly_hours" value={data.weekly_hours} />
+          <input type="hidden" name="buying_motion" value={data.buying_motion} />
           <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
             Back
           </Button>

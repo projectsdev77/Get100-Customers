@@ -24,6 +24,7 @@ const FOUNDERS: Array<
     | "stage"
     | "channels_tried"
     | "weekly_hours"
+    | "buying_motion"
   >
 > = [
   {
@@ -34,6 +35,7 @@ const FOUNDERS: Array<
     stage: "prototype",
     channels_tried: [],
     weekly_hours: "3-5",
+    buying_motion: "self_serve",
   },
   {
     company_name: "PawPath",
@@ -43,6 +45,7 @@ const FOUNDERS: Array<
     stage: "idea",
     channels_tried: ["communities"],
     weekly_hours: "1-2",
+    buying_motion: "local_in_person",
   },
   {
     company_name: "Buildscope",
@@ -52,6 +55,7 @@ const FOUNDERS: Array<
     stage: "launched",
     channels_tried: ["cold_email", "content"],
     weekly_hours: "10+",
+    buying_motion: "sales_led",
   },
 ];
 

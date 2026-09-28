@@ -7,6 +7,8 @@ export const CHANNEL_OPTIONS = [
   "Content",
   "Paid ads",
   "Partnerships",
+  "Referrals",
+  "Local & in-person",
 ];
 export const CHANNEL_VALUES: Record<string, string> = {
   "Cold email": "cold_email",
@@ -15,6 +17,8 @@ export const CHANNEL_VALUES: Record<string, string> = {
   Content: "content",
   "Paid ads": "paid",
   Partnerships: "partnerships",
+  Referrals: "referrals",
+  "Local & in-person": "local_events",
 };
 export const CHANNEL_LABELS = Object.fromEntries(
   Object.entries(CHANNEL_VALUES).map(([label, value]) => [value, label]),
@@ -39,4 +43,18 @@ export const HOURS_VALUES: Record<string, string> = {
 };
 export const HOURS_LABELS = Object.fromEntries(
   Object.entries(HOURS_VALUES).map(([l, v]) => [v, l]),
+);
+
+export const MOTION_OPTIONS = [
+  "They sign up themselves",
+  "I talk to them (calls/demos)",
+  "It's local / in-person",
+];
+export const MOTION_VALUES: Record<string, string> = {
+  "They sign up themselves": "self_serve",
+  "I talk to them (calls/demos)": "sales_led",
+  "It's local / in-person": "local_in_person",
+};
+export const MOTION_LABELS = Object.fromEntries(
+  Object.entries(MOTION_VALUES).map(([l, v]) => [v, l]),
 );

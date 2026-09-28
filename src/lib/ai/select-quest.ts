@@ -3,6 +3,7 @@ import { GEMINI_MODELS } from "./gemini";
 import { generateStructuredContent } from "./generate-structured";
 import type { Founder, GrowthProfile, QuestTemplate } from "@/types/database";
 import type { GeneratedQuest } from "./generate-quest";
+import { MOTION_DESCRIPTIONS, windowDaysRange, maxWindowDays, motionPromptNote } from "./buying-motion";
 
 // The fixed channel taxonomy (matches CHANNEL_VALUES in
 // lib/founders/field-options.ts and every quest_templates.category value in
@@ -17,6 +18,8 @@ const CATEGORIES = [
   "content",
   "paid",
   "partnerships",
+  "referrals",
+  "local_events",
 ] as const;
 
 const RESPONSE_SCHEMA = {
@@ -72,6 +75,7 @@ type FounderContext = Pick<
   | "stage"
   | "channels_tried"
   | "weekly_hours"
+  | "buying_motion"
 >;
 type GrowthContext = Pick<
   GrowthProfile,
@@ -137,6 +141,7 @@ function buildPrompt(
   growth: GrowthContext,
   templates: QuestTemplate[],
   recentQuests: RecentQuestInfo[],
+  founderIntent: string | null,
 ): string {
   const growthNotes = growth
     ? `What's working so far: ${JSON.stringify(growth.what_working)}
@@ -157,13 +162,25 @@ Founder:
 - Stage: ${founder.stage ?? "unknown"}
 - Channels already tried (from onboarding): ${founder.channels_tried.join(", ") || "none yet"}
 - Hours available per week for this: ${founder.weekly_hours ?? "unknown"}
+- How customers buy: ${founder.buying_motion ? MOTION_DESCRIPTIONS[founder.buying_motion] : "unknown"}
 
 Growth history (category-level conversion stats):
 ${growthNotes}
 
 Recent quest history for this founder, most recent first:
 ${summarizeRecentQuests(recentQuests)}
-
+${
+  founderIntent
+    ? `\nThe founder has explicitly asked to focus on this for their NEXT quest: "${founderIntent}"
+Take this seriously — a real coach listens to what their client actually
+wants, not just what the data says. Honor it unless the history above
+gives a genuine, specific reason not to (e.g. they're asking to repeat a
+channel that's already failed repeatedly with no new angle). If you honor
+it, say so plainly in your reasoning ("You asked to focus on X, so..."). If
+you deviate, explain exactly why in your reasoning rather than silently
+ignoring their request.\n`
+    : ""
+}
 How to use that history:
 - Never propose a quest worded near-identically to one already listed.
 - A category that's currently in flight (still active/suggested/awaiting
@@ -185,18 +202,27 @@ template library, not something to copy; write your own quest in plain,
 finished language, no placeholders):
 ${buildStyleExamples(templates)}
 
-Design a single quest completable within a few days, scoped to fit the
-founder's available hours per week (a smaller ask for fewer hours, not a
-different channel — "we size quests to fit"). result_questions should be
-2-4 short questions to ask when the founder reports back, at least one
-boolean question with id "converted" asking whether it led to a new
-customer. xp_value 6-15. window_days 1-5.
+Design a single quest scoped to fit the founder's available hours per week
+(a smaller ask for fewer hours, not a different channel — "we size quests
+to fit"). result_questions should be 2-4 short questions to ask when the
+founder reports back, at least one boolean question with id "converted"
+asking whether it led to a new customer. xp_value 6-15. window_days ${windowDaysRange(
+    founder.buying_motion,
+  )}.${motionPromptNote(founder.buying_motion)}
 
-Also return "reasoning": one short sentence, in a coach's voice, written
-TO the founder ("You...") explaining why you picked this quest and this
-channel for them right now — reference their growth history if there is
-one, otherwise their stage/ICP/channels tried. Shown behind a "Why this?"
-toggle in the app.`;
+Also return "reasoning": 2-3 sentences, in a coach's voice, written TO the
+founder ("You..."). Start with why you picked this quest and channel right
+now — reference their growth history if there is one, otherwise their
+stage/ICP/channels tried. ${
+    founderIntent
+      ? `Since they told you what to focus on, use this reasoning to honor
+their request or explain a deviation from it, as instructed above.`
+      : `Then name ONE specific alternative you considered and passed on —
+another channel from their history, an in-flight quest they could double
+down on instead, or repeating something that already worked — and say
+concretely why this beats it right now. Don't just say "other options
+exist"; name the actual one and the actual reason.`
+  } Shown behind a "Why this?" toggle in the app.`;
 }
 
 // Primary quest-selection path (SPEC §7.1's "Phase 5: AI personalization
@@ -215,6 +241,7 @@ export async function selectNextQuestWithAI(
   growth: GrowthContext,
   templates: QuestTemplate[],
   recentQuests: RecentQuestInfo[],
+  founderIntent: string | null = null,
 ): Promise<GeneratedQuest | null> {
   try {
     // "fast" tier: this now runs on every quest-slot refill (the same
@@ -225,7 +252,7 @@ export async function selectNextQuestWithAI(
     // only matters once a paid capable tier is turned on.)
     const response = await generateStructuredContent({
       model: GEMINI_MODELS.fast,
-      contents: buildPrompt(founder, growth, templates, recentQuests),
+      contents: buildPrompt(founder, growth, templates, recentQuests, founderIntent),
       schema: RESPONSE_SCHEMA,
     });
 
@@ -256,7 +283,7 @@ export async function selectNextQuestWithAI(
     return {
       ...parsed,
       xp_value: Math.min(20, Math.max(5, parsed.xp_value || 10)),
-      window_days: Math.min(7, Math.max(1, parsed.window_days || 3)),
+      window_days: Math.min(maxWindowDays(founder.buying_motion), Math.max(1, parsed.window_days || 3)),
       tools_provided: parsed.tools_provided ?? [],
     };
   } catch (err) {
