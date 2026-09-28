@@ -26,6 +26,7 @@ const NOTIFICATION_TYPES: NotificationType[] = [
   "re_engagement",
   "milestone",
   "weekly_recap",
+  "quest_check_in",
 ];
 
 export async function updateProfile(formData: FormData) {
