@@ -1,6 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Quest, QuestResult } from "@/types/database";
+import type { BuyingMotion, Quest, QuestResult } from "@/types/database";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -10,6 +10,19 @@ interface ChannelStats {
   conversion_rate: number;
 }
 
+// A sales-led founder's cycle can span weeks, so judging a channel "not
+// working" after the same 2 attempts that would be a fair bar for a
+// self-serve founder prematurely writes it off before deals have had time
+// to close (SPEC gap #7's residual limitation, now fixed here rather than
+// left as a known gap). local_in_person gets no special patience — those
+// cycles are typically as fast as self-serve, just not remote.
+function notWorkingThreshold(buyingMotion: BuyingMotion | null): number {
+  return buyingMotion === "sales_led" ? 4 : 2;
+}
+function minAttemptsForHypothesis(buyingMotion: BuyingMotion | null): number {
+  return buyingMotion === "sales_led" ? 5 : 3;
+}
+
 // Numeric aggregation is straightforward (non-AI) by design (SPEC §9,
 // PHASES.md Phase 4) — Phase 5 only adds the AI-summarized notes as
 // supplementary evidence text (SPEC §8) on top of the same shape; the
@@ -17,6 +30,7 @@ interface ChannelStats {
 export async function recomputeGrowthProfile(
   supabase: SupabaseServerClient,
   founderId: string,
+  buyingMotion: BuyingMotion | null = null,
 ): Promise<void> {
   const { data: quests } = await supabase
     .from("quests")
@@ -54,15 +68,18 @@ export async function recomputeGrowthProfile(
     }));
 
   const whatNotWorking = Object.entries(channels)
-    .filter(([, s]) => s.attempts >= 2 && s.successes === 0)
+    .filter(([, s]) => s.attempts >= notWorkingThreshold(buyingMotion) && s.successes === 0)
     .map(([category, s]) => ({
-      insight: `${category} hasn't converted after ${s.attempts} attempts`,
+      insight:
+        buyingMotion === "sales_led"
+          ? `${category} hasn't converted after ${s.attempts} attempts (given a longer sales cycle, that's still a real signal)`
+          : `${category} hasn't converted after ${s.attempts} attempts`,
       evidence: latestSummaryByCategory[category] ?? `conversion_rate=0`,
     }));
 
   const totalAttempts = Object.values(channels).reduce((sum, s) => sum + s.attempts, 0);
   let bottleneckHypothesis: string;
-  if (totalAttempts < 3) {
+  if (totalAttempts < minAttemptsForHypothesis(buyingMotion)) {
     bottleneckHypothesis = "Not enough data yet. Complete a few more quests.";
   } else if (whatWorking.length === 0) {
     bottleneckHypothesis =

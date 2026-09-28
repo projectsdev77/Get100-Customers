@@ -315,7 +315,7 @@ export async function submitQuestResult(formData: FormData) {
   }
 
   await refreshQuestLog(supabase, founder);
-  await recomputeGrowthProfile(supabase, founder.id);
+  await recomputeGrowthProfile(supabase, founder.id, founder.buying_motion);
 
   revalidatePath("/quests");
   revalidatePath("/dashboard");
