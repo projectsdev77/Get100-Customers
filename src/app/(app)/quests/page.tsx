@@ -13,6 +13,7 @@ import {
   acceptQuest,
   markQuestDone,
   regenerateQuest,
+  setNextFocus,
   skipQuest,
   submitQuestResult,
 } from "./actions";
@@ -151,6 +152,24 @@ export default async function QuestsPage({
           ))}
         </section>
       )}
+
+      <section className="flex flex-col gap-2 rounded-panel bg-card p-5">
+        <h2 className="text-base font-medium text-primary">What do you want to focus on next?</h2>
+        <p className="text-[13px] text-secondary">
+          Every quest so far has come from your coach — this is your turn to set the agenda. Tell it
+          a channel, an idea, anything, and it&apos;ll shape your next quest around it.
+        </p>
+        <form action={setNextFocus} className="flex flex-wrap items-center gap-2">
+          <Input
+            name="focus"
+            placeholder="e.g. cold email, or reaching out to old coworkers"
+            className="min-w-[240px] flex-1"
+          />
+          <Button type="submit" variant="outline" size="sm">
+            Set focus
+          </Button>
+        </form>
+      </section>
 
       {suggested.length > 0 && (
         <section className="flex flex-col gap-3">

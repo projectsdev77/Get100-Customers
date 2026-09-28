@@ -106,8 +106,15 @@ export async function buildQuestInsertFields(
   templates: QuestTemplate[],
   excludeTemplateIds: string[],
   recentQuests: RecentQuestInfo[] = [],
+  founderIntent: string | null = null,
 ) {
-  const aiSelected = await selectNextQuestWithAI(founder, growth, templates, recentQuests);
+  const aiSelected = await selectNextQuestWithAI(
+    founder,
+    growth,
+    templates,
+    recentQuests,
+    founderIntent,
+  );
   if (aiSelected) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + aiSelected.window_days);

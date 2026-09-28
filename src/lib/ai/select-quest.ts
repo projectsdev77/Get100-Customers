@@ -137,6 +137,7 @@ function buildPrompt(
   growth: GrowthContext,
   templates: QuestTemplate[],
   recentQuests: RecentQuestInfo[],
+  founderIntent: string | null,
 ): string {
   const growthNotes = growth
     ? `What's working so far: ${JSON.stringify(growth.what_working)}
@@ -163,7 +164,18 @@ ${growthNotes}
 
 Recent quest history for this founder, most recent first:
 ${summarizeRecentQuests(recentQuests)}
-
+${
+  founderIntent
+    ? `\nThe founder has explicitly asked to focus on this for their NEXT quest: "${founderIntent}"
+Take this seriously — a real coach listens to what their client actually
+wants, not just what the data says. Honor it unless the history above
+gives a genuine, specific reason not to (e.g. they're asking to repeat a
+channel that's already failed repeatedly with no new angle). If you honor
+it, say so plainly in your reasoning ("You asked to focus on X, so..."). If
+you deviate, explain exactly why in your reasoning rather than silently
+ignoring their request.\n`
+    : ""
+}
 How to use that history:
 - Never propose a quest worded near-identically to one already listed.
 - A category that's currently in flight (still active/suggested/awaiting
@@ -215,6 +227,7 @@ export async function selectNextQuestWithAI(
   growth: GrowthContext,
   templates: QuestTemplate[],
   recentQuests: RecentQuestInfo[],
+  founderIntent: string | null = null,
 ): Promise<GeneratedQuest | null> {
   try {
     // "fast" tier: this now runs on every quest-slot refill (the same
@@ -225,7 +238,7 @@ export async function selectNextQuestWithAI(
     // only matters once a paid capable tier is turned on.)
     const response = await generateStructuredContent({
       model: GEMINI_MODELS.fast,
-      contents: buildPrompt(founder, growth, templates, recentQuests),
+      contents: buildPrompt(founder, growth, templates, recentQuests, founderIntent),
       schema: RESPONSE_SCHEMA,
     });
 
