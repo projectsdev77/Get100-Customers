@@ -62,6 +62,25 @@ export async function createTestFounder(
     throw new Error(`createTestFounder(${label}): founders row never appeared for ${email}`);
   }
 
+  // Login always redirects to /dashboard when the profile is already
+  // complete (and onboarding completion redirects there too once it's
+  // finished) — and /dashboard's refreshQuestLog tries a live AI quest
+  // generation whenever zero "suggested" quests exist. Seeding one
+  // unconditionally here means every test founder is immune to that,
+  // regardless of what the test actually cares about — found the hard way
+  // against a live run where Gemini's daily quota was exhausted and Groq
+  // was also returning 503s, making that live call take 10-30+s per
+  // attempt and blow past normal assertion timeouts.
+  const { error: seedQuestError } = await adminClient.from("quests").insert({
+    founder_id: founderId,
+    title: "A quest waiting to be picked up",
+    category: "paid",
+    status: "suggested",
+  });
+  if (seedQuestError) {
+    throw new Error(`createTestFounder(${label}): failed to seed placeholder quest — ${seedQuestError.message}`);
+  }
+
   if (completeProfile) {
     const { error: updateError } = await adminClient
       .from("founders")

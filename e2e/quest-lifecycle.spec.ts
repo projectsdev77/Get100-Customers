@@ -68,16 +68,6 @@ test.describe("quest lifecycle", () => {
           skip_reason: "no_time",
           resolved_at: now,
         },
-        // Neither history row is "suggested," so visiting /quests would
-        // otherwise trigger refreshQuestLog -> ensureQuestSlots's live AI
-        // top-up (this test doesn't care about generation at all) — seeding
-        // one keeps the slot already full regardless of AI provider health.
-        {
-          founder_id: founder.founderId,
-          title: "A quest waiting to be picked up",
-          category: "paid",
-          status: "suggested",
-        },
       ]);
       expect(error).toBeNull();
 

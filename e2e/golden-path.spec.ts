@@ -32,8 +32,13 @@ test.describe("founder golden path", () => {
     });
 
     await test.step("complete onboarding", async () => {
-      // Step 0: optional website/notes analyzer — skip it.
-      await page.getByRole("button", { name: "Skip" }).click();
+      // Step 0: optional website/notes analyzer. Its advance button shares
+      // the same nav as every other step, and reads "Continue" specifically
+      // on step 0 (every later step's version of the same button reads
+      // "Next") — there is no button literally labeled "Skip" in the
+      // wizard. Confirmed against the current onboarding-wizard.tsx after
+      // this exact assumption caused a real, reproducible failure live.
+      await page.getByRole("button", { name: "Continue", exact: true }).click();
 
       // Step 1: company name (plain text input, no accessible label —
       // it's the only textbox visible for this step).
