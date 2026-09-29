@@ -38,12 +38,48 @@ export default async function globalSetup() {
     }
   }
 
-  const { error: createError } = await admin.auth.admin.createUser({
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
     email: TEST_EMAIL,
     password: TEST_PASSWORD,
     email_confirm: true,
   });
-  if (createError) {
-    throw new Error(`e2e global setup: failed to create test user — ${createError.message}`);
+  if (createError || !created.user) {
+    throw new Error(`e2e global setup: failed to create test user — ${createError?.message}`);
+  }
+
+  // Onboarding completion redirects to /dashboard, which calls
+  // refreshQuestLog -> ensureQuestSlots — that tries a live AI quest
+  // generation whenever zero "suggested" quests exist, which is slow or
+  // outright fails whenever the AI providers are degraded (observed live:
+  // Gemini's daily free-tier quota exhausted and Groq returning 503s,
+  // turning what should be an instant redirect into a 30+s hang). Seeding
+  // one here means golden-path.spec.ts's onboarding step never depends on
+  // live AI availability, matching the same fix applied to every founder
+  // created via e2e/helpers.ts's createTestFounder.
+  let founderId: string | null = null;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const { data: founder } = await admin
+      .from("founders")
+      .select("id")
+      .eq("auth_user_id", created.user.id)
+      .maybeSingle();
+    if (founder) {
+      founderId = founder.id;
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  if (!founderId) {
+    throw new Error("e2e global setup: founders row never appeared for the test user");
+  }
+
+  const { error: seedQuestError } = await admin.from("quests").insert({
+    founder_id: founderId,
+    title: "A quest waiting to be picked up",
+    category: "paid",
+    status: "suggested",
+  });
+  if (seedQuestError) {
+    throw new Error(`e2e global setup: failed to seed placeholder quest — ${seedQuestError.message}`);
   }
 }

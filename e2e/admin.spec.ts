@@ -47,7 +47,12 @@ test.describe("admin", () => {
       await overrideForm.getByLabel("Customer count").fill("42");
       await overrideForm.getByRole("button", { name: "Save" }).click();
 
-      await page.goto(`/admin/founders/${target.founderId}`);
+      // adminCorrectCustomerCount has no visible "saved" confirmation and
+      // only revalidatePath()s the current page rather than redirecting —
+      // an immediate second page.goto() here raced the server action
+      // (same shape as the earlier login-navigation race) and read stale
+      // data before the write landed. Asserting in place instead lets
+      // Playwright's own auto-retry wait out the revalidation.
       await expect(page.getByLabel("Customer count")).toHaveValue("42");
     } finally {
       await deleteTestFounder(admin.authUserId);

@@ -25,8 +25,11 @@ test.describe("settings", () => {
 
       await page.reload();
       await expect(page.getByLabel("Company name")).toHaveValue("Renamed Co");
+      // Not exact: true here — Chip (src/components/ui/forms/Chip.tsx)
+      // prepends "✓ " to a selected chip's own text, so its accessible name
+      // is now "✓ I talk to them (calls/demos)", not the bare label anymore.
       await expect(
-        page.getByRole("button", { name: "I talk to them (calls/demos)", exact: true }),
+        page.getByRole("button", { name: "I talk to them (calls/demos)" }),
       ).toHaveAttribute("aria-pressed", "true");
     } finally {
       await deleteTestFounder(founder.authUserId);
