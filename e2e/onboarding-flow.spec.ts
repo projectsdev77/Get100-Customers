@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { createTestFounder, deleteTestFounder, loginAs } from "./helpers";
+import { createTestFounder, deleteTestFounder, loginAs, adminClient } from "./helpers";
 
 // Checklist items "Growth Mode at 100+ customers," and the new "Referrals /
 // Local & in-person" channels and "buying motion" onboarding question
@@ -13,6 +13,19 @@ test.describe("onboarding: growth mode and new fields", () => {
     const founder = await createTestFounder("onboarding-growth", { completeProfile: false });
 
     try {
+      // The founders row (and its id) already exists via the
+      // handle_new_founder trigger even before onboarding is completed —
+      // seed a suggested quest now so landing on /dashboard at the end
+      // doesn't trigger refreshQuestLog's live AI top-up, which this test
+      // has nothing to do with and which is slow/flaky whenever the AI
+      // providers are degraded.
+      await adminClient.from("quests").insert({
+        founder_id: founder.founderId,
+        title: "A quest waiting to be picked up",
+        category: "paid",
+        status: "suggested",
+      });
+
       await loginAs(page, founder.email, founder.password);
       await expect(page).toHaveURL(/\/onboarding/);
 

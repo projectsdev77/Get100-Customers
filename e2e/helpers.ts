@@ -107,4 +107,12 @@ export async function loginAs(page: Page, email: string, password: string): Prom
   // matches two elements and Playwright refuses to guess which one.
   await page.locator('input[name="password"]').fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
+  // The login action redirects to /dashboard or /onboarding depending on
+  // profile completeness — wait for navigation away from /login rather
+  // than a fixed destination, or the caller's next page.goto()/click can
+  // interrupt the in-flight redirect before the session is actually
+  // established (observed live: an immediate goto("/admin") right after
+  // this click landed back on /login?next=%2Fadmin instead of being
+  // treated as authenticated).
+  await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 15_000 });
 }

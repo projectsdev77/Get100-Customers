@@ -47,6 +47,17 @@ test.describe("skip-pattern and growth-profile signals", () => {
           skip_reason: "too_hard",
           resolved_at: older(1),
         },
+        // None of the above is "suggested," so visiting /dashboard would
+        // otherwise trigger refreshQuestLog -> ensureQuestSlots's live AI
+        // top-up — irrelevant to what this test checks, and slow/flaky
+        // whenever the AI providers are degraded. Seeding one keeps the
+        // slot already full.
+        {
+          founder_id: founder.founderId,
+          title: "A quest waiting to be picked up",
+          category: "paid",
+          status: "suggested",
+        },
       ]);
       expect(error).toBeNull();
 
@@ -86,6 +97,16 @@ test.describe("skip-pattern and growth-profile signals", () => {
     });
 
     try {
+      // Same reasoning as the other test in this file — keeps the
+      // "suggested" slot already full so /dashboard never attempts a live
+      // AI top-up, which this test has nothing to do with.
+      await adminClient.from("quests").insert({
+        founder_id: founder.founderId,
+        title: "A quest waiting to be picked up",
+        category: "paid",
+        status: "suggested",
+      });
+
       const seedNonConvertingAttempt = async (n: number) => {
         const { data: quest, error: questError } = await adminClient
           .from("quests")

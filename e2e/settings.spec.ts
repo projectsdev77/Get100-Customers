@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import * as fs from "node:fs";
-import { createTestFounder, deleteTestFounder, loginAs } from "./helpers";
+import { createTestFounder, deleteTestFounder, loginAs, adminClient } from "./helpers";
 
 // Checklist items "Settings save correctly," "buying motion settings
 // field," and "data export" — all real, built features
@@ -37,6 +37,18 @@ test.describe("settings", () => {
     const founder = await createTestFounder("settings-password");
 
     try {
+      // This test re-lands on /dashboard after the re-login below — seed a
+      // suggested quest so refreshQuestLog's ensureQuestSlots doesn't
+      // attempt a live AI top-up along the way (irrelevant to what this
+      // test checks, and slow/flaky whenever the AI providers are
+      // degraded).
+      await adminClient.from("quests").insert({
+        founder_id: founder.founderId,
+        title: "A quest waiting to be picked up",
+        category: "paid",
+        status: "suggested",
+      });
+
       await loginAs(page, founder.email, founder.password);
       await page.goto("/settings");
       await page.getByRole("button", { name: "Account", exact: true }).click();
