@@ -18,7 +18,12 @@ test.describe("founder golden path", () => {
     await test.step("log in as the freshly provisioned test founder", async () => {
       await page.goto("/login");
       await page.getByLabel("Email").fill(TEST_EMAIL);
-      await page.getByLabel("Password").fill(TEST_PASSWORD);
+      // Not getByLabel("Password") — PasswordInput wraps the input and its
+      // "Show password" toggle in one label, so the field's accessible name
+      // is "Password Show password" and the toggle button's own name is
+      // "Show password" — both match "Password" as a substring, so
+      // getByLabel resolves to two elements instead of one.
+      await page.locator('input[name="password"]').fill(TEST_PASSWORD);
       await page.getByRole("button", { name: "Log in" }).click();
       // A brand-new founder has no profile yet, so the (app) layout
       // redirects straight to onboarding (see src/proxy.ts / dashboard

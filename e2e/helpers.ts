@@ -99,6 +99,12 @@ export async function deleteTestFounder(authUserId: string): Promise<void> {
 export async function loginAs(page: Page, email: string, password: string): Promise<void> {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
+  // Not getByLabel("Password") — PasswordInput (src/components/ui/forms/
+  // PasswordInput.tsx) wraps the input AND its "Show password" toggle
+  // button inside one label, so the field's computed accessible name is
+  // "Password Show password" and the toggle button's own name is "Show
+  // password" — both contain "password" as a substring, so getByLabel
+  // matches two elements and Playwright refuses to guess which one.
+  await page.locator('input[name="password"]').fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
 }

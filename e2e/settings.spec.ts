@@ -41,8 +41,10 @@ test.describe("settings", () => {
       await page.goto("/settings");
       await page.getByRole("button", { name: "Account", exact: true }).click();
 
-      await page.getByLabel("Current password").fill(founder.password);
-      await page.getByLabel("New password").fill("NewTestPassword456!");
+      // Same label/toggle-button ambiguity as loginAs in helpers.ts — target
+      // the inputs by name instead of by label.
+      await page.locator('input[name="current_password"]').fill(founder.password);
+      await page.locator('input[name="new_password"]').fill("NewTestPassword456!");
       await page.getByRole("button", { name: "Change password" }).click();
       await expect(page.getByText("Password updated.")).toBeVisible();
 
