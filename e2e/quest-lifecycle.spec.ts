@@ -28,7 +28,7 @@ test.describe("quest lifecycle", () => {
       await loginAs(page, founder.email, founder.password);
       await page.goto("/quests");
 
-      await expect(page.getByText("Active (3 of 3)")).toBeVisible();
+      await expect(page.getByText("In progress (3 of 3)")).toBeVisible();
 
       await page.getByRole("button", { name: "Accept" }).first().click();
 
@@ -40,7 +40,7 @@ test.describe("quest lifecycle", () => {
       await expect(
         page.getByText("You already have 3 active quests. Finish or skip one first."),
       ).toBeVisible();
-      await expect(page.getByText("Active (3 of 3)")).toBeVisible();
+      await expect(page.getByText("In progress (3 of 3)")).toBeVisible();
     } finally {
       await deleteTestFounder(founder.authUserId);
     }

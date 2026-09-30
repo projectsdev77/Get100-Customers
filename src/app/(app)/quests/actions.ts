@@ -15,6 +15,7 @@ import {
 } from "@/lib/quests/lifecycle";
 import type { RecentQuestInfo } from "@/lib/ai/select-quest";
 import { recomputeGrowthProfile } from "@/lib/growth-profile/recompute";
+import { getQuestSteps } from "@/lib/quests/steps";
 import { summarizeResultNotes } from "@/lib/ai/summarize-result-notes";
 import { computeLevel } from "@/lib/gamification/level";
 import { computeNextStreak } from "@/lib/gamification/streak";
@@ -199,6 +200,36 @@ export async function setNextFocus(formData: FormData) {
     founder_id: founder.id,
     ...built.fields,
   });
+
+  revalidatePath("/quests");
+}
+
+// Ticks/unticks one step of an in-progress quest's checklist (quests
+// redesign). sub_tasks starts empty for every quest — getQuestSteps derives
+// the full list from instructions on first use, so this write is what
+// actually persists it from then on, not just the one toggled step.
+export async function toggleQuestStep(questId: string, stepIndex: number) {
+  const supabase = await createClient();
+  const founder = await getCurrentFounder(supabase);
+  if (!founder) return;
+
+  const { data: quest } = await supabase
+    .from("quests")
+    .select("sub_tasks, instructions")
+    .eq("id", questId)
+    .eq("founder_id", founder.id)
+    .single<Pick<Quest, "sub_tasks" | "instructions">>();
+  if (!quest) return;
+
+  const steps = getQuestSteps(quest);
+  if (stepIndex < 0 || stepIndex >= steps.length) return;
+  const updated = steps.map((step, i) => (i === stepIndex ? { ...step, done: !step.done } : step));
+
+  await supabase
+    .from("quests")
+    .update({ sub_tasks: updated })
+    .eq("id", questId)
+    .eq("founder_id", founder.id);
 
   revalidatePath("/quests");
 }

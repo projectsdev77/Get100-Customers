@@ -77,6 +77,9 @@ Growth profile:
 Current quests (id: title — status):
 ${questLines}
 
+Those ids are for your own reference only, to fill in proposed_swap_quest_id
+— never write one out in your reply text. Refer to a quest by its title.
+
 If — and only if — the founder is asking for a different quest or seems
 stuck on a specific active/suggested one, set proposed_swap_quest_id to
 that quest's EXACT id from the list above (never invent an id) and explain

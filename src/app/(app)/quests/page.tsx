@@ -3,29 +3,17 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { refreshQuestLog, MAX_ACTIVE_QUESTS } from "@/lib/quests/lifecycle";
 import type { Quest } from "@/types/database";
-import { QuestCard, JournalRow } from "@/components/ui/quests/QuestCard";
+import { QuestCard } from "@/components/ui/quests/QuestCard";
 import { Button } from "@/components/ui/actions/Button";
-import { Select } from "@/components/ui/forms/Select";
-import { Textarea } from "@/components/ui/forms/Textarea";
 import { Input } from "@/components/ui/forms/Input";
 import { Banner } from "@/components/ui/surfaces/Banner";
-import {
-  acceptQuest,
-  markQuestDone,
-  regenerateQuest,
-  setNextFocus,
-  skipQuest,
-  submitQuestResult,
-} from "./actions";
+import { ReportCard } from "./report-card";
+import { InProgressCard } from "./in-progress-card";
+import { QuestJournal, type JournalEntry } from "./quest-journal";
+import { SkipForm, SKIP_REASON_LABELS } from "./skip-form";
+import { acceptQuest, regenerateQuest, setNextFocus } from "./actions";
 
 const HISTORY_STATUSES: Quest["status"][] = ["completed", "skipped", "expired"];
-
-const SKIP_REASONS = [
-  { value: "too_hard", label: "Too hard" },
-  { value: "not_relevant", label: "Not relevant" },
-  { value: "already_tried", label: "Already tried" },
-  { value: "no_time", label: "No time" },
-];
 
 export default async function QuestsPage({
   searchParams,
@@ -53,206 +41,162 @@ export default async function QuestsPage({
   const awaitingReport = all.filter((q) => q.status === "awaiting_report");
   const history = all.filter((q) => HISTORY_STATUSES.includes(q.status));
 
+  // "Show the latest status per quest ID" — a Map keyed by id keeps only
+  // one row per quest even if the query ever returned more than one for
+  // the same id, taking whichever is most recently resolved.
+  const latestById = new Map<string, Quest>();
+  for (const quest of history) {
+    const existing = latestById.get(quest.id);
+    if (!existing || (quest.resolved_at ?? "") > (existing.resolved_at ?? "")) {
+      latestById.set(quest.id, quest);
+    }
+  }
+  const journalEntries: JournalEntry[] = Array.from(latestById.values()).map((quest) => ({
+    id: quest.id,
+    title: quest.title,
+    bucket: quest.status === "completed" ? "done" : "skipped",
+    rightLabel:
+      quest.status === "completed"
+        ? `+${quest.xp_value} XP`
+        : quest.status === "expired"
+          ? "Expired"
+          : "Skipped",
+    note: quest.skip_reason
+      ? (SKIP_REASON_LABELS[quest.skip_reason] ?? quest.skip_reason)
+      : null,
+  }));
+
   return (
-    <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
-        Quests
-      </h1>
+    <div className="flex flex-col gap-3.5">
+      <h1 className="text-4xl font-medium leading-[1.1] tracking-[-0.02em] text-primary">Quests</h1>
 
-      {/*
-        The flash message rides a query param from acceptQuest's redirect
-        (see actions.ts), but skipQuest/markQuestDone/etc. only revalidate —
-        they don't navigate — so that param can outlive the "3 active
-        quests" state it describes (e.g. accept blocked at 3 active, then
-        skip one right after: the count drops but the URL still says 3).
-        Re-checking against the live count here makes the banner disappear
-        the moment it's no longer true, instead of trusting a stale string.
-      */}
-      {flash && active.length >= MAX_ACTIVE_QUESTS && <Banner tone="error">{flash}</Banner>}
+      <div className="flex flex-wrap gap-2">
+        <StatusPill count={awaitingReport.length} label="needs your results" tone="input" />
+        <StatusPill count={active.length} label="in progress" tone="active" />
+        <StatusPill count={suggested.length} label="up next" tone="suggested" />
+      </div>
 
-      {awaitingReport.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
-            Report your results
-          </h2>
+      <div className="mt-5 flex flex-wrap items-start gap-8">
+        <div className="flex min-w-0 flex-1 basis-[600px] flex-col gap-9">
+          {flash && active.length >= MAX_ACTIVE_QUESTS && <Banner tone="error">{flash}</Banner>}
+
           {awaitingReport.map((quest) => (
-            <form key={quest.id} action={submitQuestResult}>
-              <input type="hidden" name="questId" value={quest.id} />
-              <QuestCard
-                id={`quest-${quest.id}`}
-                status="awaiting_report"
-                title={quest.title}
-                xp={quest.xp_value}
-                reasoning={quest.reasoning}
-                actions={
-                  <Button type="submit" size="sm">
-                    Submit report
-                  </Button>
-                }
-              >
-                <div className="flex flex-col gap-3">
-                  {quest.result_questions.map((q) =>
-                    q.type === "boolean" ? (
-                      <Select
-                        key={q.id}
-                        name={`answer_${q.id}`}
-                        label={q.prompt}
-                        defaultValue="false"
-                        options={[
-                          { value: "true", label: "Yes" },
-                          { value: "false", label: "No" },
-                        ]}
-                      />
-                    ) : q.type === "number" ? (
-                      <Input
-                        key={q.id}
-                        type="number"
-                        name={`answer_${q.id}`}
-                        label={q.prompt}
-                        min={0}
-                        defaultValue={0}
-                      />
-                    ) : (
-                      <Input key={q.id} type="text" name={`answer_${q.id}`} label={q.prompt} />
-                    ),
-                  )}
-                  <Textarea name="notes" label="Anything else worth noting?" rows={2} />
-                </div>
-              </QuestCard>
-            </form>
+            <ReportCard key={quest.id} quest={quest} />
           ))}
-        </section>
-      )}
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
-          Active ({active.length} of {MAX_ACTIVE_QUESTS})
-        </h2>
-        {active.length === 0 && (
-          <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
-            <p className="text-sm text-secondary">
-              {suggested.length > 0
-                ? "No active quest yet. Accept the one below to get started."
-                : "No active quest yet. Check back shortly for one."}
-            </p>
-          </div>
-        )}
-        {active.length > 0 &&
-          active.map((quest) => (
-            <QuestCard
-              key={quest.id}
-              id={`quest-${quest.id}`}
-              status={quest.status}
-              title={quest.title}
-              instructions={quest.instructions}
-              xp={quest.xp_value}
-              window={quest.suggested_window}
-              tool={quest.tools_provided[0] ?? null}
-              reasoning={quest.reasoning}
-              actions={
-                <>
-                  <form action={markQuestDone.bind(null, quest.id)}>
-                    <Button type="submit" size="sm">
-                      Mark done
-                    </Button>
-                  </form>
-                  <SkipForm questId={quest.id} />
-                </>
-              }
-            />
-          ))}
-      </section>
-
-      <section className="flex flex-col gap-2 rounded-panel bg-card p-5">
-        <h2 className="text-base font-medium text-primary">What do you want to focus on next?</h2>
-        <p className="text-[13px] text-secondary">
-          Tell your coach what you want to work on, and it&apos;ll shape your next quest around
-          that instead of picking on its own.
-        </p>
-        <form action={setNextFocus} className="flex flex-wrap items-center gap-2">
-          <Input
-            name="focus"
-            placeholder="e.g. cold email, or reaching out to old coworkers"
-            className="min-w-[240px] flex-1"
-          />
-          <Button type="submit" variant="outline" size="sm">
-            Set focus
-          </Button>
-        </form>
-      </section>
-
-      {(suggested.length > 0 || (active.length === 0 && awaitingReport.length === 0)) && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
-            Next up
-          </h2>
-          {suggested.length === 0 && (
-            <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
-              <p className="text-sm text-secondary">
-                Your coach is putting together your next quest. Check back in a moment.
-              </p>
+          <section className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">
+                In progress ({active.length} of {MAX_ACTIVE_QUESTS})
+              </h2>
+              <span className="text-[13px] text-secondary">
+                Tick steps as you go. Mark done when finished.
+              </span>
             </div>
+            {active.length === 0 && (
+              <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+                <p className="text-sm text-secondary">
+                  {suggested.length > 0
+                    ? "No active quest yet. Accept the one below to get started."
+                    : "No active quest yet. Check back shortly for one."}
+                </p>
+              </div>
+            )}
+            {active.map((quest, i) => (
+              <InProgressCard key={quest.id} quest={quest} defaultOpen={i === 0} />
+            ))}
+          </section>
+
+          <section className="flex flex-col gap-2 rounded-panel bg-card p-5">
+            <h2 className="text-base font-medium text-primary">What do you want to focus on next?</h2>
+            <p className="text-[13px] text-secondary">
+              Tell your coach what you want to work on, and it&apos;ll shape your next quest around
+              that instead of picking on its own.
+            </p>
+            <form action={setNextFocus} className="flex flex-wrap items-center gap-2">
+              <Input
+                name="focus"
+                placeholder="e.g. cold email, or reaching out to old coworkers"
+                className="min-w-[240px] flex-1"
+              />
+              <Button type="submit" variant="outline" size="sm">
+                Set focus
+              </Button>
+            </form>
+          </section>
+
+          {(suggested.length > 0 || (active.length === 0 && awaitingReport.length === 0)) && (
+            <section className="flex flex-col gap-3">
+              <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">Next up</h2>
+              {suggested.length === 0 && (
+                <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+                  <p className="text-sm text-secondary">
+                    Your coach is putting together your next quest. Check back in a moment.
+                  </p>
+                </div>
+              )}
+              {suggested.map((quest) => (
+                <QuestCard
+                  key={quest.id}
+                  id={`quest-${quest.id}`}
+                  status="suggested"
+                  title={quest.title}
+                  instructions={quest.instructions}
+                  xp={quest.xp_value}
+                  window={quest.suggested_window}
+                  reasoning={quest.reasoning}
+                  actions={
+                    <>
+                      <form action={acceptQuest.bind(null, quest.id)}>
+                        <Button type="submit" size="sm">
+                          Accept
+                        </Button>
+                      </form>
+                      <form action={regenerateQuest.bind(null, quest.id)}>
+                        <Button type="submit" variant="secondary" size="sm">
+                          Show other options
+                        </Button>
+                      </form>
+                      <SkipForm questId={quest.id} />
+                    </>
+                  }
+                />
+              ))}
+            </section>
           )}
-          {suggested.map((quest) => (
-            <QuestCard
-              key={quest.id}
-              id={`quest-${quest.id}`}
-              status="suggested"
-              title={quest.title}
-              instructions={quest.instructions}
-              xp={quest.xp_value}
-              window={quest.suggested_window}
-              reasoning={quest.reasoning}
-              actions={
-                <>
-                  <form action={acceptQuest.bind(null, quest.id)}>
-                    <Button type="submit" size="sm">
-                      Accept
-                    </Button>
-                  </form>
-                  <form action={regenerateQuest.bind(null, quest.id)}>
-                    <Button type="submit" variant="secondary" size="sm">
-                      Show other options
-                    </Button>
-                  </form>
-                  <SkipForm questId={quest.id} />
-                </>
-              }
-            />
-          ))}
-        </section>
-      )}
 
-      {history.length > 0 && (
-        <section className="flex flex-col gap-1 rounded-panel bg-card px-4 py-2">
-          <h2 className="pt-2 text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
-            Quest journal
-          </h2>
-          {history.map((quest) => (
-            <JournalRow
-              key={quest.id}
-              status={quest.status}
-              title={quest.title}
-              xp={quest.status === "completed" ? quest.xp_value : null}
-              note={quest.skip_reason}
-            />
-          ))}
-        </section>
-      )}
+          {all.length === 0 && <p className="text-sm text-secondary">No quests yet. Check back shortly.</p>}
+        </div>
 
-      {all.length === 0 && <p className="text-sm text-secondary">No quests yet. Check back shortly.</p>}
+        {journalEntries.length > 0 && (
+          <aside className="sticky top-5 min-w-0 flex-1 basis-80 [max-width:420px]">
+            <QuestJournal entries={journalEntries} />
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
 
-function SkipForm({ questId }: { questId: string }) {
+function StatusPill({
+  count,
+  label,
+  tone,
+}: {
+  count: number;
+  label: string;
+  tone: "input" | "active" | "suggested";
+}) {
+  const toneClasses = {
+    input: "bg-quest-input text-quest-input-ink",
+    active: "bg-quest-active text-quest-active-ink",
+    suggested: "bg-quest-suggested text-quest-suggested-ink",
+  }[tone];
+
   return (
-    <form action={skipQuest} className="flex items-center gap-2">
-      <input type="hidden" name="questId" value={questId} />
-      <Select name="reason" placeholder="Not for me…" options={SKIP_REASONS} className="w-40" />
-      <Button type="submit" variant="secondary" size="sm">
-        Skip
-      </Button>
-    </form>
+    <span className={`flex h-9 items-center gap-2 rounded-full px-3.5 text-[13px] font-medium ${toneClasses}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {count} {label}
+    </span>
   );
 }

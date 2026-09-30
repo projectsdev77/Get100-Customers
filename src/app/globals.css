@@ -46,6 +46,7 @@
   --color-quest-input-ink: var(--quest-input-ink);
   --color-quest-done: var(--quest-done-bg);
   --color-quest-done-ink: var(--quest-done-ink);
+  --color-quest-report-border: var(--quest-report-border);
 
   --color-banner-error-bg: var(--banner-error-bg);
   --color-banner-error-border: var(--banner-error-border);

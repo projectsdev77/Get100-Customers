@@ -106,7 +106,7 @@ test.describe("founder golden path", () => {
       await expect(acceptButton).toBeVisible();
       await acceptButton.click();
 
-      await expect(page.getByText("Active (1 of 3)")).toBeVisible();
+      await expect(page.getByText("In progress (1 of 3)")).toBeVisible();
     });
 
     await test.step("settings reflects the onboarding profile", async () => {

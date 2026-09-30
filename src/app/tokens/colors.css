@@ -37,6 +37,10 @@
   --quest-active-bg: var(--violet-200); --quest-active-ink: var(--violet-700);
   --quest-input-bg: var(--butter-200); --quest-input-ink: var(--butter-700);
   --quest-done-bg: var(--violet-100); --quest-done-ink: var(--ink-600);
+  /* Report card border (quests redesign): accent in light, butter in dark —
+     quest-input-bg doesn't change between themes, so this can't just reuse
+     an existing token directly in both. */
+  --quest-report-border: var(--accent);
 
   --banner-error-bg: var(--rose-100); --banner-error-border: var(--rose-200); --banner-error-fg: var(--rose-700);
   --banner-success-bg: var(--green-100); --banner-success-border: var(--green-200); --banner-success-fg: var(--green-700);
@@ -61,6 +65,7 @@
     --action-secondary-hover: #34323F;
     --focus-ring: var(--violet-400);
     --quest-done-bg: var(--violet-800); --quest-done-ink: var(--ink-400);
+    --quest-report-border: var(--quest-input-bg);
     --banner-error-bg: #2E1714; --banner-error-border: #4D231D; --banner-error-fg: #F4A99E;
     --banner-success-bg: #122A1B; --banner-success-border: #1E4A2E; --banner-success-fg: #7BE0A0;
     --banner-info-bg: #15212A; --banner-info-border: #22384A; --banner-info-fg: #9CC6E0;
@@ -85,6 +90,7 @@
     --action-secondary-hover: #34323F;
     --focus-ring: var(--violet-400);
     --quest-done-bg: var(--violet-800); --quest-done-ink: var(--ink-400);
+    --quest-report-border: var(--quest-input-bg);
     --banner-error-bg: #2E1714; --banner-error-border: #4D231D; --banner-error-fg: #F4A99E;
     --banner-success-bg: #122A1B; --banner-success-border: #1E4A2E; --banner-success-fg: #7BE0A0;
     --banner-info-bg: #15212A; --banner-info-border: #22384A; --banner-info-fg: #9CC6E0;

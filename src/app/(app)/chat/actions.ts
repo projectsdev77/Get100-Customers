@@ -7,6 +7,7 @@ import { getGrowthProfile, OCCUPYING_STATUSES, refreshQuestLog } from "@/lib/que
 import { sendChatMessage, type ChatTurn } from "@/lib/ai/chat";
 import { isFounderStuck } from "@/lib/growth-profile/stuck";
 import { getSubscription, isRestricted } from "@/lib/subscriptions/status";
+import { stripQuestIds } from "@/lib/utils/strip-ids";
 import type { ChatMessage, Quest } from "@/types/database";
 
 export interface ChatActionResult {
@@ -43,7 +44,9 @@ function toHistoryMessage(row: ChatMessage): ChatHistoryMessage {
   return {
     id: row.id,
     role: row.role,
-    text: row.text,
+    // Cleans up any raw id a message stored before this fix, not just new
+    // replies going forward.
+    text: row.role === "model" ? stripQuestIds(row.text) : row.text,
     proposedSwapQuestId: row.proposed_swap_quest_id,
     proposedSwapReason: row.proposed_swap_reason,
     swapResolved: row.swap_resolved,
@@ -116,12 +119,17 @@ export async function sendMessage(message: string): Promise<ChatActionResult> {
   const result = await sendChatMessage(founder, growth, quests ?? [], history, message, stuck);
   if (!result) return FALLBACK;
 
+  // The model is handed each quest's raw id (so it can name one in
+  // proposed_swap_quest_id) and occasionally echoes it into the reply text
+  // itself — strip that before it's ever stored or shown (quests redesign §5).
+  const reply = stripQuestIds(result.reply);
+
   const { data: inserted } = await supabase
     .from("chat_messages")
     .insert({
       founder_id: founder.id,
       role: "model",
-      text: result.reply,
+      text: reply,
       proposed_swap_quest_id: result.proposedSwapQuestId,
       proposed_swap_reason: result.proposedSwapReason,
     })
@@ -130,7 +138,7 @@ export async function sendMessage(message: string): Promise<ChatActionResult> {
 
   return {
     id: inserted?.id ?? null,
-    reply: result.reply,
+    reply,
     proposedSwapQuestId: result.proposedSwapQuestId,
     proposedSwapReason: result.proposedSwapReason,
   };
