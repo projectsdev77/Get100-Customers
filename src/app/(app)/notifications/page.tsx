@@ -3,23 +3,19 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { redirect } from "next/navigation";
 import type { NotificationLogEntry, NotificationType } from "@/types/database";
+import { openNotification } from "./actions";
 
-// Types where the message is about one specific quest, so there's
-// somewhere real to send a click. re_engagement is quest-related but
-// never names a specific one (it fires whenever *any* occupying quest has
-// gone quiet), so it links to the quests page in general instead of a
-// quest_id. milestone/weekly_recap are pure announcements with nothing to
-// navigate to — being shown on this page is what marks them read.
+// Types where the message is about one specific quest, so clicking through
+// to it is itself the read signal — these are excluded from the
+// mark-everything-else-read-on-view sweep below. re_engagement is
+// quest-related but never names a specific one (it fires whenever *any*
+// occupying quest has gone quiet), so it's treated like the pure
+// announcements (milestone/weekly_recap): read as soon as you view this
+// page, same as before.
 const QUEST_LINKED_TYPES: NotificationType[] = ["new_quest", "window_approaching", "quest_check_in"];
 
-function notificationHref(n: NotificationLogEntry): string | null {
-  if (QUEST_LINKED_TYPES.includes(n.type) && n.quest_id) {
-    return `/quests#quest-${n.quest_id}`;
-  }
-  if (n.type === "re_engagement") {
-    return "/quests";
-  }
-  return null;
+function questHref(n: NotificationLogEntry): string | null {
+  return QUEST_LINKED_TYPES.includes(n.type) && n.quest_id ? `/quests#quest-${n.quest_id}` : null;
 }
 
 export default async function NotificationsPage() {
@@ -39,17 +35,19 @@ export default async function NotificationsPage() {
   const items = notifications ?? [];
   const unreadCount = items.filter((n) => !n.read_at).length;
 
-  // Opening this page is the "read" action now — no separate button.
-  // Rendering below still uses the unread flags captured above, so a
-  // notification shows as new for this one view; this write is what
-  // clears it (the unread count elsewhere, like the TopNav badge) from
-  // the next load on.
-  if (unreadCount > 0) {
+  // Viewing this page marks everything read EXCEPT the quest-linked ones —
+  // those only get marked read when actually clicked through (see
+  // openNotification), so an active/next-up quest you haven't looked at
+  // yet doesn't silently drop off your unread count just by opening this
+  // list. Uses the unread snapshot above for what to display, so this
+  // render still shows what was unread on arrival.
+  const autoReadIds = items.filter((n) => !n.read_at && !questHref(n)).map((n) => n.id);
+  if (autoReadIds.length > 0) {
     await supabase
       .from("notifications_log")
       .update({ read_at: new Date().toISOString() })
-      .eq("founder_id", founder.id)
-      .is("read_at", null);
+      .in("id", autoReadIds)
+      .eq("founder_id", founder.id);
   }
 
   return (
@@ -69,7 +67,7 @@ export default async function NotificationsPage() {
         <div className="flex flex-col gap-0.5 rounded-panel bg-card p-2">
           {items.map((n) => {
             const unread = !n.read_at;
-            const href = notificationHref(n);
+            const href = questHref(n);
             const rowClasses = `flex items-start gap-3.5 rounded-tile p-4 ${unread ? "bg-sunken" : ""}`;
             const content = (
               <>
@@ -87,11 +85,28 @@ export default async function NotificationsPage() {
               </>
             );
 
-            return href ? (
-              <Link key={n.id} href={href} className={`${rowClasses} transition-colors hover:bg-action-2`}>
-                {content}
-              </Link>
-            ) : (
+            if (href) {
+              return (
+                <form key={n.id} action={openNotification.bind(null, n.id, href)}>
+                  <button
+                    type="submit"
+                    className={`${rowClasses} text-left transition-colors hover:bg-action-2`}
+                  >
+                    {content}
+                  </button>
+                </form>
+              );
+            }
+
+            if (n.type === "re_engagement") {
+              return (
+                <Link key={n.id} href="/quests" className={`${rowClasses} transition-colors hover:bg-action-2`}>
+                  {content}
+                </Link>
+              );
+            }
+
+            return (
               <div key={n.id} className={rowClasses}>
                 {content}
               </div>
