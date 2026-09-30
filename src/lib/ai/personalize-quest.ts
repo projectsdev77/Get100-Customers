@@ -40,7 +40,12 @@ type GrowthContext = Pick<
   "what_working" | "what_not_working" | "bottleneck_hypothesis"
 > | null;
 
-function buildPrompt(founder: FounderContext, growth: GrowthContext, template: QuestTemplate) {
+function buildPrompt(
+  founder: FounderContext,
+  growth: GrowthContext,
+  template: QuestTemplate,
+  founderIntent: string | null,
+) {
   const growthNotes = growth
     ? `What's working so far: ${JSON.stringify(growth.what_working)}
 What's not working: ${JSON.stringify(growth.what_not_working)}
@@ -66,21 +71,37 @@ ${growthNotes}
 Template title: ${template.title_template}
 Template instructions: ${template.instructions_template}
 Template tools: ${JSON.stringify(template.tool_templates)}
-
+${
+  founderIntent
+    ? `\nThe founder asked to focus on this for their next quest: "${founderIntent}"
+The channel/category for this quest was already picked before you were
+called, so you can't change it — but reference their request directly in
+your reasoning below: say plainly whether this quest's channel (${template.category.replace(
+        /_/g,
+        " ",
+      )}) matches what they asked for, or, if it doesn't, that you couldn't
+match their exact request this time and this is the closest available
+option.\n`
+    : ""
+}
 Return the personalized title, instructions, and tools_provided (same shape
 as the template tools, content rewritten with placeholders filled in). If
 the founder has limited hours available, scale the ask down (e.g. fewer
 emails/posts) rather than changing the channel — "we size quests to fit."
 
 Also return "reasoning": in a coach's voice, written TO the founder
-("You..."), shown behind a "Why this?" toggle. Start with why this specific
+("You..."), shown behind a "Why this?" toggle. ${
+    founderIntent
+      ? "Follow the instruction above about their stated focus."
+      : `Start with why this specific
 quest was picked for them right now (reference their growth context when
 there is one, e.g. a channel that's working or a stated bottleneck —
 otherwise reference their stage/ICP). If you have real growth context, add
 a second sentence connecting this choice to it concretely — e.g. why this
 addresses the stated bottleneck more directly than doubling down on what's
 already working, or vice versa. If there's no growth history yet, one
-sentence is enough — don't invent a tradeoff you don't have data for.`;
+sentence is enough — don't invent a tradeoff you don't have data for.`
+  }`;
 }
 
 // Hybrid template+AI quest personalization (SPEC §7.1). Runs on the "fast"
@@ -91,11 +112,12 @@ export async function personalizeQuestWithAI(
   founder: FounderContext,
   growth: GrowthContext,
   template: QuestTemplate,
+  founderIntent: string | null = null,
 ): Promise<PersonalizedQuestContent | null> {
   try {
     const response = await generateStructuredContent({
       model: GEMINI_MODELS.fast,
-      contents: buildPrompt(founder, growth, template),
+      contents: buildPrompt(founder, growth, template, founderIntent),
       schema: RESPONSE_SCHEMA,
     });
 

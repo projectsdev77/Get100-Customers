@@ -156,11 +156,11 @@ export async function buildQuestInsertFields(
     };
   }
 
-  const template = pickTemplate(founder, templates, excludeTemplateIds);
+  const template = pickTemplate(founder, templates, excludeTemplateIds, founderIntent);
 
   if (template) {
-    const base = templateToQuestFields(template, founder);
-    const personalized = await personalizeQuestWithAI(founder, growth, template);
+    const base = templateToQuestFields(template, founder, founderIntent);
+    const personalized = await personalizeQuestWithAI(founder, growth, template, founderIntent);
     return {
       fields: personalized
         ? {
@@ -175,7 +175,7 @@ export async function buildQuestInsertFields(
     };
   }
 
-  const generated = await generateNetNewQuest(founder, growth);
+  const generated = await generateNetNewQuest(founder, growth, founderIntent);
   if (!generated) return null;
 
   const expiresAt = new Date();

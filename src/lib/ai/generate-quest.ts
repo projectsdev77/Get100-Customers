@@ -83,6 +83,7 @@ type GrowthContext = Pick<
 export async function generateNetNewQuest(
   founder: FounderContext,
   growth: GrowthContext,
+  founderIntent: string | null = null,
 ): Promise<GeneratedQuest | null> {
   const growthNotes = growth
     ? `What's working: ${JSON.stringify(growth.what_working)}
@@ -107,7 +108,15 @@ Founder:
 
 Growth context:
 ${growthNotes}
-
+${
+  founderIntent
+    ? `\nThe founder has explicitly asked to focus on this for their NEXT quest: "${founderIntent}"
+Take this seriously — honor it unless the growth context above gives a
+genuine, specific reason not to. If you honor it, say so plainly in your
+reasoning ("You asked to focus on X, so..."). If you deviate, explain
+exactly why rather than silently ignoring their request.\n`
+    : ""
+}
 Design a single quest completable within a few days, scoped to fit the
 founder's available hours per week ("we size quests to fit" — a smaller
 ask for fewer hours, not a different channel). category should be a
@@ -120,14 +129,18 @@ whether it led to a new customer. xp_value 6-15. window_days ${windowDaysRange(
   )}.${motionPromptNote(founder.buying_motion)}
 
 Also return "reasoning": in a coach's voice, written TO the founder
-("You..."), shown behind a "Why this?" toggle. Start with why you designed
+("You..."), shown behind a "Why this?" toggle. ${
+    founderIntent
+      ? "Follow the instruction above about their stated focus."
+      : `Start with why you designed
 this particular quest for them right now — reference their growth context
 if there is one, otherwise their stage/ICP/channels tried. If they've
 already tried other channels or have growth context showing what's not
 working, add a second sentence naming one of those specifically and saying
 why this angle is worth trying instead of repeating it. If there's no such
 history yet, one sentence is enough — don't invent a channel they haven't
-actually tried.`;
+actually tried.`
+  }`;
 
   try {
     const response = await generateStructuredContent({

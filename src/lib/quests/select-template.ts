@@ -10,6 +10,7 @@ export function pickTemplate(
   founder: Pick<Founder, "stage" | "channels_tried">,
   templates: QuestTemplate[],
   excludeTemplateIds: string[],
+  founderIntent: string | null = null,
 ): QuestTemplate | null {
   const eligible = templates.filter((t) => {
     if (excludeTemplateIds.includes(t.id)) return false;
@@ -20,6 +21,19 @@ export function pickTemplate(
   });
 
   if (eligible.length === 0) return null;
+
+  // This picker has no AI to interpret free text, so it can only honor a
+  // founder's stated focus (setNextFocus) when it's this literal — the
+  // channel name itself appears in what they typed. It's the best this
+  // rule-based fallback tier can do; the AI-selection tier (select-quest.ts)
+  // handles the general case and is tried first.
+  if (founderIntent) {
+    const intent = founderIntent.toLowerCase();
+    const matching = eligible.filter((t) => intent.includes(t.category.replace(/_/g, " ")));
+    if (matching.length > 0) {
+      return matching[Math.floor(Math.random() * matching.length)];
+    }
+  }
 
   const untried = eligible.filter((t) => !founder.channels_tried.includes(t.category));
   const pool = untried.length > 0 ? untried : eligible;
@@ -33,16 +47,22 @@ export function pickTemplate(
 export function buildFallbackReasoning(
   founder: Pick<Founder, "channels_tried" | "stage">,
   template: QuestTemplate,
+  founderIntent: string | null = null,
 ): string {
-  if (!founder.channels_tried.includes(template.category)) {
-    return `You haven't tried ${template.category.replace(/_/g, " ")} yet. Worth testing at your stage.`;
+  const channel = template.category.replace(/_/g, " ");
+  if (founderIntent?.toLowerCase().includes(channel)) {
+    return `You asked to focus on ${channel}, so that's what this one is.`;
   }
-  return `${template.category.replace(/_/g, " ")} is a channel you've already tried, so we're giving it another pass.`;
+  if (!founder.channels_tried.includes(template.category)) {
+    return `You haven't tried ${channel} yet. Worth testing at your stage.`;
+  }
+  return `${channel} is a channel you've already tried, so we're giving it another pass.`;
 }
 
 export function templateToQuestFields(
   template: QuestTemplate,
   founder: Pick<Founder, "channels_tried" | "stage" | "buying_motion">,
+  founderIntent: string | null = null,
 ) {
   // Templates carry a fixed default_window_days regardless of the founder —
   // for a sales-led founder that's too short to reach a real "converted"
@@ -62,7 +82,7 @@ export function templateToQuestFields(
     instructions: template.instructions_template,
     category: template.category,
     xp_value: template.default_xp,
-    reasoning: buildFallbackReasoning(founder, template),
+    reasoning: buildFallbackReasoning(founder, template, founderIntent),
     tools_provided: template.tool_templates,
     result_questions: template.result_question_set,
     success_criteria: null,
