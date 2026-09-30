@@ -80,7 +80,15 @@ ${questLines}
 If — and only if — the founder is asking for a different quest or seems
 stuck on a specific active/suggested one, set proposed_swap_quest_id to
 that quest's EXACT id from the list above (never invent an id) and explain
-why in proposed_swap_reason. Otherwise leave both null.`;
+why in proposed_swap_reason. Otherwise leave both null.
+
+If more than one quest is listed above and the founder's message doesn't
+make clear which one they mean (e.g. they just say "swap my quest" while
+several are active), do NOT guess which one to propose — leave
+proposed_swap_quest_id null, and in your reply ask which one they mean,
+naming each by its title so they can just answer with one. Only set
+proposed_swap_quest_id once you actually know which quest they're talking
+about, whether from this message or an earlier one in the conversation.`;
 }
 
 // Secondary chat surface with full context (SPEC §10) — Gemini "capable"
