@@ -74,6 +74,30 @@ body {
   color: var(--text-primary);
 }
 
+/* Every textarea site-wide: a native scrollbar (especially the classic
+   Windows style, with its own up/down arrow buttons) reads as broken UI
+   chrome inside a rounded field. Thins it down to a plain draggable thumb
+   with no buttons/track, instead of hiding overflow outright (still lets
+   genuinely long content scroll). */
+textarea {
+  scrollbar-width: thin;
+}
+textarea::-webkit-scrollbar {
+  width: 8px;
+}
+textarea::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+textarea::-webkit-scrollbar-thumb {
+  background: var(--color-strong);
+  border-radius: 999px;
+}
+
 /* Hero illustration: two pre-rendered images, swapped by theme with no JS. */
 .hero-illustration-dark {
   display: none;

@@ -13,7 +13,7 @@ export function Textarea({ label, hint, error, rows = 3, className = "", ...prop
       <textarea
         {...props}
         rows={rows}
-        className={`${fieldClasses(Boolean(error))} h-auto resize-y py-3 ${className}`}
+        className={`${fieldClasses(Boolean(error))} h-auto resize-none py-3 ${className}`}
       />
     </Field>
   );
