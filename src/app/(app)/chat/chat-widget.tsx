@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import type { KeyboardEvent } from "react";
 import { confirmSwap, dismissSwap, getChatHistory, sendMessage } from "./actions";
 import { Button, buttonClasses } from "@/components/ui/actions/Button";
 
@@ -31,6 +32,7 @@ export function ChatWidget({
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (restricted) return;
@@ -53,6 +55,7 @@ export function ChatWidget({
     const text = input.trim();
     if (!text || restricted) return;
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
 
     setMessages((prev) => [...prev, { id: null, role: "user", text }]);
 
@@ -69,6 +72,21 @@ export function ChatWidget({
         },
       ]);
     });
+  }
+
+  // Enter sends, Shift+Enter inserts a newline — the plain <input> this
+  // replaced couldn't hold a newline at all, regardless of which key combo
+  // was pressed.
+  function handleInputKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  function autoResize(el: HTMLTextAreaElement) {
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 100)}px`;
   }
 
   function handleConfirmSwap(
@@ -187,14 +205,19 @@ export function ChatWidget({
         )}
       </div>
 
-      <div className="flex gap-2 border-t border-subtle p-3">
-        <input
+      <div className="flex items-end gap-2 border-t border-subtle p-3">
+        <textarea
+          ref={textareaRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          onChange={(e) => {
+            setInput(e.target.value);
+            autoResize(e.target);
+          }}
+          onKeyDown={handleInputKeyDown}
           disabled={restricted}
-          placeholder={restricted ? "Chat unavailable" : "Ask about a quest…"}
-          className="h-9 flex-1 rounded-full border border-strong bg-card px-3.5 text-sm text-primary outline-none placeholder:text-secondary focus:border-accent disabled:cursor-not-allowed disabled:opacity-60"
+          rows={1}
+          placeholder={restricted ? "Chat unavailable" : "Ask about a quest… (Shift+Enter for a new line)"}
+          className="max-h-[100px] min-h-9 flex-1 resize-none rounded-field border border-strong bg-card px-3.5 py-2 text-sm text-primary outline-none placeholder:text-secondary focus:border-accent disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           onClick={handleSend}
