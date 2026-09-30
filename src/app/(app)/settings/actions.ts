@@ -176,12 +176,12 @@ export async function changeEmail(formData: FormData) {
   const { error } = await supabase.auth.updateUser(
     { email: newEmail },
     {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent("/settings")}`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?flow=email_change&next=${encodeURIComponent("/settings?tab=account")}`,
     },
   );
   if (error) return { error: authErrorMessage(error) };
 
-  return { success: true as const };
+  return { success: true as const, newEmail };
 }
 
 // Revokes every refresh token for this user (scope: "global"), not just

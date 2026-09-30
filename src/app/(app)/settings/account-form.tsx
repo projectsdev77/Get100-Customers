@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/actions/Button";
 import { Banner } from "@/components/ui/surfaces/Banner";
 
 type PasswordState = { error?: string; success?: boolean };
-type EmailState = { error?: string; success?: boolean };
+type EmailState = { error?: string; success?: boolean; newEmail?: string };
 
 function ConnectedAccounts({ hasGoogle }: { hasGoogle: boolean }) {
   return (
@@ -74,7 +74,10 @@ function EmailForm({ email }: { email: string }) {
       </p>
       {state.error && <Banner tone="error">{state.error}</Banner>}
       {state.success && (
-        <Banner tone="success">Check your inbox to confirm the change.</Banner>
+        <Banner tone="success">
+          Confirmation sent to {state.newEmail}. This still shows your current address until you
+          click it. That&apos;s expected, not a bug.
+        </Banner>
       )}
     </form>
   );

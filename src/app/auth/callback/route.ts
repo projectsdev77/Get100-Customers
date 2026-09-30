@@ -33,6 +33,38 @@ function isBrandNewAccount(user: { created_at: string; last_sign_in_at?: string 
 // ever signing up with it again, and from ever seeing this "brand new"
 // path a second time (their own ghost account would just look like an
 // existing one). Delete it outright instead.
+// This route's failure message used to be a single hardcoded "Could not
+// sign in with Google" — fine for the OAuth flow it was written for, but
+// this same route also handles signup and email-change confirmation
+// links (all three redirect here with a PKCE `code`), so that message
+// falsely blamed Google for, say, a failed email-change confirmation.
+// A likely real cause for that one specifically: PKCE code exchange needs
+// a verifier stored by whichever browser/tab originally requested the
+// change, so a confirmation link opened in a different browser context
+// (common for email links) fails here even though nothing is actually
+// wrong with the account.
+const FLOW_ERROR_MESSAGES: Record<string, string> = {
+  login: "Could not sign in with Google.",
+  signup:
+    "That confirmation link didn't work — it may have expired, already been used, or been opened in a different browser than you requested it from. Try signing up again.",
+  email_change:
+    "That confirmation link didn't work — it may have expired, already been used, or been opened in a different browser than you requested it from. Try changing your email again.",
+};
+
+// Where to send the founder on failure: an email-change confirmation
+// happens to someone who's typically still signed in elsewhere in the
+// same browser, so bouncing them to /login is jarring and pointless —
+// send them back to where they started instead. Login/signup failures
+// still belong on /login, since there's no existing session to return to.
+// Built via URL rather than string concatenation since `next` (e.g.
+// "/settings?tab=account") can already carry its own query string.
+function failureRedirectUrl(origin: string, flow: string, next: string, message: string): string {
+  const path = flow === "email_change" ? next : "/login";
+  const url = new URL(path, origin);
+  url.searchParams.set("error", message);
+  return url.toString();
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -57,7 +89,6 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(
-    `${origin}/login?error=${encodeURIComponent("Could not sign in with Google.")}`,
-  );
+  const message = FLOW_ERROR_MESSAGES[flow] ?? "Something went wrong. Please try again.";
+  return NextResponse.redirect(failureRedirectUrl(origin, flow, next, message));
 }

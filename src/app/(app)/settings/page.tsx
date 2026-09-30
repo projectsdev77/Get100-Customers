@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { hasIdentityProvider } from "@/lib/auth/find-user-by-email";
+import { Banner } from "@/components/ui/surfaces/Banner";
 import { ProfileForm } from "./profile-form";
 import { CustomerCountForm } from "./customer-count-form";
 import { AccountForm } from "./account-form";
@@ -13,9 +14,9 @@ import { SettingsTabs, type SettingsSection } from "./settings-tabs";
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; error?: string }>;
 }) {
-  const { tab } = await searchParams;
+  const { tab, error } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -85,6 +86,8 @@ export default async function SettingsPage({
       <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
         Settings
       </h1>
+
+      {error && <Banner tone="error">{error}</Banner>}
 
       <SettingsTabs sections={sections} initialTabId={tab} />
     </div>
