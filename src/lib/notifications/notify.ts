@@ -22,13 +22,20 @@ export async function notify(
 ): Promise<void> {
   const admin = createAdminClient();
 
-  await admin.from("notifications_log").insert({
+  const { error: logError } = await admin.from("notifications_log").insert({
     founder_id: founderId,
     type,
     channel: "in_app",
     message: inAppMessage,
     quest_id: options.questId ?? null,
   });
+  // Supabase returns an error object here rather than throwing, so a
+  // schema mismatch (e.g. a column this code expects that a pending
+  // migration hasn't added yet) previously failed every single
+  // notification, of every type, with nothing in the logs to explain why.
+  if (logError) {
+    console.error(`notify: failed to log "${type}" notification for founder ${founderId}:`, logError);
+  }
 
   if (!options.emailSubject || !options.emailHtml) return;
 
