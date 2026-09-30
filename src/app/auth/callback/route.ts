@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import type { AuthError, EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { errorMessage, failureRedirectUrl, FLOW_ERROR_MESSAGES } from "@/lib/auth/confirmation-messages";
 
 // A brand-new Google account's first-ever sign-in has last_sign_in_at
 // essentially equal to created_at (Supabase sets both on account
@@ -23,6 +23,12 @@ function isBrandNewAccount(user: { created_at: string; last_sign_in_at?: string 
 // login. The `handle_new_founder` trigger (supabase/schema.sql) provisions
 // the founders/subscriptions rows on first sign-in regardless of provider.
 //
+// This route also still handles the PKCE `code` a signup or email-change
+// confirmation link produces (when that email's template uses the default
+// {{ .ConfirmationURL }} format). A token_hash-based confirmation — the
+// version /auth/confirm/page.tsx handles instead — doesn't come through
+// here at all.
+//
 // "flow=login" means the founder clicked "Continue with Google" on
 // /login, which should only ever sign an EXISTING founder in — Google
 // OAuth otherwise happily creates a new account on the spot, which would
@@ -34,87 +40,11 @@ function isBrandNewAccount(user: { created_at: string; last_sign_in_at?: string 
 // ever signing up with it again, and from ever seeing this "brand new"
 // path a second time (their own ghost account would just look like an
 // existing one). Delete it outright instead.
-// This route's failure message used to be a single hardcoded "Could not
-// sign in with Google" — fine for the OAuth flow it was written for, but
-// this same route also handles signup and email-change confirmation
-// links (all three redirect here with a PKCE `code`), so that message
-// falsely blamed Google for, say, a failed email-change confirmation.
-// A likely real cause for that one specifically: PKCE code exchange needs
-// a verifier stored by whichever browser/tab originally requested the
-// change, so a confirmation link opened in a different browser context
-// (common for email links) fails here even though nothing is actually
-// wrong with the account.
-const FLOW_ERROR_MESSAGES: Record<string, string> = {
-  login: "Could not sign in with Google.",
-  signup:
-    "That confirmation link didn't work — it may have expired, already been used, or been opened in a different browser than you requested it from. Try signing up again.",
-  email_change:
-    "That confirmation link didn't work — it may have expired, already been used, or been opened in a different browser than you requested it from. Try changing your email again.",
-};
-
-// Confirming an email change to an address another account already uses
-// fails here with this specific, documented Supabase error code — worth
-// naming outright rather than folding into the generic "link didn't work"
-// message above, since the fix (pick a different email) is completely
-// different from "try again."
-function errorMessage(flow: string, error: AuthError): string {
-  if (flow === "email_change" && error.code === "email_exists") {
-    return "That email is already used by another account. Try a different one.";
-  }
-  return FLOW_ERROR_MESSAGES[flow] ?? "Something went wrong. Please try again.";
-}
-
-// Where to send the founder on failure: an email-change confirmation
-// happens to someone who's typically still signed in elsewhere in the
-// same browser, so bouncing them to /login is jarring and pointless —
-// send them back to where they started instead. Login/signup failures
-// still belong on /login, since there's no existing session to return to.
-// Built via URL rather than string concatenation since `next` (e.g.
-// "/settings?tab=account") can already carry its own query string.
-function failureRedirectUrl(origin: string, flow: string, next: string, message: string): string {
-  const path = flow === "email_change" ? next : "/login";
-  const url = new URL(path, origin);
-  url.searchParams.set("error", message);
-  return url.toString();
-}
-
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const tokenHash = searchParams.get("token_hash");
-  const otpType = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") || "/dashboard";
-  // Supabase's own `type` param (present on the token_hash path below) is
-  // more reliable than our own `flow` param for telling flows apart, since
-  // it comes straight from the confirmation link Supabase generated rather
-  // than something we appended ourselves — use it when present.
-  const flow = otpType === "email_change" ? "email_change" : searchParams.get("flow") || "signup";
-
-  // Supabase's default confirmation-email format: a token verified purely
-  // server-side against the token itself, no PKCE code_verifier required —
-  // so unlike the `code` path below, this works even when the link is
-  // opened on a different browser/device than the one that requested the
-  // change, which is the normal case for a link delivered by email. Only
-  // reaches this branch once the Supabase dashboard's email templates are
-  // changed to link with token_hash/type (e.g.
-  // "{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change&next=/settings")
-  // instead of the default {{ .ConfirmationURL }} redirect chain, which
-  // always routes through Supabase's own hosted /verify endpoint and a
-  // fresh PKCE code requiring the originating browser's verifier. That's a
-  // dashboard config change, not something this code alone controls.
-  if (tokenHash && otpType) {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.verifyOtp({ type: otpType, token_hash: tokenHash });
-
-    if (!error && data.user) {
-      return NextResponse.redirect(`${origin}${next}`);
-    }
-
-    const message = error
-      ? errorMessage(flow, error)
-      : (FLOW_ERROR_MESSAGES[flow] ?? "Something went wrong. Please try again.");
-    return NextResponse.redirect(failureRedirectUrl(origin, flow, next, message));
-  }
+  const flow = searchParams.get("flow") || "signup";
 
   if (code) {
     const supabase = await createClient();

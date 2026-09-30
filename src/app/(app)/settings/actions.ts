@@ -172,9 +172,20 @@ export async function changePassword(formData: FormData) {
 // Supabase's "Secure email change" (the project default) requires
 // confirming from both the new address and the current one before the
 // change applies, so this only ever starts the process — nothing
-// changes here until those links are clicked. Reuses /auth/callback
-// (same PKCE code exchange Google OAuth and signup confirmation already
-// use) rather than a dedicated route.
+// changes here until those links are clicked.
+//
+// emailRedirectTo only matters while the dashboard's "Change Email
+// Address" template still uses the default {{ .ConfirmationURL }}
+// format, which routes through /auth/callback's PKCE `code` exchange
+// below. If that template gets switched to link via {{ .TokenHash }}
+// instead — e.g.
+//   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change&next=%2Fsettings%3Ftab%3Daccount
+// — confirmation goes through /auth/confirm/page.tsx instead, which
+// verifies the token only on a real button press rather than on page
+// load, so an email gateway's automated link-scan can't silently consume
+// it before the founder ever clicks. That template's `next` is
+// hardcoded in its own URL text, independent of this function's
+// emailRedirectTo value.
 export async function changeEmail(formData: FormData) {
   const newEmail = String(formData.get("email") || "").trim();
   if (!newEmail) return { error: "Enter a new email address." };
