@@ -109,7 +109,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
 
         if (!foundAnything) {
           setAnalyzeNotice(
-            `Couldn't find enough on that page to pre-fill anything. No worries — just fill in the fields on the next steps.${
+            `Couldn't find enough on that page to pre-fill anything. No worries, just fill in the fields on the next steps.${
               summary ? ` (What the AI read from it: "${summary}")` : ""
             }`,
           );
@@ -259,7 +259,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     },
     {
       title: "How do people actually buy from you?",
-      hint: "We size quest deadlines and success questions to match — a sales cycle needs a longer runway than a self-serve signup.",
+      hint: "We size quest deadlines and success questions to match. A sales cycle needs a longer runway than a self-serve signup.",
       body: (
         <ChipGroup
           options={MOTION_OPTIONS}
@@ -291,6 +291,32 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
   const isLastStep = step === steps.length - 1;
   const isFirstStep = step === 0;
   const current = steps[step];
+
+  // Step 0 (source analysis) and step 6 (channels tried) are legitimately
+  // optional — a brand-new founder may have no website yet, or no channels
+  // tried yet. Every other step needs a value before moving on.
+  const canAdvance = (() => {
+    switch (step) {
+      case 1:
+        return data.company_name.trim().length > 0;
+      case 2:
+        return data.industry.trim().length > 0;
+      case 3:
+        return data.product_description.trim().length > 0;
+      case 4:
+        return data.icp.trim().length > 0;
+      case 5:
+        return data.stage.trim().length > 0;
+      case 7:
+        return data.current_customer_count.trim().length > 0;
+      case 8:
+        return data.weekly_hours.trim().length > 0;
+      case 9:
+        return data.buying_motion.trim().length > 0;
+      default:
+        return true;
+    }
+  })();
 
   return (
     <div className="flex flex-col gap-6">
@@ -332,7 +358,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
           >
             Back
           </Button>
-          <Button type="button" onClick={() => setStep(step + 1)}>
+          <Button type="button" onClick={() => setStep(step + 1)} disabled={!canAdvance}>
             {step === 0 ? "Continue" : "Next"}
           </Button>
         </div>

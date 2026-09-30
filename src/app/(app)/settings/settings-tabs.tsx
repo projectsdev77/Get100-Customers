@@ -12,8 +12,16 @@ export interface SettingsSection {
 // regardless of which tab is active — this just controls which one is
 // visible, so the sidebar can switch sections without a page reload or
 // a giant single-page scroll.
-export function SettingsTabs({ sections }: { sections: SettingsSection[] }) {
-  const [activeId, setActiveId] = useState(sections[0]?.id);
+export function SettingsTabs({
+  sections,
+  initialTabId,
+}: {
+  sections: SettingsSection[];
+  initialTabId?: string;
+}) {
+  const [activeId, setActiveId] = useState(
+    sections.find((s) => s.id === initialTabId)?.id ?? sections[0]?.id,
+  );
 
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:gap-10">

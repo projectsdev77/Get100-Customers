@@ -43,9 +43,9 @@ export async function updateProfile(formData: FormData) {
 
   const { data: before } = await supabase
     .from("founders")
-    .select("id, industry, product_description")
+    .select("id, industry, product_description, company_name")
     .eq("auth_user_id", user.id)
-    .single<Pick<Founder, "id" | "industry" | "product_description">>();
+    .single<Pick<Founder, "id" | "industry" | "product_description" | "company_name">>();
 
   const stage = String(formData.get("stage") || "");
   const weeklyHours = String(formData.get("weekly_hours") || "");
@@ -53,12 +53,13 @@ export async function updateProfile(formData: FormData) {
   const channelsRaw = formData.getAll("channels_tried").map(String).filter(Boolean);
   const newIndustry = String(formData.get("industry") || "") || null;
   const newProductDescription = String(formData.get("product_description") || "") || null;
+  const newCompanyName = String(formData.get("company_name") || "") || null;
 
   const { error } = await supabase
     .from("founders")
     .update({
       name: String(formData.get("name") || "") || null,
-      company_name: String(formData.get("company_name") || "") || null,
+      company_name: newCompanyName,
       industry: newIndustry,
       product_description: newProductDescription,
       icp: String(formData.get("icp") || "") || null,
@@ -90,10 +91,27 @@ export async function updateProfile(formData: FormData) {
         `Profile pivot: industry "${before.industry}" → "${newIndustry}", product "${before.product_description}" → "${newProductDescription}".`,
       );
     }
+
+    // A pending "suggested" quest's title/instructions are AI-generated
+    // text baked in at generation time — editing the profile here doesn't
+    // retroactively rewrite it, so a stale suggestion would otherwise keep
+    // referencing the old company name/industry/etc. indefinitely. Only
+    // 'suggested' is disposable (same rule regenerateQuest/setNextFocus
+    // follow) — active/awaiting_report quests are already committed to by
+    // the founder and are left alone.
+    const companyNameChanged = before.company_name !== newCompanyName;
+    if (industryChanged || productChanged || companyNameChanged) {
+      await supabase
+        .from("quests")
+        .delete()
+        .eq("founder_id", before.id)
+        .eq("status", "suggested");
+    }
   }
 
   revalidatePath("/settings");
   revalidatePath("/dashboard");
+  revalidatePath("/quests");
   return { success: true };
 }
 

@@ -69,8 +69,8 @@ function EmailForm({ email }: { email: string }) {
         </Button>
       </div>
       <p className="text-xs text-secondary">
-        We&apos;ll send a confirmation link to the new address (and possibly your current one) —
-        nothing changes until you click it.
+        We&apos;ll send a confirmation link to the new address (and possibly your current one).
+        Nothing changes until you click it.
       </p>
       {state.error && <Banner tone="error">{state.error}</Banner>}
       {state.success && (

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Founder } from "@/types/database";
+import type { Founder, Quest } from "@/types/database";
 import {
   refreshQuestLog,
   getGrowthProfile,
@@ -8,10 +8,12 @@ import {
   OCCUPYING_STATUSES,
 } from "@/lib/quests/lifecycle";
 import { logCustomer } from "./actions";
+import { markQuestDone, skipQuest } from "../quests/actions";
 import { isoDaysAgo } from "@/lib/utils/days-remaining";
 import { detectSkipPattern } from "@/lib/growth-profile/patterns";
 import { GrowthHud } from "@/components/ui/game/GrowthHud";
 import { GrowthInsights } from "@/components/ui/game/GrowthInsights";
+import { QuestCard } from "@/components/ui/quests/QuestCard";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Button, LinkButton } from "@/components/ui/actions/Button";
 
@@ -36,7 +38,7 @@ export default async function DashboardPage() {
   await refreshQuestLog(supabase, founder);
 
   const weekAgoIso = isoDaysAgo(7);
-  const [{ data: weekEvents }, { count: questCount }, growth, recentQuests] = await Promise.all([
+  const [{ data: weekEvents }, { data: occupying }, growth, recentQuests] = await Promise.all([
     supabase
       .from("customer_events")
       .select("delta")
@@ -45,14 +47,18 @@ export default async function DashboardPage() {
       .returns<{ delta: number }[]>(),
     supabase
       .from("quests")
-      .select("id", { count: "exact", head: true })
+      .select("*")
       .eq("founder_id", founder.id)
-      .in("status", OCCUPYING_STATUSES),
+      .in("status", OCCUPYING_STATUSES)
+      .returns<Quest[]>(),
     getGrowthProfile(supabase, founder.id),
     getRecentQuestHistory(supabase, founder.id),
   ]);
   const weekDelta = (weekEvents ?? []).reduce((sum, e) => sum + e.delta, 0);
   const skipPattern = detectSkipPattern(recentQuests);
+  const occupyingQuests = occupying ?? [];
+  const activeQuests = occupyingQuests.filter((q) => q.status === "active" || q.status === "in_progress");
+  const questCount = occupyingQuests.length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +83,7 @@ export default async function DashboardPage() {
                 + I got a new customer
               </Button>
             </form>
-            <LinkButton href="/settings" variant="outline" size="sm">
+            <LinkButton href="/settings?tab=customer-count" variant="outline" size="sm">
               Correct your count →
             </LinkButton>
           </Card>
@@ -85,7 +91,7 @@ export default async function DashboardPage() {
           <Card className="flex flex-col gap-3 p-5">
             <h2 className="text-base font-medium text-primary">Your quests</h2>
             <p className="text-sm text-secondary">
-              {questCount ?? 0} quest{questCount === 1 ? "" : "s"} in your log right now.
+              {questCount} quest{questCount === 1 ? "" : "s"} in your log right now.
             </p>
             <LinkButton href="/quests" variant="outline" size="sm">
               View your quests →
@@ -93,6 +99,49 @@ export default async function DashboardPage() {
           </Card>
         </div>
       </div>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
+          Active quests
+        </h2>
+        {activeQuests.length === 0 && (
+          <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+            <p className="text-sm text-secondary">
+              No active quest right now. Accept one from your quest log to get started.
+            </p>
+            <LinkButton href="/quests" variant="outline" size="sm">
+              Accept a quest →
+            </LinkButton>
+          </div>
+        )}
+        {activeQuests.map((quest) => (
+          <QuestCard
+            key={quest.id}
+            status={quest.status}
+            title={quest.title}
+            instructions={quest.instructions}
+            xp={quest.xp_value}
+            window={quest.suggested_window}
+            tool={quest.tools_provided[0] ?? null}
+            reasoning={quest.reasoning}
+            actions={
+              <>
+                <form action={markQuestDone.bind(null, quest.id)}>
+                  <Button type="submit" size="sm">
+                    Mark done
+                  </Button>
+                </form>
+                <form action={skipQuest}>
+                  <input type="hidden" name="questId" value={quest.id} />
+                  <Button type="submit" variant="secondary" size="sm">
+                    Skip
+                  </Button>
+                </form>
+              </>
+            }
+          />
+        ))}
+      </section>
 
       <GrowthInsights growth={growth} pattern={skipPattern} />
     </div>

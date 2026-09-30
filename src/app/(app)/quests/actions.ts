@@ -46,6 +46,7 @@ export async function acceptQuest(questId: string) {
 
   await refreshQuestLog(supabase, founder);
   revalidatePath("/quests");
+  revalidatePath("/dashboard");
 }
 
 // "Not for me" — first-class growth-profile signal, not just a dismissal
@@ -70,6 +71,7 @@ export async function skipQuest(formData: FormData) {
 
   await refreshQuestLog(supabase, founder);
   revalidatePath("/quests");
+  revalidatePath("/dashboard");
 }
 
 // "Show other options" — swaps the pending suggestion for a different
@@ -216,6 +218,7 @@ export async function markQuestDone(questId: string) {
     .eq("status", "active");
 
   revalidatePath("/quests");
+  revalidatePath("/dashboard");
 }
 
 // awaiting_report → completed (SPEC §8). Coerces each answer by the

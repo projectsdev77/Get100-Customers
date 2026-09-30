@@ -37,7 +37,7 @@ export function DangerZone() {
             placeholder="DELETE"
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
-            className="min-w-[200px] flex-1 font-mono"
+            className="!h-12 min-w-[200px] flex-1 font-mono"
           />
           <Button type="submit" variant="danger" disabled={pending || confirmation !== "DELETE"}>
             {pending ? "Deleting…" : "Delete my account"}

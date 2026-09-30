@@ -26,6 +26,22 @@ export const MAX_ACTIVE_QUESTS = 3;
 const MAX_SUGGESTED_QUESTS = 1;
 const ACTIVE_STATUSES = ["active", "in_progress"];
 
+// Bounds how long a quest-mutating action (skipQuest, acceptQuest, a
+// dashboard/quests page load) can be stalled by ensureQuestSlots's live AI
+// generation attempt. Without this, a degraded Gemini/Groq (quota
+// exhaustion, 503s) leaves the caller hanging for as long as the AI
+// provider chain takes to exhaust its own retries — the page (or the
+// skip button) just spins. If the AI call resolves after the timeout, its
+// result is simply discarded; the next visit tries again.
+const QUEST_GENERATION_TIMEOUT_MS = 8_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
+}
+
 // Flips any occupying quest whose soft deadline has passed to 'expired'
 // (SPEC §7.3). No cron job needed for a zero-budget build — this runs
 // lazily whenever quests are fetched (PHASES.md Phase 3).
@@ -231,10 +247,13 @@ export async function ensureQuestSlots(
   }));
   const history = await getRecentQuestHistory(supabase, founder.id);
 
-  const built = await buildQuestInsertFields(founder, growth, templates, usedTemplateIds, [
-    ...occupyingInfo,
-    ...history,
-  ]);
+  const built = await withTimeout(
+    buildQuestInsertFields(founder, growth, templates, usedTemplateIds, [
+      ...occupyingInfo,
+      ...history,
+    ]),
+    QUEST_GENERATION_TIMEOUT_MS,
+  );
   if (!built) return;
 
   await supabase.from("quests").insert({

@@ -75,7 +75,17 @@ test.describe("founder golden path", () => {
       await page.getByRole("button", { name: "3–5", exact: true }).click();
       await page.getByRole("button", { name: "Next", exact: true }).click();
 
-      // Step 9: review and submit.
+      // Step 9: buying motion (single-select chip group) — added this
+      // session (gap #7's fix) after this test was first written, which is
+      // exactly why it was missing here: skipping it left the wizard
+      // sitting on this step while the test went straight for "Start my
+      // quest log," a button that only exists on the review step after
+      // this one — a flat 30s wait for a button that genuinely wasn't on
+      // screen yet, not a flake.
+      await page.getByRole("button", { name: "I talk to them (calls/demos)", exact: true }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
+
+      // Step 10: review and submit.
       await page.getByRole("button", { name: "Start my quest log" }).click();
       await expect(page).toHaveURL(/\/dashboard/);
     });

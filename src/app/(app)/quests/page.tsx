@@ -123,12 +123,21 @@ export default async function QuestsPage({
         </section>
       )}
 
-      {active.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
-            Active ({active.length} of {MAX_ACTIVE_QUESTS})
-          </h2>
-          {active.map((quest) => (
+      <section className="flex flex-col gap-3">
+        <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
+          Active ({active.length} of {MAX_ACTIVE_QUESTS})
+        </h2>
+        {active.length === 0 && (
+          <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+            <p className="text-sm text-secondary">
+              {suggested.length > 0
+                ? "No active quest yet. Accept the one below to get started."
+                : "No active quest yet. Check back shortly for one."}
+            </p>
+          </div>
+        )}
+        {active.length > 0 &&
+          active.map((quest) => (
             <QuestCard
               key={quest.id}
               status={quest.status}
@@ -150,14 +159,13 @@ export default async function QuestsPage({
               }
             />
           ))}
-        </section>
-      )}
+      </section>
 
       <section className="flex flex-col gap-2 rounded-panel bg-card p-5">
         <h2 className="text-base font-medium text-primary">What do you want to focus on next?</h2>
         <p className="text-[13px] text-secondary">
-          Every quest so far has come from your coach — this is your turn to set the agenda. Tell it
-          a channel, an idea, anything, and it&apos;ll shape your next quest around it.
+          Tell your coach what you want to work on, and it&apos;ll shape your next quest around
+          that instead of picking on its own.
         </p>
         <form action={setNextFocus} className="flex flex-wrap items-center gap-2">
           <Input
@@ -171,11 +179,18 @@ export default async function QuestsPage({
         </form>
       </section>
 
-      {suggested.length > 0 && (
+      {(suggested.length > 0 || (active.length === 0 && awaitingReport.length === 0)) && (
         <section className="flex flex-col gap-3">
           <h2 className="text-[13px] font-medium uppercase tracking-[.06em] text-secondary">
             Next up
           </h2>
+          {suggested.length === 0 && (
+            <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+              <p className="text-sm text-secondary">
+                Your coach is putting together your next quest. Check back in a moment.
+              </p>
+            </div>
+          )}
           {suggested.map((quest) => (
             <QuestCard
               key={quest.id}

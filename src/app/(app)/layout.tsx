@@ -68,7 +68,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {stuck && !restricted && (
         <div className="mx-auto max-w-[1120px] px-6 pt-4">
           <Banner tone="info">
-            You&apos;ve completed several quests without a conversion yet — that&apos;s worth a
+            You&apos;ve completed several quests without a conversion yet. That&apos;s worth a
             real conversation. Try asking your coach (bottom right) what might need to change.
           </Banner>
         </div>

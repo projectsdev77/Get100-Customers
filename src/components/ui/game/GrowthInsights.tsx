@@ -17,7 +17,7 @@ export function GrowthInsights({
 }) {
   const bottleneck =
     growth?.bottleneck_hypothesis ??
-    "Complete a few quests and check back here — we'll start surfacing what's working and what isn't.";
+    "Complete a few quests and check back here. We'll start surfacing what's working and what isn't.";
   const working = growth?.what_working ?? [];
   const notWorking = growth?.what_not_working ?? [];
 

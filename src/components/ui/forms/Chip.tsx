@@ -10,13 +10,21 @@ export function Chip({ selected = false, className = "", children, ...props }: C
       type="button"
       aria-pressed={selected}
       {...props}
-      className={`h-9 rounded-full px-4 text-sm font-medium transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
         selected
           ? "border border-transparent bg-accent-soft text-primary shadow-[inset_0_0_0_1.5px_var(--accent)]"
           : "border border-strong bg-transparent text-primary hover:bg-action-2"
       } ${className}`}
     >
-      {selected ? "✓ " : ""}
+      {/* Fixed-width slot regardless of selected state, so a chip's own
+          width never changes on select/deselect — text previously grew by
+          "✓ " when selected, which (in a flex-wrap row) visibly shifted
+          every chip after it to a new position. Also kept out of the
+          accessible name (aria-hidden) so a chip's label stays exactly its
+          own text either way. */}
+      <span aria-hidden="true" className="mr-1 inline-block w-3 shrink-0 text-center">
+        {selected ? "✓" : ""}
+      </span>
       {children}
     </button>
   );
@@ -40,7 +48,10 @@ export function ChipGroup({
         selected.includes(option) ? selected.filter((v) => v !== option) : [...selected, option],
       );
     } else {
-      onChange(option);
+      // Clicking the already-selected option clears it — every field this
+      // backs is nullable, so there's no reason a single-select group can't
+      // go back to "nothing chosen" the same way a multi-select one can.
+      onChange(option === value ? "" : option);
     }
   };
 

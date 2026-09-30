@@ -46,7 +46,7 @@ export function ProfileForm({ founder }: { founder: Founder | null }) {
         <p className="text-[13px] text-secondary">Your coach uses this to pick quests.</p>
       </div>
 
-      <Input label="Name" name="name" defaultValue={founder?.name ?? ""} />
+      <Input label="Your name" name="name" defaultValue={founder?.name ?? ""} />
       <Input label="Company name" name="company_name" defaultValue={founder?.company_name ?? ""} />
       <Input label="Industry" name="industry" defaultValue={founder?.industry ?? ""} />
       <Textarea

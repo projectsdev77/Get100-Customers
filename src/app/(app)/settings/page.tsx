@@ -10,7 +10,12 @@ import { NotificationPrefsForm } from "./notification-prefs-form";
 import { DangerZone } from "./danger-zone";
 import { SettingsTabs, type SettingsSection } from "./settings-tabs";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -81,7 +86,7 @@ export default async function SettingsPage() {
         Settings
       </h1>
 
-      <SettingsTabs sections={sections} />
+      <SettingsTabs sections={sections} initialTabId={tab} />
     </div>
   );
 }
