@@ -1,5 +1,44 @@
 import type { Founder, QuestTemplate } from "@/types/database";
 
+// This picker has no AI to interpret free text, so matching a founder's
+// stated focus (setNextFocus) to a channel relies on keywords rather than
+// understanding — a founder typing "LinkedIn post" or "cold outreach"
+// means the `content` or `cold_email` channel, but neither word appears
+// in those category names themselves. Without this map, only someone who
+// happened to type the literal internal category name (e.g. "content")
+// would ever match, and everyone else's request would silently fall
+// through to a random channel instead — which is what previously produced
+// a personalized quest's reasoning openly admitting it couldn't match a
+// plain request like "LinkedIn post" at all, even though a template for
+// exactly that (content) existed and was eligible. Deliberately loose
+// (substring match against common phrasing), since this is only the
+// fallback tier — the AI-selection tier (select-quest.ts) handles the
+// general case and is tried first.
+const CATEGORY_ALIASES: Record<string, string[]> = {
+  cold_email: ["cold email", "cold outreach", "email outreach", "emailing"],
+  communities: ["community", "communities", "forum", "slack group", "discord"],
+  content: [
+    "linkedin",
+    "twitter",
+    "x post",
+    "blog",
+    "newsletter",
+    "social media",
+    "social post",
+    "content",
+  ],
+  local_events: ["local event", "meetup", "conference", "in person", "in-person"],
+  paid: ["paid ad", "advertising", "facebook ad", "google ad", "instagram ad"],
+  partnerships: ["partnership", "partner up", "integration partner"],
+  referrals: ["referral"],
+  warm_intros: ["warm intro", "introduction", "my network"],
+};
+
+function intentMatchesCategory(intent: string, category: string): boolean {
+  if (intent.includes(category.replace(/_/g, " "))) return true;
+  return (CATEGORY_ALIASES[category] ?? []).some((alias) => intent.includes(alias));
+}
+
 // Rule-based quest selection (SPEC §7.1 Phase 3 — no AI yet). Filters by
 // stage, then ranks candidates so channels the founder hasn't tried yet are
 // preferred over ones they've already tried, before falling back to any
@@ -22,14 +61,9 @@ export function pickTemplate(
 
   if (eligible.length === 0) return null;
 
-  // This picker has no AI to interpret free text, so it can only honor a
-  // founder's stated focus (setNextFocus) when it's this literal — the
-  // channel name itself appears in what they typed. It's the best this
-  // rule-based fallback tier can do; the AI-selection tier (select-quest.ts)
-  // handles the general case and is tried first.
   if (founderIntent) {
     const intent = founderIntent.toLowerCase();
-    const matching = eligible.filter((t) => intent.includes(t.category.replace(/_/g, " ")));
+    const matching = eligible.filter((t) => intentMatchesCategory(intent, t.category));
     if (matching.length > 0) {
       return matching[Math.floor(Math.random() * matching.length)];
     }
@@ -50,7 +84,7 @@ export function buildFallbackReasoning(
   founderIntent: string | null = null,
 ): string {
   const channel = template.category.replace(/_/g, " ");
-  if (founderIntent?.toLowerCase().includes(channel)) {
+  if (founderIntent && intentMatchesCategory(founderIntent.toLowerCase(), template.category)) {
     return `You asked to focus on ${channel}, so that's what this one is.`;
   }
   if (!founder.channels_tried.includes(template.category)) {
