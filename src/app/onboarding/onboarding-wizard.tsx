@@ -215,7 +215,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
           options={STAGE_OPTIONS}
           multi={false}
           value={STAGE_LABELS[data.stage] ?? ""}
-          onChange={(v) => setData({ ...data, stage: STAGE_VALUES[v as string] })}
+          onChange={(v) => setData({ ...data, stage: STAGE_VALUES[v as string] ?? "" })}
         />
       ),
     },
@@ -253,7 +253,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
           options={HOURS_OPTIONS}
           multi={false}
           value={HOURS_LABELS[data.weekly_hours] ?? ""}
-          onChange={(v) => setData({ ...data, weekly_hours: HOURS_VALUES[v as string] })}
+          onChange={(v) => setData({ ...data, weekly_hours: HOURS_VALUES[v as string] ?? "" })}
         />
       ),
     },
@@ -265,7 +265,7 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
           options={MOTION_OPTIONS}
           multi={false}
           value={MOTION_LABELS[data.buying_motion] ?? ""}
-          onChange={(v) => setData({ ...data, buying_motion: MOTION_VALUES[v as string] })}
+          onChange={(v) => setData({ ...data, buying_motion: MOTION_VALUES[v as string] ?? "" })}
         />
       ),
     },
@@ -306,13 +306,13 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
       case 4:
         return data.icp.trim().length > 0;
       case 5:
-        return data.stage.trim().length > 0;
+        return Boolean(data.stage);
       case 7:
         return data.current_customer_count.trim().length > 0;
       case 8:
-        return data.weekly_hours.trim().length > 0;
+        return Boolean(data.weekly_hours);
       case 9:
-        return data.buying_motion.trim().length > 0;
+        return Boolean(data.buying_motion);
       default:
         return true;
     }

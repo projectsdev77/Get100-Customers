@@ -63,7 +63,7 @@ export function ProfileForm({ founder }: { founder: Founder | null }) {
           options={STAGE_OPTIONS}
           multi={false}
           value={STAGE_LABELS[stage] ?? ""}
-          onChange={(v) => setStage(STAGE_VALUES[v as string])}
+          onChange={(v) => setStage(STAGE_VALUES[v as string] ?? "")}
         />
         <input type="hidden" name="stage" value={stage} />
       </div>
@@ -88,7 +88,7 @@ export function ProfileForm({ founder }: { founder: Founder | null }) {
           options={HOURS_OPTIONS}
           multi={false}
           value={HOURS_LABELS[weeklyHours] ?? ""}
-          onChange={(v) => setWeeklyHours(HOURS_VALUES[v as string])}
+          onChange={(v) => setWeeklyHours(HOURS_VALUES[v as string] ?? "")}
         />
         <input type="hidden" name="weekly_hours" value={weeklyHours} />
       </div>
@@ -99,7 +99,7 @@ export function ProfileForm({ founder }: { founder: Founder | null }) {
           options={MOTION_OPTIONS}
           multi={false}
           value={MOTION_LABELS[buyingMotion] ?? ""}
-          onChange={(v) => setBuyingMotion(MOTION_VALUES[v as string])}
+          onChange={(v) => setBuyingMotion(MOTION_VALUES[v as string] ?? "")}
         />
         <input type="hidden" name="buying_motion" value={buyingMotion} />
       </div>
