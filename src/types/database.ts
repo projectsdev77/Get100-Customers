@@ -164,6 +164,7 @@ export interface NotificationLogEntry {
   type: NotificationType;
   channel: "in_app" | "email";
   message: string;
+  quest_id: string | null;
   read_at: string | null;
   sent_at: string;
 }

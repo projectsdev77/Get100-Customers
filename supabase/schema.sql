@@ -201,6 +201,15 @@ create table if not exists notifications_log (
   sent_at timestamptz not null default now()
 );
 
+-- Which quest (if any) this notification is about, so the notifications
+-- page can link straight to it instead of just displaying text. Null for
+-- notifications with no single quest to point to (milestones, weekly
+-- recaps, the generic re-engagement nudge). Set null rather than cascading
+-- the delete — a quest is never actually deleted in this app, but if that
+-- ever changes, the notification should still display, just without a
+-- working link.
+alter table notifications_log add column if not exists quest_id uuid references quests (id) on delete set null;
+
 -- ---------------------------------------------------------------------------
 -- admin_users — internal admin dashboard access (SPEC §12)
 -- ---------------------------------------------------------------------------

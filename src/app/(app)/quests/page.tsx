@@ -79,6 +79,7 @@ export default async function QuestsPage({
             <form key={quest.id} action={submitQuestResult}>
               <input type="hidden" name="questId" value={quest.id} />
               <QuestCard
+                id={`quest-${quest.id}`}
                 status="awaiting_report"
                 title={quest.title}
                 xp={quest.xp_value}
@@ -140,6 +141,7 @@ export default async function QuestsPage({
           active.map((quest) => (
             <QuestCard
               key={quest.id}
+              id={`quest-${quest.id}`}
               status={quest.status}
               title={quest.title}
               instructions={quest.instructions}
@@ -194,6 +196,7 @@ export default async function QuestsPage({
           {suggested.map((quest) => (
             <QuestCard
               key={quest.id}
+              id={`quest-${quest.id}`}
               status="suggested"
               title={quest.title}
               instructions={quest.instructions}

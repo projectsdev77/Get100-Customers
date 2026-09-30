@@ -30,6 +30,7 @@ export async function runLazyNotificationChecks(
     await notify(founder.id, "window_approaching", `Your quest "${dueSoon.title}" is due soon.`, {
       emailSubject: "A quest is due soon",
       emailHtml: `<p>Your quest "<strong>${dueSoon.title}</strong>" is due soon. Don't lose your streak!</p>`,
+      questId: dueSoon.id,
     });
   }
 

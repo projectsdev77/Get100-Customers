@@ -5,6 +5,7 @@ import type { EmailNotificationPrefs, NotificationType } from "@/types/database"
 interface NotifyOptions {
   emailSubject?: string;
   emailHtml?: string;
+  questId?: string | null;
 }
 
 // Single entry point for every notification trigger in SPEC §11 (new
@@ -26,6 +27,7 @@ export async function notify(
     type,
     channel: "in_app",
     message: inAppMessage,
+    quest_id: options.questId ?? null,
   });
 
   if (!options.emailSubject || !options.emailHtml) return;

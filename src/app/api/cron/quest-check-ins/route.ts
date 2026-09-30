@@ -53,6 +53,7 @@ export async function POST(request: Request) {
       {
         emailSubject: `How's "${quest.title}" going?`,
         emailHtml: `<p>It's been a couple of days since you started "<strong>${quest.title}</strong>." How's it going?</p><p>If you're stuck, need a different approach, or just haven't had time — open the coach chat in the app and we can figure out the next move together.</p>`,
+        questId: quest.id,
       },
     );
 

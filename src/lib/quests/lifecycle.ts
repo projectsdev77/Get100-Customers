@@ -256,14 +256,16 @@ export async function ensureQuestSlots(
   );
   if (!built) return;
 
+  const questId = crypto.randomUUID();
   await supabase.from("quests").insert({
+    id: questId,
     founder_id: founder.id,
     ...built.fields,
   });
 
   // In-app only (SPEC §11) — the founder is typically already in the app
   // when a suggestion refills.
-  await notify(founder.id, "new_quest", `New quest: ${built.fields.title}`);
+  await notify(founder.id, "new_quest", `New quest: ${built.fields.title}`, { questId });
 }
 
 // Used by acceptQuest to enforce the "3 active" cap (design handoff)

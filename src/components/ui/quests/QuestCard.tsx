@@ -29,6 +29,7 @@ const STATUS_META: Record<QuestCardStatus, { label: string; bg: string; ink: str
 // styles, and as a client component so "Why this?" can toggle locally
 // without round-tripping through a server action.
 export function QuestCard({
+  id,
   status,
   title,
   instructions,
@@ -39,6 +40,7 @@ export function QuestCard({
   actions,
   children,
 }: {
+  id?: string;
   status: QuestCardStatus;
   title: string;
   instructions?: string | null;
@@ -53,7 +55,7 @@ export function QuestCard({
   const meta = STATUS_META[status];
 
   return (
-    <div className="flex flex-col gap-3 rounded-panel bg-card p-5">
+    <div id={id} className="flex flex-col gap-3 rounded-panel bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span
           className={`inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-on-tile ${meta.bg}`}
