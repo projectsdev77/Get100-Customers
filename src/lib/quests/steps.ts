@@ -5,10 +5,13 @@ export interface QuestStep {
   done: boolean;
 }
 
-// Quest instructions are AI-written as a numbered list ("1. ... 2. ...") —
-// this splits that into individual steps for the in-progress checklist.
-// Falls back to one single step when there's no numbering at all (a
-// net-new quest whose instructions came out as a single sentence).
+// Legacy/fallback path only — every AI-generated quest now returns its own
+// "steps" array directly (select-quest.ts/generate-quest.ts/
+// personalize-quest.ts), which lifecycle.ts writes straight into sub_tasks.
+// This regex-split only kicks in for a quest that predates that (no
+// sub_tasks yet) or the rare raw-template fallback (no AI steps at all) —
+// and even then only works when instructions happen to be numbered
+// ("1. ... 2. ..."); otherwise the whole thing becomes one step.
 export function parseQuestSteps(instructions: string | null): string[] {
   if (!instructions?.trim()) return [];
   const parts = instructions

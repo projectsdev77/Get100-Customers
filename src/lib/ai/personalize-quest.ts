@@ -8,6 +8,7 @@ export interface PersonalizedQuestContent {
   instructions: string;
   tools_provided: Array<{ label: string; content: string }>;
   reasoning: string;
+  steps: string[];
 }
 
 const RESPONSE_SCHEMA = {
@@ -27,8 +28,9 @@ const RESPONSE_SCHEMA = {
       },
     },
     reasoning: { type: Type.STRING },
+    steps: { type: Type.ARRAY, items: { type: Type.STRING } },
   },
-  required: ["title", "instructions", "tools_provided", "reasoning"],
+  required: ["title", "instructions", "tools_provided", "reasoning", "steps"],
 };
 
 type FounderContext = Pick<
@@ -89,6 +91,16 @@ as the template tools, content rewritten with placeholders filled in). If
 the founder has limited hours available, scale the ask down (e.g. fewer
 emails/posts) rather than changing the channel — "we size quests to fit."
 
+Also return "steps": break the personalized instructions into checkable
+tasks the founder ticks off one at a time as they work through it, usually
+2-5. Each step must be a complete, self-contained unit of action, not a
+fragment — "Identify 10 people who fit your ICP and find their contact
+info via LinkedIn or a prospect list" is one step; "Open LinkedIn" is not.
+Together the steps should cover the whole quest; don't just chop the
+instructions text into sentences. If the quest is genuinely one single
+action with nothing meaningful to split off, return just that one step —
+never pad it with an artificial second step just to make a list.
+
 Also return "reasoning": in a coach's voice, written TO the founder
 ("You..."), shown behind a "Why this?" toggle. ${
     founderIntent
@@ -132,7 +144,9 @@ export async function personalizeQuestWithAI(
     }
     if (/\{\{.*?\}\}/.test(JSON.stringify(parsed))) return null;
 
-    return parsed;
+    const steps = (parsed.steps ?? []).map((s) => s.trim()).filter(Boolean);
+
+    return { ...parsed, steps: steps.length > 0 ? steps : [parsed.instructions.trim()] };
   } catch (err) {
     console.error("personalizeQuestWithAI failed:", err);
     return null;

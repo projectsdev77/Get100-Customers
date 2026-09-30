@@ -54,6 +54,7 @@ const RESPONSE_SCHEMA = {
       },
     },
     reasoning: { type: Type.STRING },
+    steps: { type: Type.ARRAY, items: { type: Type.STRING } },
   },
   required: [
     "title",
@@ -63,6 +64,7 @@ const RESPONSE_SCHEMA = {
     "window_days",
     "result_questions",
     "reasoning",
+    "steps",
   ],
 };
 
@@ -210,6 +212,16 @@ asking whether it led to a new customer. xp_value 6-15. window_days ${windowDays
     founder.buying_motion,
   )}.${motionPromptNote(founder.buying_motion)}
 
+Also return "steps": break the quest into checkable tasks the founder ticks
+off one at a time as they work through it, usually 2-5. Each step must be a
+complete, self-contained unit of action, not a fragment — "Identify 10
+people who fit your ICP and find their contact info via LinkedIn or a
+prospect list" is one step; "Open LinkedIn" is not. Together the steps
+should cover the whole quest; don't just chop your instructions text into
+sentences. If the quest is genuinely one single action with nothing
+meaningful to split off, return just that one step — never pad it with an
+artificial second step just to make a list.
+
 Also return "reasoning": 2-3 sentences, in a coach's voice, written TO the
 founder ("You..."). Start with why you picked this quest and channel right
 now — reference their growth history if there is one, otherwise their
@@ -280,11 +292,14 @@ export async function selectNextQuestWithAI(
     }
     if (/\{\{.*?\}\}/.test(JSON.stringify(parsed))) return null;
 
+    const steps = (parsed.steps ?? []).map((s) => s.trim()).filter(Boolean);
+
     return {
       ...parsed,
       xp_value: Math.min(20, Math.max(5, parsed.xp_value || 10)),
       window_days: Math.min(maxWindowDays(founder.buying_motion), Math.max(1, parsed.window_days || 3)),
       tools_provided: parsed.tools_provided ?? [],
+      steps: steps.length > 0 ? steps : [parsed.instructions.trim()],
     };
   } catch (err) {
     console.error("selectNextQuestWithAI failed:", err);
