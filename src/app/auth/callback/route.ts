@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { AuthError } from "@supabase/supabase-js";
+import type { AuthError, EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -81,8 +81,40 @@ function failureRedirectUrl(origin: string, flow: string, next: string, message:
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const otpType = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") || "/dashboard";
-  const flow = searchParams.get("flow") || "signup";
+  // Supabase's own `type` param (present on the token_hash path below) is
+  // more reliable than our own `flow` param for telling flows apart, since
+  // it comes straight from the confirmation link Supabase generated rather
+  // than something we appended ourselves — use it when present.
+  const flow = otpType === "email_change" ? "email_change" : searchParams.get("flow") || "signup";
+
+  // Supabase's default confirmation-email format: a token verified purely
+  // server-side against the token itself, no PKCE code_verifier required —
+  // so unlike the `code` path below, this works even when the link is
+  // opened on a different browser/device than the one that requested the
+  // change, which is the normal case for a link delivered by email. Only
+  // reaches this branch once the Supabase dashboard's email templates are
+  // changed to link with token_hash/type (e.g.
+  // "{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change&next=/settings")
+  // instead of the default {{ .ConfirmationURL }} redirect chain, which
+  // always routes through Supabase's own hosted /verify endpoint and a
+  // fresh PKCE code requiring the originating browser's verifier. That's a
+  // dashboard config change, not something this code alone controls.
+  if (tokenHash && otpType) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.verifyOtp({ type: otpType, token_hash: tokenHash });
+
+    if (!error && data.user) {
+      return NextResponse.redirect(`${origin}${next}`);
+    }
+
+    const message = error
+      ? errorMessage(flow, error)
+      : (FLOW_ERROR_MESSAGES[flow] ?? "Something went wrong. Please try again.");
+    return NextResponse.redirect(failureRedirectUrl(origin, flow, next, message));
+  }
 
   if (code) {
     const supabase = await createClient();
