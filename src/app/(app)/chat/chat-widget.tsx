@@ -216,7 +216,7 @@ export function ChatWidget({
           onKeyDown={handleInputKeyDown}
           disabled={restricted}
           rows={1}
-          placeholder={restricted ? "Chat unavailable" : "Ask about a quest… (Shift+Enter for a new line)"}
+          placeholder={restricted ? "Chat unavailable" : "Ask about a quest…"}
           className="max-h-[100px] min-h-9 flex-1 resize-none rounded-field border border-strong bg-card px-3.5 py-2 text-sm text-primary outline-none placeholder:text-secondary focus:border-accent disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
