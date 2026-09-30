@@ -26,6 +26,10 @@ test.describe("notifications", () => {
       await expect(page.getByText("1 unread")).toBeVisible();
       await expect(page.getByText("You've hit 10 customers!")).toBeVisible();
 
+      // The mark-read write now fires from a client effect after hydration
+      // (a Server Action call, not part of the server-rendered HTML), so
+      // give it a moment to actually land before reloading and checking.
+      await page.waitForLoadState("networkidle");
       await page.reload();
       await expect(page.getByText("You're all caught up.")).toBeVisible();
     } finally {

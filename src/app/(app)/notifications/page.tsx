@@ -4,6 +4,7 @@ import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { redirect } from "next/navigation";
 import type { NotificationLogEntry, NotificationType } from "@/types/database";
 import { openNotification } from "./actions";
+import { AutoMarkRead } from "./auto-mark-read";
 
 // Types where the message is about one specific quest, so clicking through
 // to it is itself the read signal — these are excluded from the
@@ -37,21 +38,16 @@ export default async function NotificationsPage() {
 
   // Viewing this page marks everything read EXCEPT the quest-linked ones —
   // those only get marked read when actually clicked through (see
-  // openNotification), so an active/next-up quest you haven't looked at
-  // yet doesn't silently drop off your unread count just by opening this
-  // list. Uses the unread snapshot above for what to display, so this
-  // render still shows what was unread on arrival.
+  // openNotification) — via AutoMarkRead below, a client effect that calls
+  // a Server Action rather than writing here directly, since only an
+  // action can revalidate the TopNav badge in the shared layout. Rendering
+  // below uses this unread snapshot, so this view still shows what was
+  // unread on arrival rather than looking pre-emptively read.
   const autoReadIds = items.filter((n) => !n.read_at && !questHref(n)).map((n) => n.id);
-  if (autoReadIds.length > 0) {
-    await supabase
-      .from("notifications_log")
-      .update({ read_at: new Date().toISOString() })
-      .in("id", autoReadIds)
-      .eq("founder_id", founder.id);
-  }
 
   return (
     <div className="flex flex-col gap-5">
+      <AutoMarkRead ids={autoReadIds} />
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
           Notifications
@@ -90,7 +86,7 @@ export default async function NotificationsPage() {
                 <form key={n.id} action={openNotification.bind(null, n.id, href)}>
                   <button
                     type="submit"
-                    className={`${rowClasses} text-left transition-colors hover:bg-action-2`}
+                    className={`${rowClasses} w-full text-left transition-colors hover:bg-action-2`}
                   >
                     {content}
                   </button>
