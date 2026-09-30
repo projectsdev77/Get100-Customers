@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { AuthError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -51,6 +52,18 @@ const FLOW_ERROR_MESSAGES: Record<string, string> = {
     "That confirmation link didn't work — it may have expired, already been used, or been opened in a different browser than you requested it from. Try changing your email again.",
 };
 
+// Confirming an email change to an address another account already uses
+// fails here with this specific, documented Supabase error code — worth
+// naming outright rather than folding into the generic "link didn't work"
+// message above, since the fix (pick a different email) is completely
+// different from "try again."
+function errorMessage(flow: string, error: AuthError): string {
+  if (flow === "email_change" && error.code === "email_exists") {
+    return "That email is already used by another account. Try a different one.";
+  }
+  return FLOW_ERROR_MESSAGES[flow] ?? "Something went wrong. Please try again.";
+}
+
 // Where to send the founder on failure: an email-change confirmation
 // happens to someone who's typically still signed in elsewhere in the
 // same browser, so bouncing them to /login is jarring and pointless —
@@ -86,6 +99,10 @@ export async function GET(request: Request) {
         );
       }
       return NextResponse.redirect(`${origin}${next}`);
+    }
+
+    if (error) {
+      return NextResponse.redirect(failureRedirectUrl(origin, flow, next, errorMessage(flow, error)));
     }
   }
 
