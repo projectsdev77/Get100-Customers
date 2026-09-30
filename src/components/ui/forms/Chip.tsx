@@ -21,11 +21,16 @@ export function Chip({ selected = false, className = "", children, ...props }: C
           "✓ " when selected, which (in a flex-wrap row) visibly shifted
           every chip after it to a new position. Also kept out of the
           accessible name (aria-hidden) so a chip's label stays exactly its
-          own text either way. */}
+          own text either way. Mirrored by an equal-width blank slot after
+          the label so the reserved checkmark space doesn't pull the text
+          off-center — without it, the label sits visibly left-of-center
+          even on an unselected chip, since only one side ever reserved
+          space. */}
       <span aria-hidden="true" className="mr-1 inline-block w-3 shrink-0 text-center">
         {selected ? "✓" : ""}
       </span>
       {children}
+      <span aria-hidden="true" className="ml-1 inline-block w-3 shrink-0" />
     </button>
   );
 }
