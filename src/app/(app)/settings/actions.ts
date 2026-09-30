@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { appendStrategyHistory } from "@/lib/growth-profile/append-strategy-history";
 import { isPasswordValid } from "@/lib/auth/password";
-import { hasIdentityProvider } from "@/lib/auth/find-user-by-email";
+import { hasPasswordSet } from "@/lib/auth/find-user-by-email";
 import { authErrorMessage } from "@/lib/auth/error-message";
 import { REMEMBER_ME_COOKIE } from "@/lib/auth/session-persistence";
 import type {
@@ -119,8 +119,8 @@ export async function updateProfile(formData: FormData) {
 // Supabase's own optional GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_CURRENT_PASSWORD
 // project setting, which this app doesn't control) by attempting a real
 // sign-in with it before applying the change. A founder who signed up
-// via Google only has no password identity at all yet, so there's
-// nothing to verify — this lets them set one for the first time instead.
+// via Google only has no password set yet, so there's nothing to
+// verify — this lets them set one for the first time instead.
 export async function changePassword(formData: FormData) {
   const currentPassword = String(formData.get("current_password") || "");
   const newPassword = String(formData.get("new_password") || "");
@@ -138,7 +138,7 @@ export async function changePassword(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user?.email) return { error: "Not signed in." };
 
-  if (hasIdentityProvider(user, "email")) {
+  if (hasPasswordSet(user)) {
     if (!currentPassword) {
       return { error: "Enter your current password." };
     }
@@ -151,13 +151,20 @@ export async function changePassword(formData: FormData) {
     }
   }
 
-  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  // Also tags user_metadata.has_password: Supabase doesn't reliably add an
+  // "email" identity to auth.users.identities just from setting a
+  // password on an OAuth-only account (confirmed against a live account
+  // where it never appeared), so hasPasswordSet needs its own durable
+  // signal to go on — without this, both the UI label above and the
+  // verification requirement here would silently keep treating the
+  // account as password-less forever, even right after a real password
+  // was set.
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+    data: { has_password: true },
+  });
   if (error) return { error: authErrorMessage(error) };
 
-  // Setting a password for the first time adds an "email" identity to
-  // the account — without this, the page would keep showing "Set a
-  // password" (computed from the now-stale hasPassword prop) until a
-  // manual refresh, even though a Google-only founder just added one.
   revalidatePath("/settings");
   return { success: true as const };
 }

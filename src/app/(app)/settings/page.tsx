@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
-import { hasIdentityProvider } from "@/lib/auth/find-user-by-email";
+import { hasIdentityProvider, hasPasswordSet } from "@/lib/auth/find-user-by-email";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { ProfileForm } from "./profile-form";
 import { CustomerCountForm } from "./customer-count-form";
@@ -42,7 +42,7 @@ export default async function SettingsPage({
       content: (
         <AccountForm
           email={user.email ?? ""}
-          hasPassword={hasIdentityProvider(user, "email")}
+          hasPassword={hasPasswordSet(user)}
           hasGoogle={hasIdentityProvider(user, "google")}
         />
       ),

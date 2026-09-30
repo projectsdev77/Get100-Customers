@@ -25,3 +25,16 @@ export async function findAuthUserByEmail(email: string): Promise<User | null> {
 export function hasIdentityProvider(user: User, provider: string): boolean {
   return (user.identities ?? []).some((identity) => identity.provider === provider);
 }
+
+// Whether this account can sign in with email+password. Supabase's
+// updateUser({ password }) does not reliably add an "email" identity to an
+// OAuth-only account's identities array — confirmed against a live account
+// where it never appeared even after a real password was successfully
+// set — so hasIdentityProvider(user, "email") alone can't be trusted for
+// this. changePassword tags the account with user_metadata.has_password
+// itself the moment a password is actually set; this checks that flag
+// first and falls back to the identity check in case a given Supabase
+// project's GoTrue version does populate it.
+export function hasPasswordSet(user: User): boolean {
+  return user.user_metadata?.has_password === true || hasIdentityProvider(user, "email");
+}
