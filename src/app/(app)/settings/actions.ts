@@ -22,8 +22,8 @@ import type {
 const VALID_STAGES: FounderStage[] = ["idea", "prototype", "launched"];
 const VALID_WEEKLY_HOURS: WeeklyHours[] = ["1-2", "3-5", "6-10", "10+"];
 const VALID_BUYING_MOTIONS: BuyingMotion[] = ["self_serve", "sales_led", "local_in_person"];
+// new_quest excluded — see notification-prefs-form.tsx.
 const NOTIFICATION_TYPES: NotificationType[] = [
-  "new_quest",
   "window_approaching",
   "re_engagement",
   "milestone",

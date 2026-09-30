@@ -2,8 +2,12 @@ import type { EmailNotificationPrefs, NotificationType } from "@/types/database"
 import { updateNotificationPrefs } from "./actions";
 import { Button } from "@/components/ui/actions/Button";
 
-const LABELS: Record<NotificationType, string> = {
-  new_quest: "New quest available",
+// new_quest is deliberately excluded — a suggestion refilling never
+// notified by email in the first place (see ensureQuestSlots), so a
+// toggle for it here would control nothing.
+type ToggleableType = Exclude<NotificationType, "new_quest">;
+
+const LABELS: Record<ToggleableType, string> = {
   window_approaching: "Quest due soon",
   re_engagement: "Re-engagement nudges",
   milestone: "Milestones (level up, customer count)",
@@ -21,7 +25,7 @@ export function NotificationPrefsForm({ prefs }: { prefs: EmailNotificationPrefs
         </p>
       </div>
       <div className="flex flex-col gap-3">
-        {(Object.keys(LABELS) as NotificationType[]).map((type) => (
+        {(Object.keys(LABELS) as ToggleableType[]).map((type) => (
           <label key={type} className="flex items-center gap-2.5 text-sm text-primary">
             <input
               type="checkbox"

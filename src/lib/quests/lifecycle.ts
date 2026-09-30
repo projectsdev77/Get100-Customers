@@ -4,7 +4,6 @@ import { pickTemplate, templateToQuestFields } from "./select-template";
 import { personalizeQuestWithAI } from "@/lib/ai/personalize-quest";
 import { generateNetNewQuest } from "@/lib/ai/generate-quest";
 import { selectNextQuestWithAI, type RecentQuestInfo } from "@/lib/ai/select-quest";
-import { notify } from "@/lib/notifications/notify";
 import { runLazyNotificationChecks } from "@/lib/notifications/lazy-checks";
 import { applySubscriptionLifecycle, getSubscription, isRestricted } from "@/lib/subscriptions/status";
 
@@ -256,16 +255,13 @@ export async function ensureQuestSlots(
   );
   if (!built) return;
 
-  const questId = crypto.randomUUID();
+  // No notification here on purpose — a suggestion refilling isn't worth
+  // interrupting the founder for; it just sits in "Next up" until they get
+  // to it.
   await supabase.from("quests").insert({
-    id: questId,
     founder_id: founder.id,
     ...built.fields,
   });
-
-  // In-app only (SPEC §11) — the founder is typically already in the app
-  // when a suggestion refills.
-  await notify(founder.id, "new_quest", `New quest: ${built.fields.title}`, { questId });
 }
 
 // Used by acceptQuest to enforce the "3 active" cap (design handoff)
