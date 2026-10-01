@@ -14,9 +14,9 @@ import { SettingsTabs, type SettingsSection } from "./settings-tabs";
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; error?: string }>;
+  searchParams: Promise<{ tab?: string; error?: string; notice?: string }>;
 }) {
-  const { tab, error } = await searchParams;
+  const { tab, error, notice } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -88,6 +88,7 @@ export default async function SettingsPage({
       </h1>
 
       {error && <Banner tone="error">{error}</Banner>}
+      {notice && <Banner tone="info">{notice}</Banner>}
 
       <SettingsTabs sections={sections} initialTabId={tab} />
     </div>

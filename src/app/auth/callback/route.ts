@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { errorMessage, failureRedirectUrl, FLOW_ERROR_MESSAGES } from "@/lib/auth/confirmation-messages";
+import {
+  errorMessage,
+  failureRedirectUrl,
+  halfConfirmedRedirectUrl,
+  FLOW_ERROR_MESSAGES,
+} from "@/lib/auth/confirmation-messages";
 
 // A brand-new Google account's first-ever sign-in has last_sign_in_at
 // essentially equal to created_at (Supabase sets both on account
@@ -66,6 +71,16 @@ export async function GET(request: Request) {
     if (error) {
       return NextResponse.redirect(failureRedirectUrl(origin, flow, next, errorMessage(flow, error)));
     }
+  }
+
+  // Confirming just one side of a two-sided (secure) email change: Supabase's
+  // hosted /verify endpoint (what the default {{ .ConfirmationURL }} template
+  // routes through) redirects straight here with no `code` at all once the
+  // change still needs the other email's confirmation too — see
+  // halfConfirmedRedirectUrl's comment. Scoped to email_change specifically;
+  // for every other flow, no `code` really does mean something went wrong.
+  if (!code && flow === "email_change") {
+    return NextResponse.redirect(halfConfirmedRedirectUrl(origin, next));
   }
 
   const message = FLOW_ERROR_MESSAGES[flow] ?? "Something went wrong. Please try again.";

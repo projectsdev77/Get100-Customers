@@ -36,3 +36,23 @@ export function failureRedirectUrl(origin: string, flow: string, next: string, m
   url.searchParams.set("error", message);
   return url.toString();
 }
+
+export const EMAIL_CHANGE_HALF_CONFIRMED_MESSAGE =
+  "Confirmed — now open your other email (old or new, whichever you haven't clicked yet) and confirm that link too. The change only applies once both are done.";
+
+// Secure email change (Supabase's project default) requires confirming
+// from BOTH the old and new address before the swap actually applies.
+// Confirming just one side comes back from Supabase as a genuine success
+// (no error) but with no user/session yet, since the change isn't
+// complete — confirmed directly in @supabase/auth-js's source
+// (lib/fetch.ts's _sessionResponse: "Some /verify responses (e.g. secure
+// email_change first-confirmation) return only { msg, code } with no user
+// and no session"). Previously both callers here folded that into the
+// generic failure message, telling the founder their own successful click
+// "didn't work" when the only thing left was clicking the other email's
+// link too.
+export function halfConfirmedRedirectUrl(origin: string, next: string): string {
+  const url = new URL(next, origin);
+  url.searchParams.set("notice", EMAIL_CHANGE_HALF_CONFIRMED_MESSAGE);
+  return url.toString();
+}
