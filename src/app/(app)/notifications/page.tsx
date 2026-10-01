@@ -53,7 +53,7 @@ export default async function NotificationsPage() {
   const autoReadIds = items.filter((n) => !n.read_at && !questHref(n)).map((n) => n.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <AutoMarkRead ids={autoReadIds} />
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">

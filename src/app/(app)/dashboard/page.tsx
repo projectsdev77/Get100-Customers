@@ -156,18 +156,16 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-start gap-4">
-        <div className="min-w-0 flex-[3_1_600px]">
-          <GrowthHud
-            customers={founder.current_customer_count}
-            weekDelta={weekDelta !== 0 ? weekDelta : null}
-            level={founder.level}
-            xp={founder.xp}
-            streak={founder.streak_count}
-          />
-        </div>
+      <div className="grid grid-cols-1 items-start gap-6 min-[860px]:grid-cols-[1fr_320px]">
+        <GrowthHud
+          customers={founder.current_customer_count}
+          weekDelta={weekDelta !== 0 ? weekDelta : null}
+          level={founder.level}
+          xp={founder.xp}
+          streak={founder.streak_count}
+        />
 
-        <div className="flex min-w-0 flex-[1_1_340px] flex-col gap-4">
+        <div className="flex flex-col gap-4">
           {isNewUser ? (
             <>
               {questsCard}

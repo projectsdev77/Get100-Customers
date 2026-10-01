@@ -54,7 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <TopNav unreadCount={unreadCount} onLogout={logout} />
 
         {restricted && (
-          <div className="px-[clamp(24px,4vw,64px)] pt-4">
+          <div className="mx-auto max-w-[1120px] px-6 pt-4">
             <Banner
               tone="error"
               action={
@@ -75,7 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           Skipped while restricted since quests/chat are already paused then.
         */}
         {stuck && !restricted && (
-          <div className="px-[clamp(24px,4vw,64px)] pt-4">
+          <div className="mx-auto max-w-[1120px] px-6 pt-4">
             <Banner tone="info">
               You&apos;ve completed several quests without a conversion yet. That&apos;s worth a
               real conversation. Try asking your coach (bottom right) what might need to change.
@@ -83,7 +83,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        <main className="w-full px-[clamp(24px,4vw,64px)] py-10">{children}</main>
+        <main className="mx-auto max-w-[1120px] px-6 py-10">{children}</main>
         <ChatWidget restricted={restricted} stuck={stuck} />
       </div>
     </CelebrationProvider>
