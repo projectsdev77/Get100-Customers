@@ -28,9 +28,14 @@ const SUBSCRIPTION_META: Record<SubscriptionStatus | "none", { label: string; do
 // Whole (possibly negative) days until a timestamp — daysRemaining()
 // (src/lib/utils/days-remaining.ts) floors negative values to 0, which
 // hides "this already lapsed" from "this is due today," a distinction
-// that matters for flagging at-risk accounts here.
+// that matters for flagging at-risk accounts here. Uses Math.floor, not
+// Math.ceil: ceil(-0.02) is -0, and -0 < 0 is false in JS, so a timestamp
+// that passed less than a day ago would silently fail the "already
+// expired" check below and show "ends in 0d" instead — floor never
+// produces -0 for a genuinely negative input, so "expired one minute ago"
+// floors straight to -1, not 0.
 function daysUntil(iso: string): number {
-  return Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
+  return Math.floor((new Date(iso).getTime() - Date.now()) / 86_400_000);
 }
 
 const RISK_WINDOW_DAYS = 3;
@@ -49,7 +54,12 @@ function computeRisk(sub: SubFields | null): { label: string; tone: "warn" | "da
   }
   if (sub.status === "past_due" && sub.grace_period_ends_at) {
     const days = daysUntil(sub.grace_period_ends_at);
-    if (days >= 0) return { label: `Grace ends in ${days}d`, tone: "warn" };
+    // Grace period already lapsed but applySubscriptionLifecycle's lazy
+    // check hasn't run yet to flip status to "restricted" (it only runs
+    // when the founder next loads a page) — same lapsed-but-not-yet-
+    // transitioned gap the trialing branch above already accounts for.
+    if (days < 0) return { label: "Grace expired", tone: "danger" };
+    return { label: `Grace ends in ${days}d`, tone: "warn" };
   }
   return null;
 }
