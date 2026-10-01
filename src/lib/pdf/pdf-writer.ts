@@ -20,6 +20,29 @@ interface TextOptions {
   color?: readonly [number, number, number];
 }
 
+// pdf-lib's standard fonts only support WinAnsi (cp1252) encoding and throw
+// if asked to draw anything outside it — not just emoji, but any non-Latin
+// script (CJK, Cyrillic, Arabic, Turkish "ı", etc). This data is free text a
+// founder typed (name, company, product description, notes, admin
+// messages), so it can contain any of that; replacing unencodable
+// characters keeps the export from crashing on real-world input.
+const WINANSI_EXTRA_CODEPOINTS = new Set([
+  0x80, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93,
+  0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f,
+]);
+function sanitizeForPdf(text: string): string {
+  return Array.from(text)
+    .map((char) => {
+      const code = char.codePointAt(0) ?? 0;
+      if (code === 0x09 || code === 0x0a || code === 0x0d) return char;
+      if (code >= 0x20 && code <= 0x7e) return char;
+      if (code >= 0xa0 && code <= 0xff) return char;
+      if (WINANSI_EXTRA_CODEPOINTS.has(code)) return char;
+      return "?";
+    })
+    .join("");
+}
+
 export class PdfWriter {
   private doc: PDFDocument;
   private page: PDFPage;
@@ -77,7 +100,7 @@ export class PdfWriter {
   text(content: string, { bold = false, size = 10, color }: TextOptions = {}) {
     const font = bold ? this.boldFont : this.font;
     const lineHeight = size + LINE_GAP;
-    for (const line of this.wrap(content, font, size)) {
+    for (const line of this.wrap(sanitizeForPdf(content), font, size)) {
       this.ensureSpace(lineHeight);
       if (line) {
         this.page.drawText(line, {
