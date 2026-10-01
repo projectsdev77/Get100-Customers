@@ -62,27 +62,35 @@ export async function BillingSection({
       </div>
 
       <div className="flex flex-col gap-2 rounded-panel bg-sunken p-2">
-        <div className="flex flex-wrap items-start justify-between gap-4 rounded-tile bg-tile-customers p-5 text-on-tile">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-medium text-tile-customers-ink">Your plan</span>
-            <span className="text-3xl font-light leading-none tracking-[-0.02em]">
-              {subscription?.plan ?? "Founder"}
-            </span>
-            <span className="text-sm text-tile-customers-ink">
-              {liveState?.cancelAtPeriodEnd && liveState.periodEndIso
-                ? `Your subscription ends on ${new Date(liveState.periodEndIso).toLocaleDateString(
-                    undefined,
-                    { month: "short", day: "numeric", year: "numeric" },
-                  )}.`
-                : STATUS_COPY[status]}
-              {trialDaysLeft !== null &&
-                ` ${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left.`}
+        <div className="flex flex-col gap-3 rounded-tile bg-tile-customers p-5 text-on-tile">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-medium text-tile-customers-ink">Your plan</span>
+              <span className="text-3xl font-light leading-none tracking-[-0.02em]">
+                {subscription?.plan ?? "Founder"}
+              </span>
+              <span className="text-sm text-tile-customers-ink">
+                {liveState?.cancelAtPeriodEnd && liveState.periodEndIso
+                  ? `Your subscription ends on ${new Date(liveState.periodEndIso).toLocaleDateString(
+                      undefined,
+                      { month: "short", day: "numeric", year: "numeric" },
+                    )}.`
+                  : STATUS_COPY[status]}
+                {trialDaysLeft !== null &&
+                  ` ${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left.`}
+              </span>
+            </div>
+            <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-white/75 px-2.5 text-xs font-medium text-on-tile">
+              <span className={`h-1.5 w-1.5 rounded-full ${pill.dot}`} />
+              {pill.label}
             </span>
           </div>
-          <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-white/75 px-2.5 text-xs font-medium text-on-tile">
-            <span className={`h-1.5 w-1.5 rounded-full ${pill.dot}`} />
-            {pill.label}
-          </span>
+          {CELEBRATIONS_ENABLED && !hasStripeCustomer && (
+            <DecorativeImage
+              src={ILLUSTRATIONS.promoUpgrade}
+              className="h-[160px] self-end object-contain"
+            />
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2 p-3">
@@ -112,16 +120,9 @@ export async function BillingSection({
               )}
             </>
           ) : (
-            <>
-              {CELEBRATIONS_ENABLED && (
-                <div className="flex h-16 w-16 items-center justify-center rounded-tile bg-tile-level">
-                  <DecorativeImage src={ILLUSTRATIONS.promoUpgrade} className="h-14 w-14 object-contain" />
-                </div>
-              )}
-              <form action={createCheckoutSession}>
-                <Button type="submit">Subscribe</Button>
-              </form>
-            </>
+            <form action={createCheckoutSession}>
+              <Button type="submit">Subscribe</Button>
+            </form>
           )}
         </div>
       </div>

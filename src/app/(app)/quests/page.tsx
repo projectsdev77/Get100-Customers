@@ -107,12 +107,9 @@ export default async function QuestsPage({
               </span>
             </div>
             {active.length === 0 && (
-              <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+              <div className="flex flex-col items-center gap-2 rounded-panel border border-dashed border-strong bg-card p-5 text-center">
                 {CELEBRATIONS_ENABLED && (
-                  <DecorativeImage
-                    src={ILLUSTRATIONS.emptyNoActive}
-                    className="h-24 w-24 object-contain"
-                  />
+                  <DecorativeImage src={ILLUSTRATIONS.emptyNoActive} className="h-[140px] object-contain" />
                 )}
                 <p className="text-sm text-secondary">
                   {suggested.length > 0
@@ -152,12 +149,9 @@ export default async function QuestsPage({
             <section className="flex flex-col gap-3">
               <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">Next up</h2>
               {suggested.length === 0 && (
-                <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+                <div className="flex flex-col items-center gap-2 rounded-panel border border-dashed border-strong bg-card p-5 text-center">
                   {CELEBRATIONS_ENABLED && (
-                    <DecorativeImage
-                      src={ILLUSTRATIONS.emptyNoSuggested}
-                      className="h-24 w-24 object-contain"
-                    />
+                    <DecorativeImage src={ILLUSTRATIONS.emptyNoSuggested} className="h-[140px] object-contain" />
                   )}
                   <p className="text-sm text-secondary">
                     {restricted

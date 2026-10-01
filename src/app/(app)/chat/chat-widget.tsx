@@ -5,6 +5,9 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import type { KeyboardEvent } from "react";
 import { confirmSwap, dismissSwap, getChatHistory, sendMessage } from "./actions";
 import { Button, buttonClasses } from "@/components/ui/actions/Button";
+import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
+import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
+import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
 
 interface Message {
   id: string | null;
@@ -152,11 +155,16 @@ export function ChatWidget({
         ) : (
           <>
             {historyLoaded && messages.length === 0 && (
-              <p className="text-sm text-secondary">
-                {stuck
-                  ? "Looks like a few approaches haven't converted yet. Say hi and let's dig into what might need to change."
-                  : "Ask about a quest, or why something was recommended."}
-              </p>
+              <div className="flex flex-col items-center gap-2 pt-2 text-center">
+                {CELEBRATIONS_ENABLED && (
+                  <DecorativeImage src={ILLUSTRATIONS.spotCoach} className="h-[110px] object-contain" />
+                )}
+                <p className="text-sm text-secondary">
+                  {stuck
+                    ? "Looks like a few approaches haven't converted yet. Say hi and let's dig into what might need to change."
+                    : "Ask about a quest, or why something was recommended."}
+                </p>
+              </div>
             )}
             {messages.map((m, i) => (
               <div

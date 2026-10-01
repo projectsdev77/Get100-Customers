@@ -70,11 +70,11 @@ export default async function NotificationsPage() {
             <>
               <DecorativeImage
                 src={ILLUSTRATIONS.emptyNotifications}
-                className="celebration-illustration-light h-[120px] w-[160px] object-contain"
+                className="celebration-illustration-light h-[140px] object-contain"
               />
               <DecorativeImage
                 src={ILLUSTRATIONS.emptyNotificationsDark}
-                className="celebration-illustration-dark h-[120px] w-[160px] object-contain"
+                className="celebration-illustration-dark h-[140px] object-contain"
               />
             </>
           )}

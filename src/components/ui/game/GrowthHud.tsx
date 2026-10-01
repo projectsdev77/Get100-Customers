@@ -2,7 +2,7 @@ import { ProgressRing } from "./ProgressRing";
 import { getProgressFloor, getProgressTarget, isInGrowthMode } from "@/lib/gamification/growth-mode";
 import { xpIntoCurrentLevel } from "@/lib/gamification/level";
 import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
-import { milestoneSceneIllustration } from "@/lib/celebrations/illustrations";
+import { ILLUSTRATIONS, milestoneSceneIllustration } from "@/lib/celebrations/illustrations";
 import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
 
 export function GrowthHud({
@@ -22,7 +22,6 @@ export function GrowthHud({
   const floor = getProgressFloor(customers);
   const growthMode = isInGrowthMode(customers);
   const xpProgress = xpIntoCurrentLevel(xp);
-  const scene = CELEBRATIONS_ENABLED ? milestoneSceneIllustration(customers) : null;
 
   return (
     <div className="flex flex-col gap-2 rounded-panel bg-card p-2">
@@ -48,10 +47,10 @@ export function GrowthHud({
             </span>
           )}
         </div>
-        {scene && (
+        {CELEBRATIONS_ENABLED && (
           <DecorativeImage
-            src={scene}
-            className="hidden h-[150px] w-[200px] shrink-0 rounded-tile bg-white/45 object-contain p-2 min-[560px]:block"
+            src={milestoneSceneIllustration(customers)}
+            className="h-[160px] w-[220px] shrink-0 self-end rounded-tile object-cover"
           />
         )}
       </div>
@@ -75,15 +74,29 @@ export function GrowthHud({
             </span>
           </div>
         </div>
-        <div className="flex flex-col justify-center gap-1.5 rounded-tile bg-tile-streak p-4 text-on-tile">
-          <span className="text-[13px] font-medium">Streak</span>
-          {streak > 0 ? (
-            <span className="text-3xl font-light leading-none">
-              {streak}
-              <span className="text-[13px] text-tile-streak-ink"> {streak === 1 ? "day" : "days"}</span>
-            </span>
-          ) : (
-            <span className="text-[15px] text-tile-streak-ink">Finish a quest to start one</span>
+        <div className="flex items-center justify-between gap-2 rounded-tile bg-tile-streak p-4 text-on-tile">
+          <div className="flex min-w-0 flex-col justify-center gap-1.5">
+            <span className="text-[13px] font-medium">Streak</span>
+            {streak > 0 ? (
+              <span className="text-3xl font-light leading-none">
+                {streak}
+                <span className="text-[13px] text-tile-streak-ink"> {streak === 1 ? "day" : "days"}</span>
+              </span>
+            ) : (
+              <span className="text-[15px] text-tile-streak-ink">Finish a quest to start one</span>
+            )}
+          </div>
+          {CELEBRATIONS_ENABLED && (
+            <>
+              <DecorativeImage
+                src={ILLUSTRATIONS.promoStreak}
+                className="celebration-illustration-light h-[88px] w-[88px] shrink-0 self-end object-contain"
+              />
+              <DecorativeImage
+                src={ILLUSTRATIONS.promoStreakDark}
+                className="celebration-illustration-dark h-[88px] w-[88px] shrink-0 self-end object-contain"
+              />
+            </>
           )}
         </div>
       </div>

@@ -91,16 +91,14 @@ export function GrowthModeModal({ onEnter }: { onEnter: () => void }) {
           }`}
         >
           {imgOk && (
-            <div className="relative h-[120px] overflow-hidden rounded-[18px] bg-white/45">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={ILLUSTRATIONS.growthMode}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full object-contain"
-                onError={() => setImgOk(false)}
-              />
-            </div>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={ILLUSTRATIONS.growthMode}
+              alt=""
+              aria-hidden="true"
+              className="h-[140px] max-w-[300px] object-contain"
+              onError={() => setImgOk(false)}
+            />
           )}
           <span className="font-mono text-xs font-semibold tracking-[0.14em]">GROWTH MODE</span>
           <h2 id="celebration-growth-mode-title" className="text-[30px] font-medium leading-[1.1] tracking-[-0.03em]">

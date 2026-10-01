@@ -69,16 +69,14 @@ export function FirstCustomerModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         {imgOk && (
-          <div className="relative aspect-square overflow-hidden rounded-[22px] bg-white/45">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={ILLUSTRATIONS.firstCustomer}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 h-full w-full object-contain"
-              onError={() => setImgOk(false)}
-            />
-          </div>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={ILLUSTRATIONS.firstCustomer}
+            alt=""
+            aria-hidden="true"
+            className="max-w-[280px] justify-self-center object-contain"
+            onError={() => setImgOk(false)}
+          />
         )}
       </div>
       <button

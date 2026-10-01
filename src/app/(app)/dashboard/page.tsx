@@ -77,12 +77,12 @@ export default async function DashboardPage() {
 
   const questsCard = (
     <Card className="flex flex-col gap-3 p-5">
-      {CELEBRATIONS_ENABLED && (
-        <div className="flex h-14 w-14 items-center justify-center rounded-md bg-sunken">
-          <DecorativeImage src={ILLUSTRATIONS.spotQuest} className="h-12 w-12 object-contain" />
-        </div>
-      )}
-      <h2 className="text-base font-medium text-primary">Your quests</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-base font-medium text-primary">Your quests</h2>
+        {CELEBRATIONS_ENABLED && (
+          <DecorativeImage src={ILLUSTRATIONS.spotQuest} className="h-[80px] w-[80px] shrink-0 object-contain" />
+        )}
+      </div>
       {isNewUser ? (
         <>
           <p className="text-sm text-secondary">Pick one to get started.</p>
@@ -122,7 +122,14 @@ export default async function DashboardPage() {
 
   const logProgressCard = (
     <Card className="flex flex-col gap-3 p-5">
-      <EditCountToggle currentCount={founder.current_customer_count} />
+      <EditCountToggle
+        currentCount={founder.current_customer_count}
+        icon={
+          CELEBRATIONS_ENABLED && (
+            <DecorativeImage src={ILLUSTRATIONS.spotJournal} className="h-[80px] w-[80px] shrink-0 object-contain" />
+          )
+        }
+      />
       <form action={logCustomer}>
         <Button type="submit" variant={isNewUser ? "secondary" : "primary"} fullWidth size="sm">
           + I got a new customer
@@ -140,12 +147,17 @@ export default async function DashboardPage() {
         founderName={founder.name}
       />
       {CELEBRATIONS_ENABLED ? (
-        <div className="relative mt-10 rounded-panel bg-tile-customers p-7 text-on-tile">
-          <h1 className="max-w-[58%] text-3xl font-medium leading-[1.15] tracking-[-0.01em]">
-            Welcome{founder.name ? `, ${founder.name}` : ""}
-          </h1>
-          {subline && <p className="max-w-[58%] text-sm text-tile-customers-ink">{subline}</p>}
-          <HeroWelcomeIllustration className="pointer-events-none absolute -top-10 right-6 h-[calc(100%+40px)] w-[42%] max-w-[240px] object-contain object-bottom" />
+        <div className="flex flex-wrap items-end justify-between gap-4 rounded-panel bg-tile-customers p-7 text-on-tile">
+          <div className="flex min-w-0 flex-1 basis-[260px] flex-col gap-1">
+            <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em]">
+              Welcome{founder.name ? `, ${founder.name}` : ""}
+            </h1>
+            {subline && <p className="text-sm text-tile-customers-ink">{subline}</p>}
+          </div>
+          <HeroWelcomeIllustration
+            founderId={founder.id}
+            className="h-[180px] max-w-[45%] shrink-0 self-end object-contain"
+          />
         </div>
       ) : (
         <div className="flex flex-col gap-1">

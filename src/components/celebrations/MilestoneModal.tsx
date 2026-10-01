@@ -79,14 +79,14 @@ export function MilestoneModal({
       }`}
     >
       <div
-        className="grid h-full grid-cols-1 items-center gap-7 p-8 sm:grid-cols-[200px_1fr] sm:p-9"
+        className="grid h-full grid-cols-1 items-center gap-7 p-8 sm:grid-cols-[240px_1fr] sm:p-9"
         onClick={(e) => e.stopPropagation()}
       >
         <ProgressRing
           value={reduced ? 1 : count}
           max={1}
-          diameterPx={200}
-          thicknessPx={15}
+          diameterPx={240}
+          thicknessPx={17}
           color="var(--ink-900)"
           center="var(--tile-customers)"
           label="Milestone progress"
@@ -101,16 +101,14 @@ export function MilestoneModal({
           }`}
         >
           {imgOk && (
-            <div className="relative h-[140px] overflow-hidden rounded-[18px] bg-white/50">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={milestoneCelebrationIllustration(milestone)}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full object-contain"
-                onError={() => setImgOk(false)}
-              />
-            </div>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={milestoneCelebrationIllustration(milestone)}
+              alt=""
+              aria-hidden="true"
+              className="h-[180px] max-w-[260px] object-contain"
+              onError={() => setImgOk(false)}
+            />
           )}
           <span className="font-mono text-xs font-semibold tracking-[0.14em] text-tile-customers-ink">
             {copy.eyebrow}

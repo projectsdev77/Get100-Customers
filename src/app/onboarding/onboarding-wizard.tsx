@@ -325,18 +325,29 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
     <div className="flex flex-col gap-6">
       <Stepper step={step + 1} total={steps.length} />
 
-      {CELEBRATIONS_ENABLED && isFirstStep && (
-        <DecorativeImage
-          src={ILLUSTRATIONS.onboardingWelcome}
-          className="h-[225px] w-[180px] self-center rounded-tile bg-tile-streak object-contain p-3"
-        />
+      {CELEBRATIONS_ENABLED && isFirstStep ? (
+        <div className="flex flex-wrap items-start gap-5">
+          <DecorativeImage
+            src={ILLUSTRATIONS.onboardingWelcome}
+            className="h-[120px] shrink-0 object-contain"
+          />
+          <div className="flex min-w-0 flex-1 basis-[260px] flex-col gap-3">
+            <h1 className="text-2xl font-medium leading-[1.25] tracking-[-0.01em] text-primary">
+              {current.title}
+            </h1>
+            {"hint" in current && current.hint && <p className="text-sm text-secondary">{current.hint}</p>}
+            {current.body}
+          </div>
+        </div>
+      ) : (
+        <>
+          <h1 className="text-2xl font-medium leading-[1.25] tracking-[-0.01em] text-primary">
+            {current.title}
+          </h1>
+          {"hint" in current && current.hint && <p className="-mt-4 text-sm text-secondary">{current.hint}</p>}
+          {current.body}
+        </>
       )}
-
-      <h1 className="text-2xl font-medium leading-[1.25] tracking-[-0.01em] text-primary">
-        {current.title}
-      </h1>
-      {"hint" in current && current.hint && <p className="-mt-4 text-sm text-secondary">{current.hint}</p>}
-      {current.body}
 
       {isLastStep ? (
         <form action={completeOnboarding} className="flex justify-between">

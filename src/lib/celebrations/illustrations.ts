@@ -30,30 +30,28 @@ export const ILLUSTRATIONS = {
   onboardingWelcome: "/illustrations/onboarding-welcome.webp",
 } as const;
 
-const HERO_WELCOME_VARIANTS = [
-  ILLUSTRATIONS.heroWelcomeMaya,
-  ILLUSTRATIONS.heroWelcomeSam,
-  ILLUSTRATIONS.heroWelcomeNoor,
-  ILLUSTRATIONS.heroWelcomeLeo,
-] as const;
+const HERO_NAMES = ["maya", "sam", "noor", "leo"] as const;
+const HERO_ASSET_BY_NAME: Record<(typeof HERO_NAMES)[number], string> = {
+  maya: ILLUSTRATIONS.heroWelcomeMaya,
+  sam: ILLUSTRATIONS.heroWelcomeSam,
+  noor: ILLUSTRATIONS.heroWelcomeNoor,
+  leo: ILLUSTRATIONS.heroWelcomeLeo,
+};
 
-const HERO_WELCOME_STORAGE_KEY = "g100_hero_welcome_variant";
-
-// One random hero picked per founder on first load and kept (spec: "store
-// in localStorage only; no backend field"). Falls back to a stable choice
-// if localStorage is unavailable (private browsing, blocked storage).
-export function pickHeroWelcomeIllustration(): string {
-  try {
-    const stored = window.localStorage.getItem(HERO_WELCOME_STORAGE_KEY);
-    if (stored && (HERO_WELCOME_VARIANTS as readonly string[]).includes(stored)) {
-      return stored;
-    }
-    const choice = HERO_WELCOME_VARIANTS[Math.floor(Math.random() * HERO_WELCOME_VARIANTS.length)];
-    window.localStorage.setItem(HERO_WELCOME_STORAGE_KEY, choice);
-    return choice;
-  } catch {
-    return HERO_WELCOME_VARIANTS[0];
-  }
+// Deterministic daily rotation (06-illustration-placement README §3) —
+// replaces the earlier random-pick-and-store-in-localStorage version.
+// Runs identically on server and client (same Date.now() day, modulo a
+// midnight-boundary edge case the handoff accepts), so it no longer needs
+// to be a client-only effect — safe to call straight from a Server
+// Component. No id (logged-out preview) falls back to "maya".
+export function heroForToday(founderId: string | null | undefined): string {
+  if (!founderId) return HERO_ASSET_BY_NAME.maya;
+  const day = Math.floor(Date.now() / 86_400_000);
+  let hash = 0;
+  for (const ch of String(founderId)) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  const offset = Math.abs(hash) % HERO_NAMES.length;
+  const name = HERO_NAMES[(day + offset) % HERO_NAMES.length];
+  return HERO_ASSET_BY_NAME[name];
 }
 
 // Real quest category taxonomy (src/lib/ai/select-quest.ts) has 8 values;
@@ -75,13 +73,14 @@ export function illustrationForCategory(category: string | null | undefined): st
   return CATEGORY_ILLUSTRATIONS[category] ?? null;
 }
 
-// desk (pre-growth-mode) / team (Growth Mode) / rooftop (1,000+), per the
-// handoff's illustration table.
-export function milestoneSceneIllustration(customers: number): string | null {
+// Customers-tile scene thresholds per 06-illustration-placement §4 (desk
+// 0-249, team 250-999, rooftop 1,000+) — a different cutover than the
+// celebration modal's own desk/team/rooftop-by-milestone mapping below,
+// and always shows something now (no more "nothing below 10 customers").
+export function milestoneSceneIllustration(customers: number): string {
   if (customers >= 1000) return ILLUSTRATIONS.milestoneRooftop;
-  if (customers >= 100) return ILLUSTRATIONS.milestoneTeam;
-  if (customers >= 10) return ILLUSTRATIONS.milestoneDesk;
-  return null;
+  if (customers >= 250) return ILLUSTRATIONS.milestoneTeam;
+  return ILLUSTRATIONS.milestoneDesk;
 }
 
 export function milestoneCelebrationIllustration(milestone: number): string {
