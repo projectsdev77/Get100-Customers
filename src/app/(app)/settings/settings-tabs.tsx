@@ -23,6 +23,21 @@ export function SettingsTabs({
     sections.find((s) => s.id === initialTabId)?.id ?? sections[0]?.id,
   );
 
+  // Switching tabs only ever changed this component's own state, never the
+  // URL — so a reload always re-ran page.tsx with no `tab` search param and
+  // landed back on the first section (business profile) regardless of which
+  // tab was open. Updating the URL via the plain History API (rather than
+  // next/navigation's router) keeps the fix purely cosmetic for reload/
+  // bookmark/share purposes without reintroducing a server round-trip on
+  // every tab click, which is the whole reason this component manages
+  // switching client-side in the first place (see the comment above).
+  function selectTab(id: string) {
+    setActiveId(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", id);
+    window.history.replaceState(null, "", url);
+  }
+
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:gap-10">
       <nav className="flex gap-1 overflow-x-auto pb-1 sm:w-[180px] sm:shrink-0 sm:flex-col sm:overflow-visible sm:pb-0">
@@ -32,7 +47,7 @@ export function SettingsTabs({
             <button
               key={section.id}
               type="button"
-              onClick={() => setActiveId(section.id)}
+              onClick={() => selectTab(section.id)}
               className={`whitespace-nowrap rounded-full px-3.5 py-2 text-left text-sm font-medium transition-colors duration-200 sm:whitespace-normal sm:rounded-tile ${
                 active ? "bg-card text-primary" : "text-secondary hover:text-primary"
               }`}
