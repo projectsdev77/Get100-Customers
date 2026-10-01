@@ -13,7 +13,11 @@ import { AutoMarkRead } from "./auto-mark-read";
 // occupying quest has gone quiet), so it's treated like the pure
 // announcements (milestone/weekly_recap): read as soon as you view this
 // page, same as before.
-const QUEST_LINKED_TYPES: NotificationType[] = ["new_quest", "window_approaching", "quest_check_in"];
+const QUEST_LINKED_TYPES: Array<NotificationType | "admin_message"> = [
+  "new_quest",
+  "window_approaching",
+  "quest_check_in",
+];
 
 function questHref(n: NotificationLogEntry): string | null {
   return QUEST_LINKED_TYPES.includes(n.type) && n.quest_id ? `/quests#quest-${n.quest_id}` : null;

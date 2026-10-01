@@ -1,10 +1,16 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Founder, GrowthProfile, NotificationLogEntry, Subscription } from "@/types/database";
-import { adminCorrectCustomerCount, adminGenerateQuest, adminUpdateSubscriptionStatus } from "./actions";
+import {
+  adminCorrectCustomerCount,
+  adminGenerateQuest,
+  adminSendMessage,
+  adminUpdateSubscriptionStatus,
+} from "./actions";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Input } from "@/components/ui/forms/Input";
 import { Select } from "@/components/ui/forms/Select";
+import { Textarea } from "@/components/ui/forms/Textarea";
 import { Button } from "@/components/ui/actions/Button";
 import { Banner } from "@/components/ui/surfaces/Banner";
 
@@ -200,6 +206,25 @@ export default async function AdminFounderDetailPage({
           <input type="hidden" name="founderId" value={founder.id} />
           <Button type="submit" variant="secondary" size="sm">
             Generate a quest now
+          </Button>
+        </form>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-6">
+        <h2 className="text-base font-medium text-primary">Send a message</h2>
+        <p className="text-[13px] text-secondary">
+          Shown in their in-app notifications regardless of their email preferences, since this is
+          a direct message, not an automated category they opted in/out of.
+        </p>
+        <form action={adminSendMessage} className="flex flex-col gap-3">
+          <input type="hidden" name="founderId" value={founder.id} />
+          <Textarea name="message" placeholder="What do you want to tell them?" rows={3} required />
+          <label className="flex items-center gap-2 text-sm text-secondary">
+            <input type="checkbox" name="sendEmail" className="h-4 w-4" />
+            Also send as an email
+          </label>
+          <Button type="submit" variant="secondary" size="sm" className="self-start">
+            Send
           </Button>
         </form>
       </Card>

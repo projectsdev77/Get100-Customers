@@ -161,7 +161,13 @@ export type NotificationType =
 export interface NotificationLogEntry {
   id: string;
   founder_id: string;
-  type: NotificationType;
+  // "admin_message" (src/app/admin/founders/[id]/actions.ts) is a direct
+  // support-to-founder message, not one of the toggleable automated
+  // categories NotificationType/EmailNotificationPrefs cover — kept out of
+  // that union so adding it here doesn't force every EmailNotificationPrefs
+  // object (settings defaults, the DB column's default, etc.) to carry a
+  // meaningless toggle for a category with no preference to set.
+  type: NotificationType | "admin_message";
   channel: "in_app" | "email";
   message: string;
   quest_id: string | null;
