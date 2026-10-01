@@ -16,6 +16,11 @@ import { GrowthInsights } from "@/components/ui/game/GrowthInsights";
 import { QuestCard } from "@/components/ui/quests/QuestCard";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Button, LinkButton } from "@/components/ui/actions/Button";
+import { CelebrationSnapshot } from "@/components/celebrations/CelebrationSnapshot";
+import { HeroWelcomeIllustration } from "@/components/celebrations/HeroWelcomeIllustration";
+import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
+import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
+import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -62,9 +67,20 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
-        Welcome{founder.name ? `, ${founder.name}` : ""}
-      </h1>
+      <CelebrationSnapshot
+        xp={founder.xp}
+        level={founder.level}
+        customers={founder.current_customer_count}
+        founderName={founder.name}
+      />
+      <div className="flex items-center gap-3">
+        <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
+          Welcome{founder.name ? `, ${founder.name}` : ""}
+        </h1>
+        {CELEBRATIONS_ENABLED && (
+          <HeroWelcomeIllustration className="h-12 w-12 shrink-0 object-contain" />
+        )}
+      </div>
 
       <div className="grid grid-cols-1 items-start gap-6 min-[860px]:grid-cols-[1fr_320px]">
         <GrowthHud
@@ -89,7 +105,12 @@ export default async function DashboardPage() {
           </Card>
 
           <Card className="flex flex-col gap-3 p-5">
-            <h2 className="text-base font-medium text-primary">Your quests</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-medium text-primary">Your quests</h2>
+              {CELEBRATIONS_ENABLED && (
+                <DecorativeImage src={ILLUSTRATIONS.spotQuest} className="h-8 w-8 shrink-0 object-contain" />
+              )}
+            </div>
             <p className="text-sm text-secondary">
               {questCount} quest{questCount === 1 ? "" : "s"} in your log right now.
             </p>
@@ -124,6 +145,7 @@ export default async function DashboardPage() {
             window={quest.suggested_window}
             tool={quest.tools_provided[0] ?? null}
             reasoning={quest.reasoning}
+            category={quest.category}
             actions={
               <>
                 <form action={markQuestDone.bind(null, quest.id)}>

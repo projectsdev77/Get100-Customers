@@ -7,6 +7,8 @@ export function ProgressRing({
   value = 0,
   max = 100,
   size = "lg",
+  diameterPx,
+  thicknessPx,
   color,
   track = "var(--ring-track)",
   center,
@@ -16,6 +18,10 @@ export function ProgressRing({
   value?: number;
   max?: number;
   size?: "lg" | "sm";
+  /** Overrides the diameter implied by `size` — for celebration overlays, which use ring sizes `size` doesn't cover. */
+  diameterPx?: number;
+  /** Overrides the ring thickness implied by `size`. */
+  thicknessPx?: number;
   color?: string;
   track?: string;
   center?: string;
@@ -23,8 +29,8 @@ export function ProgressRing({
   children?: ReactNode;
 }) {
   const pct = Math.max(0, Math.min(1, max ? value / max : 0)) * 100;
-  const diameter = size === "lg" ? 132 : 60;
-  const thickness = size === "lg" ? 12 : 6;
+  const diameter = diameterPx ?? (size === "lg" ? 132 : 60);
+  const thickness = thicknessPx ?? (size === "lg" ? 12 : 6);
   const fill = color || (size === "lg" ? "var(--ring-customers)" : "var(--ring-level)");
   const bg = center || "var(--tile-customers)";
 

@@ -9,6 +9,7 @@ import { ChatWidget } from "./chat/chat-widget";
 import { TopNav } from "@/components/ui/navigation/TopNav";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { LinkButton } from "@/components/ui/actions/Button";
+import { CelebrationProvider } from "@/components/celebrations/CelebrationProvider";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -41,41 +42,50 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-canvas">
-      <TopNav unreadCount={unreadCount} onLogout={logout} />
+    <CelebrationProvider
+      initialSnapshot={{
+        xp: founder?.xp ?? 0,
+        level: founder?.level ?? 1,
+        customers: founder?.current_customer_count ?? 0,
+        founderName: founder?.name ?? null,
+      }}
+    >
+      <div className="min-h-screen bg-canvas">
+        <TopNav unreadCount={unreadCount} onLogout={logout} />
 
-      {restricted && (
-        <div className="mx-auto max-w-[1120px] px-6 pt-4">
-          <Banner
-            tone="error"
-            action={
-              <LinkButton href="/settings" size="sm" variant="danger">
-                Go to billing
-              </LinkButton>
-            }
-          >
-            Your account is restricted. Subscribe to get new quests and chat back.
-          </Banner>
-        </div>
-      )}
+        {restricted && (
+          <div className="mx-auto max-w-[1120px] px-6 pt-4">
+            <Banner
+              tone="error"
+              action={
+                <LinkButton href="/settings" size="sm" variant="danger">
+                  Go to billing
+                </LinkButton>
+              }
+            >
+              Your account is restricted. Subscribe to get new quests and chat back.
+            </Banner>
+          </div>
+        )}
 
-      {/*
-        Deterministic signal (isFounderStuck, no AI judgment call) for
-        "several quests done, zero conversions yet" — nudges toward the
-        existing chat coach rather than silently generating another quest.
-        Skipped while restricted since quests/chat are already paused then.
-      */}
-      {stuck && !restricted && (
-        <div className="mx-auto max-w-[1120px] px-6 pt-4">
-          <Banner tone="info">
-            You&apos;ve completed several quests without a conversion yet. That&apos;s worth a
-            real conversation. Try asking your coach (bottom right) what might need to change.
-          </Banner>
-        </div>
-      )}
+        {/*
+          Deterministic signal (isFounderStuck, no AI judgment call) for
+          "several quests done, zero conversions yet" — nudges toward the
+          existing chat coach rather than silently generating another quest.
+          Skipped while restricted since quests/chat are already paused then.
+        */}
+        {stuck && !restricted && (
+          <div className="mx-auto max-w-[1120px] px-6 pt-4">
+            <Banner tone="info">
+              You&apos;ve completed several quests without a conversion yet. That&apos;s worth a
+              real conversation. Try asking your coach (bottom right) what might need to change.
+            </Banner>
+          </div>
+        )}
 
-      <main className="mx-auto max-w-[1120px] px-6 py-10">{children}</main>
-      <ChatWidget restricted={restricted} stuck={stuck} />
-    </div>
+        <main className="mx-auto max-w-[1120px] px-6 py-10">{children}</main>
+        <ChatWidget restricted={restricted} stuck={stuck} />
+      </div>
+    </CelebrationProvider>
   );
 }

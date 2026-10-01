@@ -4,6 +4,9 @@ import { listInvoices } from "@/lib/stripe/invoices";
 import { getLiveSubscriptionState } from "@/lib/stripe/subscription-state";
 import { createCheckoutSession, createPortalSession } from "../billing/actions";
 import { Button } from "@/components/ui/actions/Button";
+import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
+import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
+import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
 import type { Founder, SubscriptionStatus } from "@/types/database";
 import type { createClient } from "@/lib/supabase/server";
 
@@ -109,9 +112,14 @@ export async function BillingSection({
               )}
             </>
           ) : (
-            <form action={createCheckoutSession}>
-              <Button type="submit">Subscribe</Button>
-            </form>
+            <>
+              {CELEBRATIONS_ENABLED && (
+                <DecorativeImage src={ILLUSTRATIONS.promoUpgrade} className="h-11 w-11 object-contain" />
+              )}
+              <form action={createCheckoutSession}>
+                <Button type="submit">Subscribe</Button>
+              </form>
+            </>
           )}
         </div>
       </div>

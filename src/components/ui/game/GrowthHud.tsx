@@ -1,6 +1,9 @@
 import { ProgressRing } from "./ProgressRing";
 import { getProgressFloor, getProgressTarget, isInGrowthMode } from "@/lib/gamification/growth-mode";
 import { xpIntoCurrentLevel } from "@/lib/gamification/level";
+import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
+import { milestoneSceneIllustration } from "@/lib/celebrations/illustrations";
+import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
 
 export function GrowthHud({
   customers,
@@ -19,6 +22,7 @@ export function GrowthHud({
   const floor = getProgressFloor(customers);
   const growthMode = isInGrowthMode(customers);
   const xpProgress = xpIntoCurrentLevel(xp);
+  const scene = CELEBRATIONS_ENABLED ? milestoneSceneIllustration(customers) : null;
 
   return (
     <div className="flex flex-col gap-2 rounded-panel bg-card p-2">
@@ -38,6 +42,12 @@ export function GrowthHud({
             </span>
           )}
         </div>
+        {scene && (
+          <DecorativeImage
+            src={scene}
+            className="hidden h-[90px] w-[150px] shrink-0 rounded-tile bg-white/45 object-contain p-1.5 min-[480px]:block"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-2">

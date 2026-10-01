@@ -13,6 +13,10 @@ import { QuestJournal, type JournalEntry } from "./quest-journal";
 import { SkipForm, SKIP_REASON_LABELS } from "./skip-form";
 import { acceptQuest, regenerateQuest, setNextFocus } from "./actions";
 import { getSubscription, isRestricted } from "@/lib/subscriptions/status";
+import { CelebrationSnapshot } from "@/components/celebrations/CelebrationSnapshot";
+import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
+import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
+import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
 
 const HISTORY_STATUSES: Quest["status"][] = ["completed", "skipped", "expired"];
 
@@ -71,6 +75,12 @@ export default async function QuestsPage({
 
   return (
     <div className="flex flex-col gap-3.5">
+      <CelebrationSnapshot
+        xp={founder.xp}
+        level={founder.level}
+        customers={founder.current_customer_count}
+        founderName={founder.name}
+      />
       <h1 className="text-4xl font-medium leading-[1.1] tracking-[-0.02em] text-primary">Quests</h1>
 
       <div className="flex flex-wrap gap-2">
@@ -98,6 +108,12 @@ export default async function QuestsPage({
             </div>
             {active.length === 0 && (
               <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+                {CELEBRATIONS_ENABLED && (
+                  <DecorativeImage
+                    src={ILLUSTRATIONS.emptyNoActive}
+                    className="h-12 w-12 object-contain"
+                  />
+                )}
                 <p className="text-sm text-secondary">
                   {suggested.length > 0
                     ? "No active quest yet. Accept the one below to get started."
@@ -137,6 +153,12 @@ export default async function QuestsPage({
               <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">Next up</h2>
               {suggested.length === 0 && (
                 <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
+                  {CELEBRATIONS_ENABLED && (
+                    <DecorativeImage
+                      src={ILLUSTRATIONS.emptyNoSuggested}
+                      className="h-12 w-12 object-contain"
+                    />
+                  )}
                   <p className="text-sm text-secondary">
                     {restricted
                       ? "Your account is restricted, so new quests are paused until you subscribe."
@@ -154,6 +176,7 @@ export default async function QuestsPage({
                   xp={quest.xp_value}
                   window={quest.suggested_window}
                   reasoning={quest.reasoning}
+                  category={quest.category}
                   actions={
                     <>
                       <form action={acceptQuest.bind(null, quest.id)}>

@@ -9,6 +9,9 @@ import { Textarea } from "@/components/ui/forms/Textarea";
 import { ChipGroup } from "@/components/ui/forms/Chip";
 import { Button } from "@/components/ui/actions/Button";
 import { Banner } from "@/components/ui/surfaces/Banner";
+import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
+import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
+import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
 import {
   CHANNEL_OPTIONS,
   CHANNEL_VALUES,
@@ -321,6 +324,10 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
   return (
     <div className="flex flex-col gap-6">
       <Stepper step={step + 1} total={steps.length} />
+
+      {CELEBRATIONS_ENABLED && isFirstStep && (
+        <DecorativeImage src={ILLUSTRATIONS.onboardingWelcome} className="h-28 w-28 self-center object-contain" />
+      )}
 
       <h1 className="text-2xl font-medium leading-[1.25] tracking-[-0.01em] text-primary">
         {current.title}

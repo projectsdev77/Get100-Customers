@@ -96,3 +96,25 @@
     --banner-info-bg: #15212A; --banner-info-border: #22384A; --banner-info-fg: #9CC6E0;
     --danger: #F07B6B;
 }
+
+/* Growth Mode (100+ customers, gamification handoff round 1): lime leads,
+   violet supports. UI-only remap — the actual 100-customer threshold is
+   src/lib/gamification/growth-mode.ts's isInGrowthMode(), this just follows
+   it visually. Put data-mode="growth" on <html>. */
+[data-mode="growth"] {
+  --accent: var(--lime-700); --accent-soft: var(--lime-200); --focus-ring: var(--lime-700);
+  --tile-customers: var(--lime-200); --tile-customers-ink: var(--lime-700); --ring-customers: var(--lime-700);
+  --tile-level: var(--violet-200); --tile-level-ink: var(--violet-700); --ring-level: var(--violet-600);
+  --ring-track-customers: color-mix(in srgb, var(--lime-700) 18%, transparent);
+  --ring-track-level: color-mix(in srgb, var(--violet-700) 20%, transparent);
+  --quest-active-bg: var(--lime-200); --quest-active-ink: var(--lime-700);
+  --growth-hero: var(--lime-300);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-mode="growth"] {
+    --accent: var(--lime-300); --accent-soft: #2A3312; --focus-ring: var(--lime-300);
+  }
+}
+[data-theme="dark"] [data-mode="growth"] {
+  --accent: var(--lime-300); --accent-soft: #2A3312; --focus-ring: var(--lime-300);
+}

@@ -58,6 +58,8 @@
   --color-banner-info-border: var(--banner-info-border);
   --color-banner-info-fg: var(--banner-info-fg);
 
+  --color-growth-hero: var(--growth-hero);
+
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-tile: 22px;
@@ -117,5 +119,27 @@ body {
   display: none;
 }
 [data-theme="dark"] .hero-illustration-dark {
+  display: block;
+}
+
+/* Same no-JS light/dark swap pattern, reused by the gamification handoff's
+   other light/dark illustration pairs (notifications empty state, sidebar
+   promo card) — kept separate from .hero-illustration-* since those two
+   names are already specific to the landing-page hero. */
+.celebration-illustration-dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .celebration-illustration-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .celebration-illustration-dark {
+    display: block;
+  }
+}
+[data-theme="dark"] .celebration-illustration-light {
+  display: none;
+}
+[data-theme="dark"] .celebration-illustration-dark {
   display: block;
 }

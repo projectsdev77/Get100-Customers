@@ -10,6 +10,7 @@ import { BillingSection } from "./billing-section";
 import { NotificationPrefsForm } from "./notification-prefs-form";
 import { DangerZone } from "./danger-zone";
 import { Tabs, type TabSection } from "@/components/ui/navigation/Tabs";
+import { CelebrationSnapshot } from "@/components/celebrations/CelebrationSnapshot";
 
 export default async function SettingsPage({
   searchParams,
@@ -83,6 +84,14 @@ export default async function SettingsPage({
 
   return (
     <div className="mx-auto flex w-full max-w-[900px] flex-col gap-6">
+      {founder && (
+        <CelebrationSnapshot
+          xp={founder.xp}
+          level={founder.level}
+          customers={founder.current_customer_count}
+          founderName={founder.name}
+        />
+      )}
       <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
         Settings
       </h1>

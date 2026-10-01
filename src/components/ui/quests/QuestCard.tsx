@@ -4,6 +4,9 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { XpPill } from "@/components/ui/game/LevelBadge";
 import { buttonClasses } from "@/components/ui/actions/Button";
+import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
+import { illustrationForCategory } from "@/lib/celebrations/illustrations";
+import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
 
 export type QuestCardStatus =
   | "suggested"
@@ -37,6 +40,7 @@ export function QuestCard({
   window,
   tool,
   reasoning,
+  category,
   actions,
   children,
 }: {
@@ -48,11 +52,14 @@ export function QuestCard({
   window?: string | null;
   tool?: { label: string; content: string } | null;
   reasoning?: string | null;
+  /** Decorative only — picks a small category illustration when one matches (README §6). Omit for no change in behavior. */
+  category?: string | null;
   actions?: ReactNode;
   children?: ReactNode;
 }) {
   const [showWhy, setShowWhy] = useState(false);
   const meta = STATUS_META[status];
+  const categoryImage = CELEBRATIONS_ENABLED ? illustrationForCategory(category) : null;
 
   return (
     <div id={id} className="flex flex-col gap-3 rounded-panel bg-card p-5">
@@ -69,9 +76,14 @@ export function QuestCard({
         </span>
       </div>
 
-      <span className="text-xl font-medium leading-[1.25] tracking-[-0.01em] text-balance text-primary">
-        {title}
-      </span>
+      <div className="flex items-start gap-3">
+        <span className="min-w-0 flex-1 text-xl font-medium leading-[1.25] tracking-[-0.01em] text-balance text-primary">
+          {title}
+        </span>
+        {categoryImage && (
+          <DecorativeImage src={categoryImage} className="h-10 w-10 shrink-0 object-contain" />
+        )}
+      </div>
 
       {instructions && <p className="text-sm text-secondary text-balance">{instructions}</p>}
 

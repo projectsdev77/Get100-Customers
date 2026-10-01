@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import type { NotificationLogEntry, NotificationType } from "@/types/database";
 import { openNotification } from "./actions";
 import { AutoMarkRead } from "./auto-mark-read";
+import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
+import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
+import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
 
 // Types where the message is about one specific quest, so clicking through
 // to it is itself the read signal — these are excluded from the
@@ -62,7 +65,21 @@ export default async function NotificationsPage() {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-sm text-secondary">Nothing yet.</p>
+        <div className="flex flex-col items-start gap-2">
+          {CELEBRATIONS_ENABLED && (
+            <>
+              <DecorativeImage
+                src={ILLUSTRATIONS.emptyNotifications}
+                className="celebration-illustration-light h-12 w-12 object-contain"
+              />
+              <DecorativeImage
+                src={ILLUSTRATIONS.emptyNotificationsDark}
+                className="celebration-illustration-dark h-12 w-12 object-contain"
+              />
+            </>
+          )}
+          <p className="text-sm text-secondary">Nothing yet.</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-0.5 rounded-panel bg-card p-2">
           {items.map((n) => {
