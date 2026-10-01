@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Table, type TableColumn } from "@/components/ui/data/Table";
+import type { SubscriptionStatus } from "@/types/database";
 
 export interface AdminFounderRow {
   id: string;
@@ -10,9 +11,17 @@ export interface AdminFounderRow {
   stage: string;
   customers: number;
   level: number;
+  subscriptionStatus: SubscriptionStatus | "none";
   subscriptionLabel: string;
   subscriptionDot: string;
+  riskLabel?: string;
+  riskTone?: "warn" | "danger";
 }
+
+const RISK_TONE_CLASSES: Record<"warn" | "danger", string> = {
+  warn: "text-[#C9A227]",
+  danger: "text-danger",
+};
 
 const COLUMNS: TableColumn<AdminFounderRow>[] = [
   { key: "company", label: "Company", width: "1.4fr" },
@@ -25,9 +34,16 @@ const COLUMNS: TableColumn<AdminFounderRow>[] = [
     label: "Subscription",
     width: "1fr",
     render: (row) => (
-      <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-primary">
-        <span className={`h-1.5 w-1.5 rounded-full ${row.subscriptionDot}`} />
-        {row.subscriptionLabel}
+      <span className="flex flex-col gap-0.5">
+        <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-primary">
+          <span className={`h-1.5 w-1.5 rounded-full ${row.subscriptionDot}`} />
+          {row.subscriptionLabel}
+        </span>
+        {row.riskLabel && (
+          <span className={`text-[11px] font-medium ${RISK_TONE_CLASSES[row.riskTone ?? "warn"]}`}>
+            {row.riskLabel}
+          </span>
+        )}
       </span>
     ),
   },
