@@ -326,7 +326,10 @@ export function OnboardingWizard({ founder }: { founder: Founder | null }) {
       <Stepper step={step + 1} total={steps.length} />
 
       {CELEBRATIONS_ENABLED && isFirstStep && (
-        <DecorativeImage src={ILLUSTRATIONS.onboardingWelcome} className="h-28 w-28 self-center object-contain" />
+        <DecorativeImage
+          src={ILLUSTRATIONS.onboardingWelcome}
+          className="h-[225px] w-[180px] self-center rounded-tile bg-tile-streak object-contain p-3"
+        />
       )}
 
       <h1 className="text-2xl font-medium leading-[1.25] tracking-[-0.01em] text-primary">

@@ -73,14 +73,18 @@ export default async function DashboardPage() {
         customers={founder.current_customer_count}
         founderName={founder.name}
       />
-      <div className="flex items-center gap-3">
+      {CELEBRATIONS_ENABLED ? (
+        <div className="relative mt-10 rounded-panel bg-tile-customers p-7 text-on-tile">
+          <h1 className="max-w-[58%] text-3xl font-medium leading-[1.15] tracking-[-0.01em]">
+            Welcome{founder.name ? `, ${founder.name}` : ""}
+          </h1>
+          <HeroWelcomeIllustration className="pointer-events-none absolute -top-10 right-6 h-[calc(100%+40px)] w-[42%] max-w-[240px] object-contain object-bottom" />
+        </div>
+      ) : (
         <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
           Welcome{founder.name ? `, ${founder.name}` : ""}
         </h1>
-        {CELEBRATIONS_ENABLED && (
-          <HeroWelcomeIllustration className="h-12 w-12 shrink-0 object-contain" />
-        )}
-      </div>
+      )}
 
       <div className="grid grid-cols-1 items-start gap-6 min-[860px]:grid-cols-[1fr_320px]">
         <GrowthHud
@@ -105,12 +109,12 @@ export default async function DashboardPage() {
           </Card>
 
           <Card className="flex flex-col gap-3 p-5">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-medium text-primary">Your quests</h2>
-              {CELEBRATIONS_ENABLED && (
-                <DecorativeImage src={ILLUSTRATIONS.spotQuest} className="h-8 w-8 shrink-0 object-contain" />
-              )}
-            </div>
+            {CELEBRATIONS_ENABLED && (
+              <div className="flex h-14 w-14 items-center justify-center rounded-md bg-sunken">
+                <DecorativeImage src={ILLUSTRATIONS.spotQuest} className="h-12 w-12 object-contain" />
+              </div>
+            )}
+            <h2 className="text-base font-medium text-primary">Your quests</h2>
             <p className="text-sm text-secondary">
               {questCount} quest{questCount === 1 ? "" : "s"} in your log right now.
             </p>

@@ -62,60 +62,62 @@ export function QuestCard({
   const categoryImage = CELEBRATIONS_ENABLED ? illustrationForCategory(category) : null;
 
   return (
-    <div id={id} className="flex flex-col gap-3 rounded-panel bg-card p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span
-          className={`inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-on-tile ${meta.bg}`}
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${meta.ink}`} />
-          {meta.label}
-        </span>
-        <span className="flex items-center gap-2">
-          {window && <span className="text-xs text-secondary">{window}</span>}
-          {xp != null && <XpPill xp={xp} />}
-        </span>
-      </div>
+    <div id={id} className="flex flex-col overflow-hidden rounded-panel bg-card">
+      {categoryImage && (
+        <div className="relative aspect-[16/10] w-full bg-sunken">
+          <DecorativeImage src={categoryImage} className="absolute inset-0 h-full w-full object-contain" />
+        </div>
+      )}
+      <div className="flex flex-col gap-3 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span
+            className={`inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-on-tile ${meta.bg}`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${meta.ink}`} />
+            {meta.label}
+          </span>
+          <span className="flex items-center gap-2">
+            {window && <span className="text-xs text-secondary">{window}</span>}
+            {xp != null && <XpPill xp={xp} />}
+          </span>
+        </div>
 
-      <div className="flex items-start gap-3">
-        <span className="min-w-0 flex-1 text-xl font-medium leading-[1.25] tracking-[-0.01em] text-balance text-primary">
+        <span className="text-xl font-medium leading-[1.25] tracking-[-0.01em] text-balance text-primary">
           {title}
         </span>
-        {categoryImage && (
-          <DecorativeImage src={categoryImage} className="h-10 w-10 shrink-0 object-contain" />
+
+        {instructions && <p className="text-sm text-secondary text-balance">{instructions}</p>}
+
+        {tool && (
+          <div className="flex flex-col gap-1.5 rounded-tile bg-sunken p-4">
+            <span className="text-[11px] font-medium tracking-[0.08em] text-secondary">
+              YOUR TOOL
+            </span>
+            <div className="whitespace-pre-wrap text-sm text-primary">{tool.content}</div>
+          </div>
+        )}
+
+        {reasoning && showWhy && (
+          <p className="rounded-tile bg-accent-soft p-3 text-sm text-primary">{reasoning}</p>
+        )}
+
+        {children}
+
+        {(actions || reasoning) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {actions}
+            {reasoning && (
+              <button
+                type="button"
+                onClick={() => setShowWhy((v) => !v)}
+                className={buttonClasses("coach", "sm")}
+              >
+                Why this?
+              </button>
+            )}
+          </div>
         )}
       </div>
-
-      {instructions && <p className="text-sm text-secondary text-balance">{instructions}</p>}
-
-      {tool && (
-        <div className="flex flex-col gap-1.5 rounded-tile bg-sunken p-4">
-          <span className="text-[11px] font-medium tracking-[0.08em] text-secondary">
-            YOUR TOOL
-          </span>
-          <div className="whitespace-pre-wrap text-sm text-primary">{tool.content}</div>
-        </div>
-      )}
-
-      {reasoning && showWhy && (
-        <p className="rounded-tile bg-accent-soft p-3 text-sm text-primary">{reasoning}</p>
-      )}
-
-      {children}
-
-      {(actions || reasoning) && (
-        <div className="flex flex-wrap items-center gap-2">
-          {actions}
-          {reasoning && (
-            <button
-              type="button"
-              onClick={() => setShowWhy((v) => !v)}
-              className={buttonClasses("coach", "sm")}
-            >
-              Why this?
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

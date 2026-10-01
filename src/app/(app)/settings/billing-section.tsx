@@ -114,7 +114,9 @@ export async function BillingSection({
           ) : (
             <>
               {CELEBRATIONS_ENABLED && (
-                <DecorativeImage src={ILLUSTRATIONS.promoUpgrade} className="h-11 w-11 object-contain" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-tile bg-tile-level">
+                  <DecorativeImage src={ILLUSTRATIONS.promoUpgrade} className="h-14 w-14 object-contain" />
+                </div>
               )}
               <form action={createCheckoutSession}>
                 <Button type="submit">Subscribe</Button>

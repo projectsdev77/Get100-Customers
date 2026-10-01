@@ -45,7 +45,7 @@ export function GrowthHud({
         {scene && (
           <DecorativeImage
             src={scene}
-            className="hidden h-[90px] w-[150px] shrink-0 rounded-tile bg-white/45 object-contain p-1.5 min-[480px]:block"
+            className="hidden h-[150px] w-[200px] shrink-0 rounded-tile bg-white/45 object-contain p-2 min-[560px]:block"
           />
         )}
       </div>

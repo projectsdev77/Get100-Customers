@@ -65,16 +65,16 @@ export default async function NotificationsPage() {
       </div>
 
       {items.length === 0 ? (
-        <div className="flex flex-col items-start gap-2">
+        <div className="flex flex-col items-center gap-2 rounded-panel bg-card p-8 text-center">
           {CELEBRATIONS_ENABLED && (
             <>
               <DecorativeImage
                 src={ILLUSTRATIONS.emptyNotifications}
-                className="celebration-illustration-light h-12 w-12 object-contain"
+                className="celebration-illustration-light h-[120px] w-[160px] object-contain"
               />
               <DecorativeImage
                 src={ILLUSTRATIONS.emptyNotificationsDark}
-                className="celebration-illustration-dark h-12 w-12 object-contain"
+                className="celebration-illustration-dark h-[120px] w-[160px] object-contain"
               />
             </>
           )}

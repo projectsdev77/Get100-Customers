@@ -111,7 +111,7 @@ export default async function QuestsPage({
                 {CELEBRATIONS_ENABLED && (
                   <DecorativeImage
                     src={ILLUSTRATIONS.emptyNoActive}
-                    className="h-12 w-12 object-contain"
+                    className="h-24 w-24 object-contain"
                   />
                 )}
                 <p className="text-sm text-secondary">
@@ -156,7 +156,7 @@ export default async function QuestsPage({
                   {CELEBRATIONS_ENABLED && (
                     <DecorativeImage
                       src={ILLUSTRATIONS.emptyNoSuggested}
-                      className="h-12 w-12 object-contain"
+                      className="h-24 w-24 object-contain"
                     />
                   )}
                   <p className="text-sm text-secondary">
