@@ -24,6 +24,33 @@ import { Tabs, type TabSection } from "@/components/ui/navigation/Tabs";
 // how many rows get shown at once (see notification-history.tsx).
 const NOTIFICATION_FETCH_LIMIT = 50;
 
+// Was rendering JSON.stringify(growth.what_working) directly — showed a
+// bare "[]" with no explanation when empty, and raw
+// {"insight":"...","evidence":"..."} objects even when it had data.
+function GrowthInsightList({
+  insights,
+  emptyText,
+}: {
+  insights: Array<{ insight: string; evidence?: string }>;
+  emptyText: string;
+}) {
+  if (insights.length === 0) {
+    return <p className="text-primary">{emptyText}</p>;
+  }
+  return (
+    <ul className="flex flex-col gap-2">
+      {insights.map((item, i) => (
+        <li key={i} className="text-primary">
+          {item.insight}
+          {item.evidence && (
+            <span className="block text-[13px] text-secondary">{item.evidence}</span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default async function AdminFounderDetailPage({
   params,
   searchParams,
@@ -109,12 +136,18 @@ export default async function AdminFounderDetailPage({
                 <dt className="text-secondary">Bottleneck hypothesis</dt>
                 <dd className="text-primary">{growth.bottleneck_hypothesis ?? "-"}</dd>
                 <dt className="text-secondary">What&apos;s working</dt>
-                <dd className="font-mono text-[13px] text-primary">
-                  {JSON.stringify(growth.what_working)}
+                <dd>
+                  <GrowthInsightList
+                    insights={growth.what_working}
+                    emptyText="Nothing yet — no channel has a confirmed conversion."
+                  />
                 </dd>
                 <dt className="text-secondary">What&apos;s not working</dt>
-                <dd className="font-mono text-[13px] text-primary">
-                  {JSON.stringify(growth.what_not_working)}
+                <dd>
+                  <GrowthInsightList
+                    insights={growth.what_not_working}
+                    emptyText="Nothing yet — no channel has been tried enough times without converting to call it out."
+                  />
                 </dd>
               </dl>
             ) : (
