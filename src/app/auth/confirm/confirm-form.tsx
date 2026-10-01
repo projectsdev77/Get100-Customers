@@ -1,18 +1,8 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { Button } from "@/components/ui/actions/Button";
+import { SubmitButton } from "@/components/ui/actions/SubmitButton";
 import { confirmEmailToken } from "./actions";
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" fullWidth disabled={pending}>
-      {pending ? "Confirming…" : "Confirm"}
-    </Button>
-  );
-}
 
 export function ConfirmForm({
   tokenHash,
@@ -25,7 +15,9 @@ export function ConfirmForm({
 }) {
   return (
     <form action={confirmEmailToken.bind(null, tokenHash, type, next)}>
-      <SubmitButton />
+      <SubmitButton fullWidth pendingLabel="Confirming…">
+        Confirm
+      </SubmitButton>
     </form>
   );
 }

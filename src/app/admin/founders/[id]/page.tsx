@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/actions/Button";
+import { SubmitButton } from "@/components/ui/actions/SubmitButton";
 import { Input } from "@/components/ui/forms/Input";
 import { Select } from "@/components/ui/forms/Select";
 import { Textarea } from "@/components/ui/forms/Textarea";
@@ -189,9 +189,9 @@ export default async function AdminFounderDetailPage({
                   defaultValue={founder.current_customer_count}
                   className="w-32"
                 />
-                <Button type="submit" variant="secondary" size="sm">
+                <SubmitButton variant="secondary" size="sm" pendingLabel="Saving…">
                   Save
-                </Button>
+                </SubmitButton>
               </form>
             </div>
 
@@ -211,9 +211,9 @@ export default async function AdminFounderDetailPage({
                   options={["trialing", "active", "past_due", "restricted", "canceled"]}
                   className="w-40"
                 />
-                <Button type="submit" variant="secondary" size="sm">
+                <SubmitButton variant="secondary" size="sm" pendingLabel="Saving…">
                   Save
-                </Button>
+                </SubmitButton>
               </form>
             </div>
 
@@ -226,9 +226,9 @@ export default async function AdminFounderDetailPage({
               </div>
               <form action={adminGenerateQuest}>
                 <input type="hidden" name="founderId" value={founder.id} />
-                <Button type="submit" variant="secondary" size="sm">
+                <SubmitButton variant="secondary" size="sm" pendingLabel="Generating…">
                   Generate a quest now
-                </Button>
+                </SubmitButton>
               </form>
             </div>
           </Card>
@@ -251,9 +251,14 @@ export default async function AdminFounderDetailPage({
                 <input type="checkbox" name="sendEmail" className="h-4 w-4" />
                 Also send as an email
               </label>
-              <Button type="submit" variant="secondary" size="sm" className="self-start">
+              <SubmitButton
+                variant="secondary"
+                size="sm"
+                className="self-start"
+                pendingLabel="Sending…"
+              >
                 Send
-              </Button>
+              </SubmitButton>
             </form>
           </Card>
         </div>
@@ -279,9 +284,13 @@ export default async function AdminFounderDetailPage({
             className="self-start"
           >
             <input type="hidden" name="founderId" value={founder.id} />
-            <Button type="submit" variant={isSuspended ? "secondary" : "danger"} size="sm">
+            <SubmitButton
+              variant={isSuspended ? "secondary" : "danger"}
+              size="sm"
+              pendingLabel={isSuspended ? "Unsuspending…" : "Suspending…"}
+            >
               {isSuspended ? "Unsuspend account" : "Suspend account"}
-            </Button>
+            </SubmitButton>
           </form>
         </div>
       ),
