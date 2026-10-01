@@ -175,41 +175,66 @@ export default async function AdminFounderDetailPage({
           <Card className="flex flex-col gap-4 p-6">
             <h2 className="text-base font-medium text-primary">Support overrides</h2>
 
-            <form action={adminCorrectCustomerCount} className="flex flex-wrap items-end gap-2">
-              <input type="hidden" name="founderId" value={founder.id} />
-              <Input
-                label="Customer count"
-                type="number"
-                name="count"
-                min={0}
-                defaultValue={founder.current_customer_count}
-                className="w-32"
-              />
-              <Button type="submit" variant="secondary" size="sm">
-                Save
-              </Button>
-            </form>
+            <div className="flex flex-col gap-2">
+              <p className="text-[13px] text-secondary">
+                Corrects a miscounted total — e.g. the founder reports a mistake, or a manual fix is
+                needed outside the normal quest-report flow.
+              </p>
+              <form action={adminCorrectCustomerCount} className="flex flex-wrap items-end gap-2">
+                <input type="hidden" name="founderId" value={founder.id} />
+                <Input
+                  label="Customer count"
+                  type="number"
+                  name="count"
+                  min={0}
+                  defaultValue={founder.current_customer_count}
+                  className="w-32"
+                />
+                <Button type="submit" variant="secondary" size="sm">
+                  Save
+                </Button>
+              </form>
+            </div>
 
-            <form action={adminUpdateSubscriptionStatus} className="flex flex-wrap items-end gap-2">
-              <input type="hidden" name="founderId" value={founder.id} />
-              <Select
-                label="Subscription status"
-                name="status"
-                defaultValue={subscription?.status ?? "trialing"}
-                options={["trialing", "active", "past_due", "restricted", "canceled"]}
-                className="w-40"
-              />
-              <Button type="submit" variant="secondary" size="sm">
-                Save
-              </Button>
-            </form>
+            <div className="flex flex-col gap-2 border-t border-subtle pt-4">
+              <p className="text-[13px] text-secondary">
+                Manually sets billing state — e.g. honoring a refund/comp, or unblocking an account
+                stuck restricted due to a billing glitch.
+              </p>
+              <form
+                action={adminUpdateSubscriptionStatus}
+                className="flex flex-wrap items-end gap-2"
+              >
+                <input type="hidden" name="founderId" value={founder.id} />
+                <Select
+                  label="Subscription status"
+                  name="status"
+                  defaultValue={subscription?.status ?? "trialing"}
+                  options={["trialing", "active", "past_due", "restricted", "canceled"]}
+                  className="w-40"
+                />
+                <Button type="submit" variant="secondary" size="sm">
+                  Save
+                </Button>
+              </form>
+            </div>
 
-            <form action={adminGenerateQuest} className="flex flex-wrap items-end gap-2">
-              <input type="hidden" name="founderId" value={founder.id} />
-              <Button type="submit" variant="secondary" size="sm">
-                Generate a quest now
-              </Button>
-            </form>
+            <div className="flex flex-col gap-2 border-t border-subtle pt-4">
+              <div>
+                <h3 className="text-sm font-medium text-primary">Generate a quest now</h3>
+                <p className="text-[13px] text-secondary">
+                  For when a founder is stuck with no quest waiting — fills their suggestion slot
+                  immediately instead of waiting for their next page load, even on a restricted
+                  account.
+                </p>
+              </div>
+              <form action={adminGenerateQuest}>
+                <input type="hidden" name="founderId" value={founder.id} />
+                <Button type="submit" variant="secondary" size="sm">
+                  Generate a quest now
+                </Button>
+              </form>
+            </div>
           </Card>
 
           <Card className="flex flex-col gap-3 p-6">
