@@ -60,11 +60,30 @@ export async function createPortalSession(flow?: "payment_method_update" | "subs
         ? { type: flow }
         : undefined;
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: subscription.stripe_customer_id,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings`,
-    ...(flowData ? { flow_data: flowData } : {}),
-  });
+  const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing`;
+
+  let session;
+  try {
+    session = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripe_customer_id,
+      return_url: returnUrl,
+      ...(flowData ? { flow_data: flowData } : {}),
+    });
+  } catch (err) {
+    // Belt-and-suspenders alongside billing-section.tsx hiding the "Cancel
+    // subscription" button once a cancellation is already scheduled:
+    // Stripe rejects re-entering the "subscription_cancel" flow on a
+    // subscription that's already pending cancellation ("already set to be
+    // canceled at period end") rather than no-op'ing, so a stale page (or
+    // a second tab) can still hit this. Fall back to the portal's generic
+    // landing page — which reflects the subscription's actual state
+    // correctly on its own — instead of crashing the whole settings page.
+    console.error("createPortalSession: deep-linked flow rejected by Stripe, using generic portal:", err);
+    session = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripe_customer_id,
+      return_url: returnUrl,
+    });
+  }
 
   redirect(session.url);
 }

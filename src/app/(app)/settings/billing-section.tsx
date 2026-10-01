@@ -1,6 +1,7 @@
 import { getSubscription } from "@/lib/subscriptions/status";
 import { daysRemaining } from "@/lib/utils/days-remaining";
 import { listInvoices } from "@/lib/stripe/invoices";
+import { getLiveSubscriptionState } from "@/lib/stripe/subscription-state";
 import { createCheckoutSession, createPortalSession } from "../billing/actions";
 import { Button } from "@/components/ui/actions/Button";
 import type { Founder, SubscriptionStatus } from "@/types/database";
@@ -44,6 +45,9 @@ export async function BillingSection({
       : null;
 
   const invoices = hasStripeCustomer ? await listInvoices(subscription!.stripe_customer_id!) : [];
+  const liveState = subscription?.billing_provider_ref
+    ? await getLiveSubscriptionState(subscription.billing_provider_ref)
+    : null;
 
   const pill = STATUS_PILL[status];
 
@@ -62,7 +66,12 @@ export async function BillingSection({
               {subscription?.plan ?? "Founder"}
             </span>
             <span className="text-sm text-tile-customers-ink">
-              {STATUS_COPY[status]}
+              {liveState?.cancelAtPeriodEnd && liveState.periodEndIso
+                ? `Your subscription ends on ${new Date(liveState.periodEndIso).toLocaleDateString(
+                    undefined,
+                    { month: "short", day: "numeric", year: "numeric" },
+                  )}.`
+                : STATUS_COPY[status]}
               {trialDaysLeft !== null &&
                 ` ${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left.`}
             </span>
@@ -79,11 +88,25 @@ export async function BillingSection({
               <form action={createPortalSession.bind(null, "payment_method_update")}>
                 <Button type="submit">Update payment method</Button>
               </form>
-              <form action={createPortalSession.bind(null, "subscription_cancel")}>
-                <Button type="submit" variant="secondary">
-                  Cancel subscription
-                </Button>
-              </form>
+              {liveState?.cancelAtPeriodEnd ? (
+                // Stripe rejects re-entering the "subscription_cancel" portal
+                // flow on a subscription that's already pending cancellation
+                // ("already set to be canceled at period end") — the generic
+                // portal page handles this state correctly on its own
+                // (including offering to resume), so route there instead of
+                // ever retrying the flow that's guaranteed to fail here.
+                <form action={createPortalSession.bind(null, undefined)}>
+                  <Button type="submit" variant="secondary">
+                    Manage subscription
+                  </Button>
+                </form>
+              ) : (
+                <form action={createPortalSession.bind(null, "subscription_cancel")}>
+                  <Button type="submit" variant="secondary">
+                    Cancel subscription
+                  </Button>
+                </form>
+              )}
             </>
           ) : (
             <form action={createCheckoutSession}>
