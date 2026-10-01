@@ -217,6 +217,22 @@ export async function ensureQuestSlots(
   const subscription = await getSubscription(supabase, founder.id);
   if (isRestricted(subscription)) return;
 
+  await fillNextQuestSlot(supabase, founder);
+}
+
+// Split out of ensureQuestSlots so an admin support action
+// (adminGenerateQuest) can deliberately force-fill a slot for a
+// restricted founder — a real support need (e.g. "I just paid again but
+// nothing's loading yet") — without that override accidentally also
+// reaching every regular background refill, which must keep respecting
+// the restriction. Returns whether a quest was actually inserted, so
+// callers needing confirmation (e.g. the admin action) can tell a real
+// MAX_SUGGESTED_QUESTS/generation-failure no-op apart from a genuine
+// insert instead of guessing from a void return.
+export async function fillNextQuestSlot(
+  supabase: SupabaseServerClient,
+  founder: Founder,
+): Promise<boolean> {
   const { data: occupying } = await supabase
     .from("quests")
     .select("id, template_id, status, category, title")
@@ -226,13 +242,13 @@ export async function ensureQuestSlots(
 
   const occupyingRows = occupying ?? [];
   const suggestedCount = occupyingRows.filter((q) => q.status === "suggested").length;
-  if (suggestedCount >= MAX_SUGGESTED_QUESTS) return;
+  if (suggestedCount >= MAX_SUGGESTED_QUESTS) return false;
 
   const { data: templates } = await supabase
     .from("quest_templates")
     .select("*")
     .returns<QuestTemplate[]>();
-  if (!templates || templates.length === 0) return;
+  if (!templates || templates.length === 0) return false;
 
   const growth = await getGrowthProfile(supabase, founder.id);
   const usedTemplateIds = occupyingRows
@@ -254,7 +270,7 @@ export async function ensureQuestSlots(
     ]),
     QUEST_GENERATION_TIMEOUT_MS,
   );
-  if (!built) return;
+  if (!built) return false;
 
   // No notification here on purpose — a suggestion refilling isn't worth
   // interrupting the founder for; it just sits in "Next up" until they get
@@ -263,6 +279,7 @@ export async function ensureQuestSlots(
     founder_id: founder.id,
     ...built.fields,
   });
+  return true;
 }
 
 // Used by acceptQuest to enforce the "3 active" cap (design handoff)

@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Founder, GrowthProfile, NotificationLogEntry, Subscription } from "@/types/database";
-import { adminCorrectCustomerCount, adminUpdateSubscriptionStatus } from "./actions";
+import { adminCorrectCustomerCount, adminGenerateQuest, adminUpdateSubscriptionStatus } from "./actions";
 import { Card } from "@/components/ui/surfaces/Card";
 import { Input } from "@/components/ui/forms/Input";
 import { Select } from "@/components/ui/forms/Select";
 import { Button } from "@/components/ui/actions/Button";
+import { Banner } from "@/components/ui/surfaces/Banner";
 
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   new_quest: "New quest",
@@ -21,10 +22,13 @@ const NOTIFICATION_HISTORY_LIMIT = 20;
 
 export default async function AdminFounderDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ flash?: string }>;
 }) {
   const { id } = await params;
+  const { flash } = await searchParams;
   const admin = createAdminClient();
 
   const { data: founder } = await admin
@@ -66,6 +70,8 @@ export default async function AdminFounderDetailPage({
         </h1>
         <p className="font-mono text-[13px] text-secondary">{authUser?.user?.email}</p>
       </div>
+
+      {flash && <Banner tone="info">{flash}</Banner>}
 
       <Card className="flex flex-col gap-4 p-6">
         <h2 className="text-base font-medium text-primary">Profile</h2>
@@ -187,6 +193,13 @@ export default async function AdminFounderDetailPage({
           />
           <Button type="submit" variant="secondary" size="sm">
             Save
+          </Button>
+        </form>
+
+        <form action={adminGenerateQuest} className="flex flex-wrap items-end gap-2">
+          <input type="hidden" name="founderId" value={founder.id} />
+          <Button type="submit" variant="secondary" size="sm">
+            Generate a quest now
           </Button>
         </form>
       </Card>

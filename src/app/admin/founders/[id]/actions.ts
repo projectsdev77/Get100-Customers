@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserAdmin } from "@/lib/admin/is-admin";
-import type { SubscriptionStatus } from "@/types/database";
+import { fillNextQuestSlot } from "@/lib/quests/lifecycle";
+import type { Founder, SubscriptionStatus } from "@/types/database";
 
 const VALID_STATUSES: SubscriptionStatus[] = [
   "trialing",
@@ -47,6 +49,37 @@ export async function adminCorrectCustomerCount(formData: FormData) {
   }
 
   revalidatePath(`/admin/founders/${founderId}`);
+}
+
+// Force-fills a "suggested" slot right now rather than waiting for the
+// founder's next page load — a real support need (e.g. "I just fixed my
+// payment but nothing's loading yet"). Deliberately bypasses the
+// restriction check ensureQuestSlots normally enforces (fillNextQuestSlot
+// is that function's shared core, split out for exactly this override —
+// see src/lib/quests/lifecycle.ts) since this is a support action, not a
+// loophole reachable by the founder themselves.
+export async function adminGenerateQuest(formData: FormData) {
+  await requireAdmin();
+  const founderId = String(formData.get("founderId"));
+
+  const admin = createAdminClient();
+  const { data: founder } = await admin
+    .from("founders")
+    .select("*")
+    .eq("id", founderId)
+    .single<Founder>();
+  if (!founder) return;
+
+  const inserted = await fillNextQuestSlot(admin, founder);
+
+  revalidatePath(`/admin/founders/${founderId}`);
+  redirect(
+    `/admin/founders/${founderId}?flash=${encodeURIComponent(
+      inserted
+        ? "Generated a new quest."
+        : "No new quest generated — they may already have one suggested, or generation failed. Try again in a moment.",
+    )}`,
+  );
 }
 
 export async function adminUpdateSubscriptionStatus(formData: FormData) {
