@@ -45,6 +45,20 @@ const WINANSI_EXTRA_CODEPOINTS = new Set([
   0x017d, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014, 0x02dc, 0x2122, 0x0161, 0x203a,
   0x0153, 0x017e, 0x0178,
 ]);
+// Visually-equivalent punctuation that AI-generated text favors but cp1252
+// has no slot for (various Unicode hyphen/dash/prime variants) — normalized
+// to their plain-ASCII look-alike instead of falling through to "?".
+const PUNCTUATION_LOOKALIKES: Record<number, string> = {
+  0x2010: "-", // hyphen
+  0x2011: "-", // non-breaking hyphen
+  0x2012: "-", // figure dash
+  0x2015: "-", // horizontal bar
+  0x2212: "-", // minus sign
+  0x2032: "'", // prime
+  0x2033: '"', // double prime
+  0x200b: "", // zero-width space
+  0xfeff: "", // zero-width no-break space / BOM
+};
 function sanitizeForPdf(text: string): string {
   return Array.from(text)
     .map((char) => {
@@ -53,6 +67,7 @@ function sanitizeForPdf(text: string): string {
       if (code >= 0x20 && code <= 0x7e) return char;
       if (code >= 0xa0 && code <= 0xff) return char;
       if (WINANSI_EXTRA_CODEPOINTS.has(code)) return char;
+      if (code in PUNCTUATION_LOOKALIKES) return PUNCTUATION_LOOKALIKES[code];
       return "?";
     })
     .join("");
@@ -293,9 +308,10 @@ export class PdfWriter {
     this.spacer(16);
     this.ensureSpace(28);
     this.text(content, { bold: true, size: 14, color: PdfColors.accent });
+    this.spacer(2);
     this.page.drawLine({
-      start: { x: MARGIN, y: this.y + 4 },
-      end: { x: PAGE_WIDTH - MARGIN, y: this.y + 4 },
+      start: { x: MARGIN, y: this.y },
+      end: { x: PAGE_WIDTH - MARGIN, y: this.y },
       thickness: 1,
       color: PdfColors.accentSoft,
     });
