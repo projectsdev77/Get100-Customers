@@ -1,6 +1,13 @@
-import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/actions/Button";
+import { Input } from "@/components/ui/forms/Input";
+import { Select } from "@/components/ui/forms/Select";
+import { Textarea } from "@/components/ui/forms/Textarea";
+import { Tabs, type TabSection } from "@/components/ui/navigation/Tabs";
+import { Banner } from "@/components/ui/surfaces/Banner";
+import { Card } from "@/components/ui/surfaces/Card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Founder, GrowthProfile, NotificationLogEntry, Subscription } from "@/types/database";
+import { notFound } from "next/navigation";
 import {
   adminCorrectCustomerCount,
   adminGenerateQuest,
@@ -10,13 +17,6 @@ import {
   adminUpdateSubscriptionStatus,
 } from "./actions";
 import { NotificationHistory } from "./notification-history";
-import { Card } from "@/components/ui/surfaces/Card";
-import { Input } from "@/components/ui/forms/Input";
-import { Select } from "@/components/ui/forms/Select";
-import { Textarea } from "@/components/ui/forms/Textarea";
-import { Button } from "@/components/ui/actions/Button";
-import { Banner } from "@/components/ui/surfaces/Banner";
-import { Tabs, type TabSection } from "@/components/ui/navigation/Tabs";
 
 // Raised from 20 so NotificationHistory's "emails & messages only" default
 // filter still has enough of a pool to find something in on an account
