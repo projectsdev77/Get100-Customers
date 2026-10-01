@@ -26,6 +26,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 `supabase/schema.sql` holds the full schema (SPEC.md §19), including starter Row Level Security policies. `supabase/seed.sql` seeds the starter quest template library (SPEC §7.1). Run both against a Supabase project's SQL editor, or via the Supabase CLI, once a project exists (PHASES.md Phase 1/3).
 
+## Known limitations
+
+- **Outbound email doesn't reach real users yet.** Resend's free tier, without a verified sending domain, only allows delivery to the address that owns the Resend account itself — every other recipient gets rejected with a 403 (`"You can only send testing emails to your own email address"`). Since every in-app email (milestones, quest check-ins, weekly recap, etc.) is addressed to the *founder's* email, not the Resend account owner's, none of it currently reaches anyone. `src/lib/email/resend.ts` now logs this rejection instead of swallowing it silently, but fixing it for real requires buying a domain, verifying it in Resend (Domains → Add Domain, add the DNS records it gives you), and pointing `RESEND_FROM_EMAIL` at an address on that domain. Deliberately deferred — no domain owned yet.
+
 ## AI quality checks
 
 `npm run golden-set` runs the sample founder profiles in `scripts/golden-set-check.ts` against the live Gemini API and prints the personalized/generated quest output for manual review (SPEC §17). Needs a real `GEMINI_API_KEY` in `.env.local` — not run in CI. Re-run it after touching any prompt in `src/lib/ai/` or `supabase/seed.sql`.
