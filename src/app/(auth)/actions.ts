@@ -7,6 +7,7 @@ import { isPasswordValid } from "@/lib/auth/password";
 import { findAuthUserByEmail, hasIdentityProvider } from "@/lib/auth/find-user-by-email";
 import { authErrorMessage } from "@/lib/auth/error-message";
 import { REMEMBER_ME_COOKIE } from "@/lib/auth/session-persistence";
+import { isCurrentUserAdmin } from "@/lib/admin/is-admin";
 
 // Must run before createClient() reads cookies for this same request —
 // createClient()/proxy.ts key off this marker's presence to decide
@@ -31,7 +32,7 @@ async function applyRememberMePreference(remember: boolean) {
 export async function login(formData: FormData) {
   const email = String(formData.get("email"));
   const password = String(formData.get("password"));
-  const next = String(formData.get("next") || "/dashboard");
+  const requestedNext = String(formData.get("next") || "/dashboard");
   const remember = formData.has("remember");
 
   await applyRememberMePreference(remember);
@@ -60,6 +61,19 @@ export async function login(formData: FormData) {
     }
     redirect(`/login?error=${encodeURIComponent(authErrorMessage(error))}`);
   }
+
+  // An admin's own founder profile (industry/product_description) is
+  // normally never filled in — admin_users is a separate, internal-only
+  // role (SPEC §12), not someone actually using the product as a founder
+  // — so the default post-login destination, /dashboard, immediately
+  // bounced every admin straight to /onboarding for a profile they have
+  // no reason to ever complete. Only overrides the *default* landing page;
+  // an explicit `next` (e.g. proxy.ts sending someone back to whatever
+  // protected page they originally tried to visit) is still respected.
+  const next =
+    requestedNext === "/dashboard" && (await isCurrentUserAdmin(supabase))
+      ? "/admin"
+      : requestedNext;
 
   redirect(next);
 }
