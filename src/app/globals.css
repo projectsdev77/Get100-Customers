@@ -37,6 +37,8 @@
   --color-ring-customers: var(--ring-customers);
   --color-ring-level: var(--ring-level);
   --color-ring-track: var(--ring-track);
+  --color-ring-track-customers: var(--ring-track-customers);
+  --color-ring-track-level: var(--ring-track-level);
 
   --color-quest-suggested: var(--quest-suggested-bg);
   --color-quest-suggested-ink: var(--quest-suggested-ink);

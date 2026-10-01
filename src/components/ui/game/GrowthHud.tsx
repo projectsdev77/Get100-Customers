@@ -26,12 +26,18 @@ export function GrowthHud({
 
   return (
     <div className="flex flex-col gap-2 rounded-panel bg-card p-2">
-      <div className="flex flex-wrap items-center gap-4.5 rounded-tile bg-tile-customers p-4.5 text-on-tile">
-        <ProgressRing value={customers - floor} max={target - floor} center="var(--tile-customers)" label="Customers">
+      <div className="flex flex-wrap items-center justify-center gap-6 rounded-tile bg-tile-customers p-6 text-on-tile">
+        <ProgressRing
+          value={customers - floor}
+          max={target - floor}
+          center="var(--tile-customers)"
+          track="var(--ring-track-customers)"
+          label="Customers"
+        >
           <span className="font-light text-[44px] leading-none tracking-[-0.04em]">{customers}</span>
           <span className="text-xs font-medium text-tile-customers-ink">of {target}</span>
         </ProgressRing>
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex min-w-0 max-w-[320px] flex-col gap-2">
           <span className="text-[15px] font-medium">{growthMode ? "Growth Mode" : "Customers"}</span>
           <span className="text-xl leading-[1.2] tracking-[-0.01em] text-balance">
             {target - customers} more to {growthMode ? "your next target" : "your first 100"}
@@ -52,7 +58,14 @@ export function GrowthHud({
 
       <div className="grid grid-cols-2 gap-2">
         <div className="flex items-center gap-3 rounded-tile bg-tile-level px-4 py-3.5 text-on-tile">
-          <ProgressRing size="sm" value={xpProgress.current} max={xpProgress.target} center="var(--tile-level)" label="Level progress">
+          <ProgressRing
+            size="sm"
+            value={xpProgress.current}
+            max={xpProgress.target}
+            center="var(--tile-level)"
+            track="var(--ring-track-level)"
+            label="Level progress"
+          >
             <span className="text-base font-medium leading-none">{level}</span>
           </ProgressRing>
           <div className="flex flex-col gap-0.5">
@@ -70,7 +83,7 @@ export function GrowthHud({
               <span className="text-[13px] text-tile-streak-ink"> {streak === 1 ? "day" : "days"}</span>
             </span>
           ) : (
-            <span className="text-[15px] text-tile-streak-ink">No streak yet</span>
+            <span className="text-[15px] text-tile-streak-ink">Finish a quest to start one</span>
           )}
         </div>
       </div>

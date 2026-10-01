@@ -20,7 +20,7 @@ export function TopNav({
   const pathname = usePathname();
 
   return (
-    <nav className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-4 px-6 py-3.5">
+    <nav className="flex w-full flex-wrap items-center justify-between gap-4 px-[clamp(24px,4vw,64px)] py-3.5">
       <Link href="/dashboard" className="text-[17px] font-semibold tracking-[-0.01em] text-primary">
         Get100-Customers
       </Link>

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Founder, Quest } from "@/types/database";
 import {
@@ -7,15 +8,17 @@ import {
   getRecentQuestHistory,
   OCCUPYING_STATUSES,
 } from "@/lib/quests/lifecycle";
-import { logCustomer } from "./actions";
+import { logCustomer, startFirstSuggestedQuest } from "./actions";
 import { markQuestDone, skipQuest } from "../quests/actions";
 import { isoDaysAgo } from "@/lib/utils/days-remaining";
 import { detectSkipPattern } from "@/lib/growth-profile/patterns";
+import { STAGE_LABELS } from "@/lib/founders/field-options";
 import { GrowthHud } from "@/components/ui/game/GrowthHud";
 import { GrowthInsights } from "@/components/ui/game/GrowthInsights";
 import { QuestCard } from "@/components/ui/quests/QuestCard";
 import { Card } from "@/components/ui/surfaces/Card";
-import { Button, LinkButton } from "@/components/ui/actions/Button";
+import { Button } from "@/components/ui/actions/Button";
+import { EditCountToggle } from "./edit-count-toggle";
 import { CelebrationSnapshot } from "@/components/celebrations/CelebrationSnapshot";
 import { HeroWelcomeIllustration } from "@/components/celebrations/HeroWelcomeIllustration";
 import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
@@ -63,7 +66,70 @@ export default async function DashboardPage() {
   const skipPattern = detectSkipPattern(recentQuests);
   const occupyingQuests = occupying ?? [];
   const activeQuests = occupyingQuests.filter((q) => q.status === "active" || q.status === "in_progress");
+  const suggestedQuests = occupyingQuests.filter((q) => q.status === "suggested");
   const questCount = occupyingQuests.length;
+  const isNewUser = founder.current_customer_count === 0;
+  const firstSuggested = suggestedQuests[0] ?? null;
+
+  const subline = [founder.company_name, founder.stage ? (STAGE_LABELS[founder.stage] ?? founder.stage) : null]
+    .filter(Boolean)
+    .join(" · ");
+
+  const questsCard = (
+    <Card className="flex flex-col gap-3 p-5">
+      {CELEBRATIONS_ENABLED && (
+        <div className="flex h-14 w-14 items-center justify-center rounded-md bg-sunken">
+          <DecorativeImage src={ILLUSTRATIONS.spotQuest} className="h-12 w-12 object-contain" />
+        </div>
+      )}
+      <h2 className="text-base font-medium text-primary">Your quests</h2>
+      {isNewUser ? (
+        <>
+          <p className="text-sm text-secondary">Pick one to get started.</p>
+          {suggestedQuests.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              {suggestedQuests.slice(0, 3).map((quest) => (
+                <div key={quest.id} className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-quest-suggested-ink" />
+                  <span className="min-w-0 flex-1 truncate text-sm text-primary">{quest.title}</span>
+                  <span className="shrink-0 text-xs text-secondary">+{quest.xp_value} XP</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {firstSuggested ? (
+            <form action={startFirstSuggestedQuest.bind(null, firstSuggested.id)}>
+              <Button type="submit" fullWidth size="sm">
+                Start your first quest
+              </Button>
+            </form>
+          ) : (
+            <p className="text-sm text-secondary">Your coach is preparing your first quest.</p>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-secondary">
+            {questCount} quest{questCount === 1 ? "" : "s"} in your log right now.
+          </p>
+          <Link href="/quests" className="text-sm font-medium text-accent">
+            View your quests →
+          </Link>
+        </>
+      )}
+    </Card>
+  );
+
+  const logProgressCard = (
+    <Card className="flex flex-col gap-3 p-5">
+      <EditCountToggle currentCount={founder.current_customer_count} />
+      <form action={logCustomer}>
+        <Button type="submit" variant={isNewUser ? "secondary" : "primary"} fullWidth size="sm">
+          + I got a new customer
+        </Button>
+      </form>
+    </Card>
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -78,50 +144,41 @@ export default async function DashboardPage() {
           <h1 className="max-w-[58%] text-3xl font-medium leading-[1.15] tracking-[-0.01em]">
             Welcome{founder.name ? `, ${founder.name}` : ""}
           </h1>
+          {subline && <p className="max-w-[58%] text-sm text-tile-customers-ink">{subline}</p>}
           <HeroWelcomeIllustration className="pointer-events-none absolute -top-10 right-6 h-[calc(100%+40px)] w-[42%] max-w-[240px] object-contain object-bottom" />
         </div>
       ) : (
-        <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
-          Welcome{founder.name ? `, ${founder.name}` : ""}
-        </h1>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
+            Welcome{founder.name ? `, ${founder.name}` : ""}
+          </h1>
+          {subline && <p className="text-sm text-secondary">{subline}</p>}
+        </div>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-6 min-[860px]:grid-cols-[1fr_320px]">
-        <GrowthHud
-          customers={founder.current_customer_count}
-          weekDelta={weekDelta !== 0 ? weekDelta : null}
-          level={founder.level}
-          xp={founder.xp}
-          streak={founder.streak_count}
-        />
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="min-w-0 flex-[3_1_600px]">
+          <GrowthHud
+            customers={founder.current_customer_count}
+            weekDelta={weekDelta !== 0 ? weekDelta : null}
+            level={founder.level}
+            xp={founder.xp}
+            streak={founder.streak_count}
+          />
+        </div>
 
-        <div className="flex flex-col gap-4">
-          <Card className="flex flex-col gap-3 p-5">
-            <h2 className="text-base font-medium text-primary">Log progress</h2>
-            <form action={logCustomer}>
-              <Button type="submit" fullWidth size="sm">
-                + I got a new customer
-              </Button>
-            </form>
-            <LinkButton href="/settings?tab=customer-count" variant="outline" size="sm">
-              Correct your count →
-            </LinkButton>
-          </Card>
-
-          <Card className="flex flex-col gap-3 p-5">
-            {CELEBRATIONS_ENABLED && (
-              <div className="flex h-14 w-14 items-center justify-center rounded-md bg-sunken">
-                <DecorativeImage src={ILLUSTRATIONS.spotQuest} className="h-12 w-12 object-contain" />
-              </div>
-            )}
-            <h2 className="text-base font-medium text-primary">Your quests</h2>
-            <p className="text-sm text-secondary">
-              {questCount} quest{questCount === 1 ? "" : "s"} in your log right now.
-            </p>
-            <LinkButton href="/quests" variant="outline" size="sm">
-              View your quests →
-            </LinkButton>
-          </Card>
+        <div className="flex min-w-0 flex-[1_1_340px] flex-col gap-4">
+          {isNewUser ? (
+            <>
+              {questsCard}
+              {logProgressCard}
+            </>
+          ) : (
+            <>
+              {logProgressCard}
+              {questsCard}
+            </>
+          )}
         </div>
       </div>
 
@@ -134,9 +191,9 @@ export default async function DashboardPage() {
             <p className="text-sm text-secondary">
               No active quest right now. Accept one from your quest log to get started.
             </p>
-            <LinkButton href="/quests" variant="outline" size="sm">
+            <Link href="/quests" className="text-sm font-medium text-accent">
               Accept a quest →
-            </LinkButton>
+            </Link>
           </div>
         )}
         {activeQuests.map((quest) => (

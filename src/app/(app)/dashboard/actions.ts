@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { notify } from "@/lib/notifications/notify";
@@ -73,4 +74,28 @@ export async function correctCustomerCount(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/settings");
   return { success: true as const };
+}
+
+// New-user dashboard state's "Start your first quest" CTA (dashboard-fix
+// handoff item #1) — a thin, dashboard-only wrapper around the same
+// suggested-to-active transition acceptQuest already does on the quests
+// page, kept separate so acceptQuest's own behavior (and its capacity
+// check, moot for a brand-new account with zero active quests) stays
+// untouched. Navigates to /quests so the founder lands where the quest
+// now lives, unlike logCustomer/correctCustomerCount which stay in place.
+export async function startFirstSuggestedQuest(questId: string) {
+  const supabase = await createClient();
+  const founder = await getCurrentFounder(supabase);
+  if (!founder) return;
+
+  await supabase
+    .from("quests")
+    .update({ status: "active", activated_at: new Date().toISOString() })
+    .eq("id", questId)
+    .eq("founder_id", founder.id)
+    .eq("status", "suggested");
+
+  revalidatePath("/dashboard");
+  revalidatePath("/quests");
+  redirect("/quests");
 }
