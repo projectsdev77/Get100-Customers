@@ -177,8 +177,7 @@ export default async function AdminFounderDetailPage({
 
             <div className="flex flex-col gap-2">
               <p className="text-[13px] text-secondary">
-                Corrects a miscounted total — e.g. the founder reports a mistake, or a manual fix is
-                needed outside the normal quest-report flow.
+                Corrects a miscounted total.
               </p>
               <form action={adminCorrectCustomerCount} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="founderId" value={founder.id} />
@@ -198,8 +197,7 @@ export default async function AdminFounderDetailPage({
 
             <div className="flex flex-col gap-2 border-t border-subtle pt-4">
               <p className="text-[13px] text-secondary">
-                Manually sets billing state — e.g. honoring a refund/comp, or unblocking an account
-                stuck restricted due to a billing glitch.
+                Manually sets billing state.
               </p>
               <form
                 action={adminUpdateSubscriptionStatus}
@@ -223,9 +221,7 @@ export default async function AdminFounderDetailPage({
               <div>
                 <h3 className="text-sm font-medium text-primary">Generate a quest now</h3>
                 <p className="text-[13px] text-secondary">
-                  For when a founder is stuck with no quest waiting — fills their suggestion slot
-                  immediately instead of waiting for their next page load, even on a restricted
-                  account.
+                  For when a founder is stuck with no quest waiting.
                 </p>
               </div>
               <form action={adminGenerateQuest}>
