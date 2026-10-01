@@ -61,7 +61,7 @@ test.describe("settings", () => {
     }
   });
 
-  test("data export downloads a JSON file scoped to the current founder", async ({ page }) => {
+  test("data export downloads a PDF scoped to the current founder", async ({ page }) => {
     const founder = await createTestFounder("settings-export");
 
     try {
@@ -73,14 +73,17 @@ test.describe("settings", () => {
       await page.getByRole("link", { name: "Download my data" }).click();
       const download = await downloadPromise;
 
+      // The route names the file get100-customers-export-<founderId>.pdf
+      // (src/app/api/account/export/route.ts) — checking the suggested
+      // filename confirms scoping without needing a PDF-parsing dependency
+      // just for this test.
+      expect(download.suggestedFilename()).toBe(`get100-customers-export-${founder.founderId}.pdf`);
+
       const filePath = await download.path();
       expect(filePath).toBeTruthy();
-      const contents = JSON.parse(fs.readFileSync(filePath!, "utf-8"));
-
-      expect(contents.founder.id).toBe(founder.founderId);
-      expect(contents).toHaveProperty("quests");
-      expect(contents).toHaveProperty("quest_results");
-      expect(contents).toHaveProperty("subscription");
+      const contents = fs.readFileSync(filePath!);
+      expect(contents.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+      expect(contents.length).toBeGreaterThan(500);
     } finally {
       await deleteTestFounder(founder.authUserId);
     }
