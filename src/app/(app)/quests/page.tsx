@@ -12,6 +12,7 @@ import { InProgressCard } from "./in-progress-card";
 import { QuestJournal, type JournalEntry } from "./quest-journal";
 import { SkipForm, SKIP_REASON_LABELS } from "./skip-form";
 import { acceptQuest, regenerateQuest, setNextFocus } from "./actions";
+import { getSubscription, isRestricted } from "@/lib/subscriptions/status";
 
 const HISTORY_STATUSES: Quest["status"][] = ["completed", "skipped", "expired"];
 
@@ -27,6 +28,8 @@ export default async function QuestsPage({
   if (!founder.industry || !founder.product_description) redirect("/onboarding");
 
   await refreshQuestLog(supabase, founder);
+
+  const restricted = isRestricted(await getSubscription(supabase, founder.id));
 
   const { data: quests } = await supabase
     .from("quests")
@@ -98,7 +101,9 @@ export default async function QuestsPage({
                 <p className="text-sm text-secondary">
                   {suggested.length > 0
                     ? "No active quest yet. Accept the one below to get started."
-                    : "No active quest yet. Check back shortly for one."}
+                    : restricted
+                      ? "No active quest. Your account is restricted, so new quests are paused until you subscribe."
+                      : "No active quest yet. Check back shortly for one."}
                 </p>
               </div>
             )}
@@ -107,23 +112,25 @@ export default async function QuestsPage({
             ))}
           </section>
 
-          <section className="flex flex-col gap-2 rounded-panel bg-card p-5">
-            <h2 className="text-base font-medium text-primary">What do you want to focus on next?</h2>
-            <p className="text-[13px] text-secondary">
-              Tell your coach what you want to work on, and it&apos;ll shape your next quest around
-              that instead of picking on its own.
-            </p>
-            <form action={setNextFocus} className="flex flex-wrap items-center gap-2">
-              <Input
-                name="focus"
-                placeholder="e.g. cold email, or reaching out to old coworkers"
-                className="min-w-[240px] flex-1"
-              />
-              <Button type="submit" variant="outline" size="sm">
-                Set focus
-              </Button>
-            </form>
-          </section>
+          {!restricted && (
+            <section className="flex flex-col gap-2 rounded-panel bg-card p-5">
+              <h2 className="text-base font-medium text-primary">What do you want to focus on next?</h2>
+              <p className="text-[13px] text-secondary">
+                Tell your coach what you want to work on, and it&apos;ll shape your next quest
+                around that instead of picking on its own.
+              </p>
+              <form action={setNextFocus} className="flex flex-wrap items-center gap-2">
+                <Input
+                  name="focus"
+                  placeholder="e.g. cold email, or reaching out to old coworkers"
+                  className="min-w-[240px] flex-1"
+                />
+                <Button type="submit" variant="outline" size="sm">
+                  Set focus
+                </Button>
+              </form>
+            </section>
+          )}
 
           {(suggested.length > 0 || (active.length === 0 && awaitingReport.length === 0)) && (
             <section className="flex flex-col gap-3">
@@ -131,7 +138,9 @@ export default async function QuestsPage({
               {suggested.length === 0 && (
                 <div className="flex flex-col items-start gap-2 rounded-panel border border-dashed border-strong bg-card p-5">
                   <p className="text-sm text-secondary">
-                    Your coach is putting together your next quest. Check back in a moment.
+                    {restricted
+                      ? "Your account is restricted, so new quests are paused until you subscribe."
+                      : "Your coach is putting together your next quest. Check back in a moment."}
                   </p>
                 </div>
               )}
@@ -152,11 +161,13 @@ export default async function QuestsPage({
                           Accept
                         </Button>
                       </form>
-                      <form action={regenerateQuest.bind(null, quest.id)}>
-                        <Button type="submit" variant="secondary" size="sm">
-                          Show other options
-                        </Button>
-                      </form>
+                      {!restricted && (
+                        <form action={regenerateQuest.bind(null, quest.id)}>
+                          <Button type="submit" variant="secondary" size="sm">
+                            Show other options
+                          </Button>
+                        </form>
+                      )}
                       <SkipForm questId={quest.id} />
                     </>
                   }

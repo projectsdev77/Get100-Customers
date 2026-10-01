@@ -21,6 +21,7 @@ import { computeLevel } from "@/lib/gamification/level";
 import { computeNextStreak } from "@/lib/gamification/streak";
 import { notify } from "@/lib/notifications/notify";
 import { crossedCustomerMilestone, milestoneMessage } from "@/lib/notifications/milestones";
+import { getSubscription, isRestricted } from "@/lib/subscriptions/status";
 import type { Quest, QuestTemplate } from "@/types/database";
 
 // Suggested → active (SPEC §7.3/§7.4), blocked while 3 quests are already
@@ -82,6 +83,14 @@ export async function regenerateQuest(questId: string) {
   const supabase = await createClient();
   const founder = await getCurrentFounder(supabase);
   if (!founder) return;
+
+  // Unlike ensureQuestSlots' automatic background refill, this is a
+  // founder-initiated request for a brand-new generated quest — without
+  // this check a restricted (unpaid) account could still get unlimited
+  // new quests just by repeatedly clicking "Show other options" on
+  // whatever suggestion it already had before the account lapsed, fully
+  // bypassing the restriction.
+  if (isRestricted(await getSubscription(supabase, founder.id))) return;
 
   const { data: existing } = await supabase
     .from("quests")
@@ -149,6 +158,11 @@ export async function setNextFocus(formData: FormData) {
   const supabase = await createClient();
   const founder = await getCurrentFounder(supabase);
   if (!founder) return;
+
+  // Same gap as regenerateQuest: this generates a brand-new quest on
+  // request, so a restricted account could otherwise keep using it to get
+  // new quests indefinitely without ever paying.
+  if (isRestricted(await getSubscription(supabase, founder.id))) return;
 
   const { data: existing } = await supabase
     .from("quests")
