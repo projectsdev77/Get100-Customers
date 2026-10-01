@@ -5,6 +5,8 @@ import {
   adminCorrectCustomerCount,
   adminGenerateQuest,
   adminSendMessage,
+  adminSuspendAccount,
+  adminUnsuspendAccount,
   adminUpdateSubscriptionStatus,
 } from "./actions";
 import { Card } from "@/components/ui/surfaces/Card";
@@ -68,12 +70,27 @@ export default async function AdminFounderDetailPage({
       .returns<NotificationLogEntry[]>(),
   ]);
 
+  // banned_until is set via Supabase's own Admin API ban (adminSuspendAccount/
+  // adminUnsuspendAccount), not a custom column — checked against the
+  // current time since a ban with a finite duration could in principle
+  // have already lapsed, even though this app only ever sets the ~100-year
+  // "permanent" one or clears it back to none.
+  const bannedUntil = authUser?.user?.banned_until;
+  const isSuspended = Boolean(bannedUntil && new Date(bannedUntil) > new Date());
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
-          {founder.company_name ?? founder.name ?? "Unnamed founder"}
-        </h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em] text-primary">
+            {founder.company_name ?? founder.name ?? "Unnamed founder"}
+          </h1>
+          {isSuspended && (
+            <span className="inline-flex h-6 items-center rounded-full bg-danger px-2.5 text-xs font-medium text-white">
+              Suspended
+            </span>
+          )}
+        </div>
         <p className="font-mono text-[13px] text-secondary">{authUser?.user?.email}</p>
       </div>
 
@@ -228,6 +245,28 @@ export default async function AdminFounderDetailPage({
           </Button>
         </form>
       </Card>
+
+      <div className="flex flex-col gap-3.5 rounded-panel border border-banner-error-border bg-card p-6">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-base font-medium text-danger">
+            {isSuspended ? "Account suspended" : "Suspend account"}
+          </h2>
+          <p className="text-sm text-secondary">
+            {isSuspended
+              ? "This account can't sign in anywhere (password, Google) until unsuspended."
+              : "Blocks sign-in everywhere (password, Google) immediately. For abuse or a chargeback — not for billing issues, which the subscription status above already handles."}
+          </p>
+        </div>
+        <form
+          action={isSuspended ? adminUnsuspendAccount : adminSuspendAccount}
+          className="self-start"
+        >
+          <input type="hidden" name="founderId" value={founder.id} />
+          <Button type="submit" variant={isSuspended ? "secondary" : "danger"} size="sm">
+            {isSuspended ? "Unsuspend account" : "Suspend account"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

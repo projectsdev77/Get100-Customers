@@ -26,11 +26,25 @@ const VALID_STATUSES: SubscriptionStatus[] = [
   "canceled",
 ];
 
-async function requireAdmin() {
+// Returns the signed-in admin's own auth user id, so adminSuspendAccount
+// can refuse to let an admin lock themselves out by mistake.
+async function requireAdmin(): Promise<string> {
   const supabase = await createClient();
-  const ok = await isCurrentUserAdmin(supabase);
-  if (!ok) throw new Error("Not authorized");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !(await isCurrentUserAdmin(supabase))) throw new Error("Not authorized");
+  return user.id;
 }
+
+// Supabase's own ban mechanism (ban_duration), not a custom DB flag —
+// takes effect at the Auth level immediately, blocking every sign-in
+// method (password, Google OAuth) and rejecting their existing session on
+// its very next server-side auth.getUser() check (proxy.ts runs this on
+// every request), without needing a suspended-account check added to
+// every page/action in the app. "876000h" (~100 years) is Supabase's own
+// documented convention for an effectively permanent ban; "none" lifts it.
+const PERMANENT_BAN_DURATION = "876000h";
 
 // Support-tool overrides (SPEC §12) — both bypass RLS via the admin
 // client since this founder isn't the one making the request.
@@ -150,6 +164,54 @@ export async function adminSendMessage(formData: FormData) {
       ? "Message sent (in-app and email)."
       : "Message sent in-app, but the email failed to send — check Vercel's logs (sendEmail) for why.";
   redirect(`/admin/founders/${founderId}?flash=${encodeURIComponent(flash)}`);
+}
+
+export async function adminSuspendAccount(formData: FormData) {
+  const currentAdminAuthId = await requireAdmin();
+  const founderId = String(formData.get("founderId"));
+
+  const admin = createAdminClient();
+  const { data: founder } = await admin
+    .from("founders")
+    .select("auth_user_id")
+    .eq("id", founderId)
+    .single<{ auth_user_id: string }>();
+  if (!founder) return;
+
+  if (founder.auth_user_id === currentAdminAuthId) {
+    redirect(
+      `/admin/founders/${founderId}?flash=${encodeURIComponent(
+        "You can't suspend your own account.",
+      )}`,
+    );
+  }
+
+  await admin.auth.admin.updateUserById(founder.auth_user_id, {
+    ban_duration: PERMANENT_BAN_DURATION,
+  });
+
+  revalidatePath(`/admin/founders/${founderId}`);
+  revalidatePath("/admin");
+  redirect(`/admin/founders/${founderId}?flash=${encodeURIComponent("Account suspended.")}`);
+}
+
+export async function adminUnsuspendAccount(formData: FormData) {
+  await requireAdmin();
+  const founderId = String(formData.get("founderId"));
+
+  const admin = createAdminClient();
+  const { data: founder } = await admin
+    .from("founders")
+    .select("auth_user_id")
+    .eq("id", founderId)
+    .single<{ auth_user_id: string }>();
+  if (!founder) return;
+
+  await admin.auth.admin.updateUserById(founder.auth_user_id, { ban_duration: "none" });
+
+  revalidatePath(`/admin/founders/${founderId}`);
+  revalidatePath("/admin");
+  redirect(`/admin/founders/${founderId}?flash=${encodeURIComponent("Account unsuspended.")}`);
 }
 
 export async function adminUpdateSubscriptionStatus(formData: FormData) {

@@ -35,6 +35,11 @@ function daysUntil(iso: string): number {
 
 const RISK_WINDOW_DAYS = 3;
 
+// Extracted alongside daysUntil for the same reason — see its comment.
+function isCurrentlyBanned(bannedUntil: string | null | undefined): boolean {
+  return Boolean(bannedUntil && new Date(bannedUntil).getTime() > Date.now());
+}
+
 function computeRisk(sub: SubFields | null): { label: string; tone: "warn" | "danger" } | null {
   if (!sub) return null;
   if (sub.status === "trialing" && sub.trial_ends_at) {
@@ -64,7 +69,9 @@ export default async function AdminFoundersPage() {
     admin.auth.admin.listUsers({ page: 1, perPage: 200 }),
   ]);
 
-  const emailById = new Map(userList?.users.map((u) => [u.id, u.email ?? "-"]) ?? []);
+  const authById = new Map(
+    userList?.users.map((u) => [u.id, { email: u.email ?? "-", bannedUntil: u.banned_until }]) ?? [],
+  );
 
   const allFounders = founders ?? [];
   const sevenDaysAgoIso = isoDaysAgo(7);
@@ -74,11 +81,13 @@ export default async function AdminFoundersPage() {
     const sub = Array.isArray(f.subscriptions) ? f.subscriptions[0] : f.subscriptions;
     const meta = SUBSCRIPTION_META[sub?.status ?? "none"];
     const risk = computeRisk(sub ?? null);
+    const auth = authById.get(f.auth_user_id);
+    const suspended = isCurrentlyBanned(auth?.bannedUntil);
 
     return {
       id: f.id,
       company: f.company_name ?? f.name ?? "Unnamed",
-      email: emailById.get(f.auth_user_id) ?? "-",
+      email: auth?.email ?? "-",
       stage: f.stage ? (STAGE_LABEL[f.stage] ?? f.stage) : "-",
       customers: f.current_customer_count,
       level: f.level,
@@ -87,6 +96,7 @@ export default async function AdminFoundersPage() {
       subscriptionDot: meta.dot,
       riskLabel: risk?.label,
       riskTone: risk?.tone,
+      suspended,
     };
   });
 

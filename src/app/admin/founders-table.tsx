@@ -16,6 +16,7 @@ export interface AdminFounderRow {
   subscriptionDot: string;
   riskLabel?: string;
   riskTone?: "warn" | "danger";
+  suspended: boolean;
 }
 
 const RISK_TONE_CLASSES: Record<"warn" | "danger", string> = {
@@ -24,7 +25,21 @@ const RISK_TONE_CLASSES: Record<"warn" | "danger", string> = {
 };
 
 const COLUMNS: TableColumn<AdminFounderRow>[] = [
-  { key: "company", label: "Company", width: "1.4fr" },
+  {
+    key: "company",
+    label: "Company",
+    width: "1.4fr",
+    render: (row) => (
+      <span className="flex items-center gap-1.5">
+        <span className="truncate">{row.company}</span>
+        {row.suspended && (
+          <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-danger px-2 text-[11px] font-medium text-white">
+            Suspended
+          </span>
+        )}
+      </span>
+    ),
+  },
   { key: "email", label: "Email", width: "1.6fr", mono: true },
   { key: "stage", label: "Stage", width: "1fr" },
   { key: "customers", label: "Customers", align: "right", width: "0.8fr" },
