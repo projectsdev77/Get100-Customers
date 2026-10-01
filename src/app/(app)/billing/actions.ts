@@ -43,10 +43,27 @@ export async function createPortalSession(flow?: "payment_method_update" | "subs
   if (!subscription?.stripe_customer_id) redirect("/settings");
 
   const stripe = getStripeClient();
+
+  // Unlike "payment_method_update", Stripe's "subscription_cancel" portal
+  // flow requires the specific subscription to cancel
+  // (flow_data.subscription_cancel.subscription) — omitting it isn't just
+  // ignored, Stripe rejects the whole session-create call outright
+  // ("Missing required param: flow_data[subscription_cancel]"), which
+  // previously crashed this Server Action uncaught, surfacing as a bare
+  // "A server error occurred" page. Falls back to the portal's generic
+  // landing page (no flow_data at all) if there's no Stripe subscription
+  // id on file to deep-link to yet.
+  const flowData =
+    flow === "subscription_cancel" && subscription.billing_provider_ref
+      ? { type: flow, subscription_cancel: { subscription: subscription.billing_provider_ref } }
+      : flow === "payment_method_update"
+        ? { type: flow }
+        : undefined;
+
   const session = await stripe.billingPortal.sessions.create({
     customer: subscription.stripe_customer_id,
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings`,
-    ...(flow ? { flow_data: { type: flow } } : {}),
+    ...(flowData ? { flow_data: flowData } : {}),
   });
 
   redirect(session.url);
