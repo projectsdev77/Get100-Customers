@@ -9,7 +9,7 @@ import { AccountForm } from "./account-form";
 import { BillingSection } from "./billing-section";
 import { NotificationPrefsForm } from "./notification-prefs-form";
 import { DangerZone } from "./danger-zone";
-import { SettingsTabs, type SettingsSection } from "./settings-tabs";
+import { Tabs, type TabSection } from "@/components/ui/navigation/Tabs";
 
 export default async function SettingsPage({
   searchParams,
@@ -25,7 +25,7 @@ export default async function SettingsPage({
 
   const founder = await getCurrentFounder(supabase);
 
-  const sections: SettingsSection[] = [
+  const sections: TabSection[] = [
     { id: "profile", label: "Business profile", content: <ProfileForm founder={founder} /> },
     ...(founder
       ? [
@@ -90,7 +90,7 @@ export default async function SettingsPage({
       {error && <Banner tone="error">{error}</Banner>}
       {notice && <Banner tone="info">{notice}</Banner>}
 
-      <SettingsTabs sections={sections} initialTabId={tab} />
+      <Tabs sections={sections} initialTabId={tab} />
     </div>
   );
 }

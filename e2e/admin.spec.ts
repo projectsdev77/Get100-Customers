@@ -43,6 +43,13 @@ test.describe("admin", () => {
       await page.goto(`/admin/founders/${target.founderId}`);
       await expect(page.getByRole("heading", { name: `E2E admin-override-target` })).toBeVisible();
 
+      // Support overrides live under the "Support actions" tab (the
+      // founder detail page was split into tabs — Overview/Notifications/
+      // Support actions/Suspend — so an old account's notification history
+      // no longer pushes every other section far down the page). Same
+      // tab-click-before-interacting pattern settings.spec.ts already uses.
+      await page.getByRole("button", { name: "Support actions", exact: true }).click();
+
       const overrideForm = page.locator("form", { has: page.getByLabel("Customer count") });
       await overrideForm.getByLabel("Customer count").fill("42");
       await overrideForm.getByRole("button", { name: "Save" }).click();

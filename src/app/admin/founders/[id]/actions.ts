@@ -46,6 +46,16 @@ async function requireAdmin(): Promise<string> {
 // documented convention for an effectively permanent ban; "none" lifts it.
 const PERMANENT_BAN_DURATION = "876000h";
 
+// Centralizes the flash-message redirect, specifically so every caller
+// also carries the tab it acted from — the detail page's tab state lives
+// in the URL only for reload/bookmark purposes (see Tabs' comment), but a
+// redirect is a full navigation, so without this every action here would
+// silently bounce the admin back to the Overview tab instead of staying
+// on Support actions/Suspend where they just clicked something.
+function redirectWithFlash(founderId: string, tab: string, message: string): never {
+  redirect(`/admin/founders/${founderId}?tab=${tab}&flash=${encodeURIComponent(message)}`);
+}
+
 // Support-tool overrides (SPEC §12) — both bypass RLS via the admin
 // client since this founder isn't the one making the request.
 export async function adminCorrectCustomerCount(formData: FormData) {
@@ -97,12 +107,12 @@ export async function adminGenerateQuest(formData: FormData) {
   const inserted = await fillNextQuestSlot(admin, founder);
 
   revalidatePath(`/admin/founders/${founderId}`);
-  redirect(
-    `/admin/founders/${founderId}?flash=${encodeURIComponent(
-      inserted
-        ? "Generated a new quest."
-        : "No new quest generated — they may already have one suggested, or generation failed. Try again in a moment.",
-    )}`,
+  redirectWithFlash(
+    founderId,
+    "actions",
+    inserted
+      ? "Generated a new quest."
+      : "No new quest generated — they may already have one suggested, or generation failed. Try again in a moment.",
   );
 }
 
@@ -163,7 +173,7 @@ export async function adminSendMessage(formData: FormData) {
     : emailSent
       ? "Message sent (in-app and email)."
       : "Message sent in-app, but the email failed to send — check Vercel's logs (sendEmail) for why.";
-  redirect(`/admin/founders/${founderId}?flash=${encodeURIComponent(flash)}`);
+  redirectWithFlash(founderId, "actions", flash);
 }
 
 export async function adminSuspendAccount(formData: FormData) {
@@ -179,11 +189,7 @@ export async function adminSuspendAccount(formData: FormData) {
   if (!founder) return;
 
   if (founder.auth_user_id === currentAdminAuthId) {
-    redirect(
-      `/admin/founders/${founderId}?flash=${encodeURIComponent(
-        "You can't suspend your own account.",
-      )}`,
-    );
+    redirectWithFlash(founderId, "suspend", "You can't suspend your own account.");
   }
 
   await admin.auth.admin.updateUserById(founder.auth_user_id, {
@@ -192,7 +198,7 @@ export async function adminSuspendAccount(formData: FormData) {
 
   revalidatePath(`/admin/founders/${founderId}`);
   revalidatePath("/admin");
-  redirect(`/admin/founders/${founderId}?flash=${encodeURIComponent("Account suspended.")}`);
+  redirectWithFlash(founderId, "suspend", "Account suspended.");
 }
 
 export async function adminUnsuspendAccount(formData: FormData) {
@@ -211,7 +217,7 @@ export async function adminUnsuspendAccount(formData: FormData) {
 
   revalidatePath(`/admin/founders/${founderId}`);
   revalidatePath("/admin");
-  redirect(`/admin/founders/${founderId}?flash=${encodeURIComponent("Account unsuspended.")}`);
+  redirectWithFlash(founderId, "suspend", "Account unsuspended.");
 }
 
 export async function adminUpdateSubscriptionStatus(formData: FormData) {
