@@ -145,3 +145,16 @@ body {
 [data-theme="dark"] .celebration-illustration-dark {
   display: block;
 }
+
+/* Dashboard welcome banner (handoff-welcome-banner README): fixed gradient,
+   identical in light and dark since the violet stops already read as "dark"
+   with white text on both themes. */
+.hero-welcome-banner {
+  background: linear-gradient(
+    100deg,
+    var(--violet-700) 0%,
+    var(--violet-600) 40%,
+    var(--violet-400) 70%,
+    var(--violet-200) 100%
+  );
+}

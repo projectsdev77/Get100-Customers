@@ -147,16 +147,16 @@ export default async function DashboardPage() {
         founderName={founder.name}
       />
       {CELEBRATIONS_ENABLED ? (
-        <div className="flex flex-wrap items-end justify-between gap-4 rounded-panel bg-tile-customers p-7 text-on-tile">
-          <div className="flex min-w-0 flex-1 basis-[260px] flex-col gap-1">
-            <h1 className="text-3xl font-medium leading-[1.15] tracking-[-0.01em]">
+        <div className="hero-welcome-banner mt-20 flex min-h-[128px] items-center gap-4 rounded-[24px] py-0 pl-8 pr-6 max-[600px]:mt-0">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[clamp(22px,3.4vw,30px)] font-medium leading-[1.15] tracking-[-0.01em] text-white">
               Welcome{founder.name ? `, ${founder.name}` : ""}
             </h1>
-            {subline && <p className="text-sm text-tile-customers-ink">{subline}</p>}
+            {subline && <p className="text-sm text-white">{subline}</p>}
           </div>
           <HeroWelcomeIllustration
             founderId={founder.id}
-            className="h-[180px] max-w-[45%] shrink-0 self-end object-contain"
+            className="h-[210px] max-w-[46%] shrink min-w-0 -mt-[82px] mr-[6%] self-end object-contain object-bottom max-[600px]:hidden"
           />
         </div>
       ) : (
