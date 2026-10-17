@@ -123,6 +123,21 @@ alter table quests add column if not exists check_in_sent boolean not null defau
 alter table founders add column if not exists buying_motion text
   check (buying_motion in ('self_serve', 'sales_led', 'local_in_person'));
 
+-- At most one 'suggested' quest per founder (MAX_SUGGESTED_QUESTS in
+-- lifecycle.ts) is the "a single Next Up suggestion is always waiting"
+-- invariant — but fillNextQuestSlot only enforced it with a
+-- count-then-insert in application code, which two concurrent requests for
+-- the same founder (e.g. a dashboard load racing a Next.js prefetch of
+-- /quests) can both pass before either insert commits. Each one then runs
+-- its own independent AI call and lands its own suggestion, so the founder
+-- sees several near-identical "Next up" quests instead of one. This index
+-- makes the invariant atomic at the data layer: a second concurrent insert
+-- fails instead of silently violating it, and fillNextQuestSlot treats that
+-- failure as "lost the race", not an error.
+create unique index if not exists quests_one_suggested_per_founder
+  on quests (founder_id)
+  where status = 'suggested';
+
 -- ---------------------------------------------------------------------------
 -- quest_results — structured + free-text outcomes (SPEC §8)
 -- ---------------------------------------------------------------------------

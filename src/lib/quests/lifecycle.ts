@@ -275,10 +275,21 @@ export async function fillNextQuestSlot(
   // No notification here on purpose — a suggestion refilling isn't worth
   // interrupting the founder for; it just sits in "Next up" until they get
   // to it.
-  await supabase.from("quests").insert({
+  const { error } = await supabase.from("quests").insert({
     founder_id: founder.id,
     ...built.fields,
   });
+  if (error) {
+    // 23505 = unique_violation on quests_one_suggested_per_founder — a
+    // concurrent call for this same founder (see schema.sql's comment on
+    // that index) already filled the slot between our count check above
+    // and this insert. That's not a failure, just a lost race; the AI call
+    // we just made and its quest are simply discarded.
+    if (error.code !== "23505") {
+      console.error("fillNextQuestSlot insert failed:", error);
+    }
+    return false;
+  }
   return true;
 }
 
