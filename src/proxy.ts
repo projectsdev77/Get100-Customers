@@ -8,6 +8,7 @@ const PROTECTED_PATHS = [
   "/onboarding",
   "/quests",
   "/notifications",
+  "/coaching",
   "/admin",
 ];
 

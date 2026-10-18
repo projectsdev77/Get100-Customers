@@ -117,7 +117,21 @@ values ('<your auth.users id from the Authentication tab>', 'owner');
 
 Either way, visit `/admin` with the admin account — you should see the founders list and be able to use the support overrides.
 
-## 11. Deploy (when ready to test for real, or to unlock the cron)
+## 11. 1-on-1 coaching (Cal.com, free)
+
+Founders on a paid plan (subscription `active`, or `past_due` during the grace period) book weekly sessions with human coaches at `/coaching`. Free-trial founders see a "subscribe" prompt instead. Cal.com handles the calendar, limits, timezones, Google Meet links, confirmations and reminders, and the app stores no bookings.
+
+1. Re-run `supabase/schema.sql` in the SQL Editor. It adds the `coaches` table and a public `coach-photos` storage bucket, and is safe to re-run.
+2. Each coach sets up a free Cal.com account:
+   - Two event types: **Weekly 1-on-1 Growth Strategy Call** and **Weekly Outreach & ICP Review**. Hide or delete the default events.
+   - On each event, under Limits, turn on the per-booker limit on upcoming bookings (set it to 1) and limit future bookings to 7 days ahead. Don't use "Limit booking frequency": that caps the coach's *total* bookings across all founders. Cal.com has no exact "one per founder per calendar week" rule; these two settings together come closest.
+   - Connect Google Calendar and set the location to Google Meet.
+   - Set a display name and photo.
+3. In the app, go to **Admin → Coaches** and add each coach: name, title, photo, and their Cal.com **profile** link (`cal.com/username`). A single-event link is rejected, since founders would then only see one session type. Untick "Show to founders" to hide a coach without deleting them.
+
+Cal.com profile pages are public, so anyone with a coach's link could book outside the app. Bookings only live in Cal.com, so the app can't list upcoming sessions. A synced "My sessions" view would need Cal.com webhooks plus a bookings table.
+
+## 12. Deploy (when ready to test for real, or to unlock the cron)
 
 1. Push to Vercel (free Hobby tier) — connect the repo, set every env var from `.env.local` in the Vercel project settings.
 2. Point Stripe's webhook and the `APP_URL` GitHub secret at the deployed URL.

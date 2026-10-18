@@ -246,6 +246,37 @@ create policy "admin_users_self_select" on admin_users
   for select using (auth.uid() = auth_user_id);
 
 -- ---------------------------------------------------------------------------
+-- coaches — human growth coaches founders book 1-on-1 sessions with
+-- ---------------------------------------------------------------------------
+-- Bookings themselves live entirely in Cal.com (weekly limits, timezones,
+-- Meet links, reminders); the app stores only enough to list coaches and
+-- embed their booking page. Managed by admins in /admin/coaches.
+create table if not exists coaches (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  title text,
+  photo_url text,
+  -- Profile link only (https://cal.com/<username>), never a single-event
+  -- link, so the embed shows every event type the coach offers.
+  cal_link text check (cal_link is null or cal_link ~ '^https://cal\.com/[A-Za-z0-9][A-Za-z0-9._-]*$'),
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- RLS on with no policies: only the service-role client can read or write.
+-- /coaching reads it server-side after checking the founder has paid access,
+-- so coach details never reach unpaid accounts through the REST API.
+alter table coaches enable row level security;
+
+-- Public-read bucket for coach headshots (the same photos are public on each
+-- coach's Cal.com page anyway). No storage policies, so only the
+-- service-role client can upload or delete.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('coach-photos', 'coach-photos', true, 1048576, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
 -- Row Level Security — founders can only read/write their own data.
 -- quest_templates is readable by any authenticated user (shared library),
 -- writable only via service role (seeding/admin). Tighten further per-table

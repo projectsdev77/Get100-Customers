@@ -12,6 +12,7 @@
     "create-test-accounts": "tsx scripts/create-test-accounts.ts"
   },
   "dependencies": {
+    "@calcom/embed-react": "^1.5.3",
     "@google/genai": "^2.24.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.0",

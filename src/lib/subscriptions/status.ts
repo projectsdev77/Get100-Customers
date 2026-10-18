@@ -22,6 +22,13 @@ export function isRestricted(subscription: Subscription | null): boolean {
   return subscription?.status === "restricted";
 }
 
+// Human 1-on-1 coaching costs real coach time, so it's for paying customers
+// only, not the free trial. past_due still counts: they've paid before and
+// keep full access during the grace period while Stripe retries the card.
+export function hasPaidAccess(subscription: Subscription | null): boolean {
+  return subscription?.status === "active" || subscription?.status === "past_due";
+}
+
 // Two time-based transitions Stripe itself won't push to us on a schedule:
 // trial expiring, and a past_due grace period running out. No cron for a
 // zero-budget build — same lazy-check-on-page-load pattern as quest expiry

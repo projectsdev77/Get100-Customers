@@ -183,3 +183,14 @@ export interface AdminUser {
   role: string;
   created_at: string;
 }
+
+export interface Coach {
+  id: string;
+  name: string;
+  title: string | null;
+  photo_url: string | null;
+  cal_link: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
