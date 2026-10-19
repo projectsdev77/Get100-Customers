@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
+import { levelUpEmail } from "@/lib/email/templates";
 import {
   buildQuestInsertFields,
   countActiveQuests,
@@ -353,7 +354,7 @@ export async function submitQuestResult(formData: FormData) {
   if (newLevel > founder.level) {
     await notify(founder.id, "milestone", `Level up! You're now level ${newLevel}.`, {
       emailSubject: "Level up!",
-      emailHtml: `<p>You just reached <strong>level ${newLevel}</strong>. Keep going.</p>`,
+      emailHtml: levelUpEmail(newLevel),
     });
   }
   const milestone = crossedCustomerMilestone(founder.current_customer_count, newCustomerCount);

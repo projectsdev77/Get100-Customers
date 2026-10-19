@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { Founder, Quest } from "@/types/database";
 import { hasRecentNotification, notify } from "./notify";
+import { questDueSoonEmail, reEngagementEmail } from "@/lib/email/templates";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -29,7 +30,7 @@ export async function runLazyNotificationChecks(
   if (dueSoon && !(await hasRecentNotification(founder.id, "window_approaching", 24))) {
     await notify(founder.id, "window_approaching", `Your quest "${dueSoon.title}" is due soon.`, {
       emailSubject: "A quest is due soon",
-      emailHtml: `<p>Your quest "<strong>${dueSoon.title}</strong>" is due soon. Don't lose your streak!</p>`,
+      emailHtml: questDueSoonEmail({ questId: dueSoon.id, questTitle: dueSoon.title }),
       questId: dueSoon.id,
     });
   }
@@ -55,6 +56,6 @@ export async function runLazyNotificationChecks(
 
   await notify(founder.id, "re_engagement", "Your quest is still open. Need a hand?", {
     emailSubject: "Still there? Your quest is waiting",
-    emailHtml: "<p>You've got an open quest waiting. Need a hand getting started?</p>",
+    emailHtml: reEngagementEmail(),
   });
 }

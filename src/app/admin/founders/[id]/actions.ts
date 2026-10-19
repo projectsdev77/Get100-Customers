@@ -7,16 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserAdmin } from "@/lib/admin/is-admin";
 import { fillNextQuestSlot } from "@/lib/quests/lifecycle";
 import { sendEmail } from "@/lib/email/resend";
+import { adminMessageEmail } from "@/lib/email/templates";
 import type { Founder, SubscriptionStatus } from "@/types/database";
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 const VALID_STATUSES: SubscriptionStatus[] = [
   "trialing",
@@ -155,7 +147,7 @@ export async function adminSendMessage(formData: FormData) {
 
     if (email) {
       const subject = "A message from the Get100-Customers team";
-      emailSent = await sendEmail(email, subject, `<p>${escapeHtml(message)}</p>`);
+      emailSent = await sendEmail(email, subject, adminMessageEmail(message));
       if (emailSent) {
         await admin.from("notifications_log").insert({
           founder_id: founderId,

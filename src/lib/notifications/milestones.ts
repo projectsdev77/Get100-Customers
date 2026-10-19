@@ -1,3 +1,5 @@
+import { milestoneEmail } from "@/lib/email/templates";
+
 // Customer-count milestones worth celebrating (SPEC §11 triggers).
 // 100 is special-cased as Growth Mode entry, not just another number
 // (SPEC §14 — reaching 100 isn't a hard stop).
@@ -13,20 +15,19 @@ export function milestoneMessage(milestone: number): { message: string; emailSub
     return {
       message: "Your first customer! That's the hardest one.",
       emailSubject: "You got your first customer!",
-      emailHtml: "<p>You just landed <strong>your first customer</strong>. Everything after this gets a little easier.</p>",
+      emailHtml: milestoneEmail(milestone),
     };
   }
   if (milestone === 100) {
     return {
       message: "You've hit 100 customers! Welcome to Growth Mode. Next stop: 250.",
       emailSubject: "100 customers: welcome to Growth Mode",
-      emailHtml:
-        "<p>You've reached <strong>100 customers</strong>, the original goal. You're now in <strong>Growth Mode</strong>, with a new stretch target of 250.</p>",
+      emailHtml: milestoneEmail(milestone),
     };
   }
   return {
     message: `You've hit ${milestone} customers!`,
     emailSubject: `${milestone} customers, nice work`,
-    emailHtml: `<p>You've reached <strong>${milestone} customers</strong> on your way to 100.</p>`,
+    emailHtml: milestoneEmail(milestone),
   };
 }

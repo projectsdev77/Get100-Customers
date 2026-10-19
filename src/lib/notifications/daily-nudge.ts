@@ -87,11 +87,12 @@ export interface NudgeContext {
   nextStep: string | null;
   daysLeft: number | null;
   customers: number;
+  streak: number;
 }
 
 export function buildNudgeContext(
   quest: NudgeQuest,
-  founder: { name: string | null; company_name: string | null; current_customer_count: number },
+  founder: { name: string | null; company_name: string | null; current_customer_count: number; streak_count?: number },
   now = Date.now(),
 ): NudgeContext {
   const nextStep = getQuestSteps(quest).find((s) => !s.done)?.label ?? null;
@@ -102,6 +103,7 @@ export function buildNudgeContext(
     nextStep,
     daysLeft: quest.expires_at ? Math.max(0, Math.ceil((new Date(quest.expires_at).getTime() - now) / 86_400_000)) : null,
     customers: founder.current_customer_count,
+    streak: founder.streak_count ?? 0,
   };
 }
 
@@ -171,18 +173,4 @@ export function fallbackNudge(context: NudgeContext): NudgeCopy {
     subject: `10 minutes on "${context.questTitle}" today?`.slice(0, MAX_SUBJECT),
     body: `Your quest "${context.questTitle}" is still open. Ten focused minutes today keeps it moving.${step}`,
   };
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-export function buildNudgeEmailHtml(copy: NudgeCopy, context: NudgeContext, questUrl: string): string {
-  const greeting = context.firstName ? `<p>Hi ${escapeHtml(context.firstName)},</p>` : "";
-  return `${greeting}<p>${escapeHtml(copy.body)}</p><p><a href="${escapeHtml(questUrl)}" style="display:inline-block;padding:10px 18px;border-radius:999px;background:#1B1A25;color:#ffffff;text-decoration:none;font-weight:500">Open your quest</a></p><p style="color:#6b6880;font-size:13px">You're getting this because your quest hasn't moved in a day. You can turn these off in Settings → Notifications.</p>`;
 }

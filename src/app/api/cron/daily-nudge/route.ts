@@ -4,13 +4,13 @@ import { notify } from "@/lib/notifications/notify";
 import {
   NUDGE_WINDOW_HOURS,
   buildNudgeContext,
-  buildNudgeEmailHtml,
   fallbackNudge,
   isNudgeHour,
   selectNudges,
   writeNudgeWithAI,
   type NudgeQuest,
 } from "@/lib/notifications/daily-nudge";
+import { dailyNudgeEmail } from "@/lib/email/templates";
 import type { Founder } from "@/types/database";
 
 // Triggered hourly by .github/workflows/daily-nudge.yml (same zero-budget
@@ -48,9 +48,11 @@ export async function POST(request: Request) {
 
   const { data: founderRows } = await admin
     .from("founders")
-    .select("id, name, company_name, current_customer_count, timezone")
+    .select("id, name, company_name, current_customer_count, streak_count, timezone")
     .in("id", candidateIds)
-    .returns<Pick<Founder, "id" | "name" | "company_name" | "current_customer_count" | "timezone">[]>();
+    .returns<
+      Pick<Founder, "id" | "name" | "company_name" | "current_customer_count" | "streak_count" | "timezone">[]
+    >();
   const founders = new Map(
     (founderRows ?? []).filter((f) => isNudgeHour(f.timezone, now)).map((f) => [f.id, f]),
   );
@@ -100,10 +102,9 @@ export async function POST(request: Request) {
     const copy = aiCopy ?? fallbackNudge(context);
     if (aiCopy) aiWritten += 1;
 
-    const questUrl = `${process.env.NEXT_PUBLIC_APP_URL}/quests#quest-${quest.id}`;
     await notify(founder.id, "daily_nudge", copy.body, {
       emailSubject: copy.subject,
-      emailHtml: buildNudgeEmailHtml(copy, context, questUrl),
+      emailHtml: dailyNudgeEmail({ ...context, subject: copy.subject, body: copy.body, questId: quest.id }),
       questId: quest.id,
     });
     sent += 1;

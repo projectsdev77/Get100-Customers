@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notify } from "@/lib/notifications/notify";
+import { weeklyRecapEmail } from "@/lib/email/templates";
 import type { Founder } from "@/types/database";
 
 // Weekly progress recap (SPEC §11). No paid cron infra — this route is
@@ -47,7 +48,11 @@ export async function POST(request: Request) {
       `This week: ${questsCompleted ?? 0} quests completed, ${customersThisWeek >= 0 ? "+" : ""}${customersThisWeek} customers. You're at ${founder.current_customer_count}/100.`,
       {
         emailSubject: "Your weekly growth recap",
-        emailHtml: `<p>This week you completed <strong>${questsCompleted ?? 0}</strong> quest${questsCompleted === 1 ? "" : "s"} and gained <strong>${customersThisWeek}</strong> customer${customersThisWeek === 1 ? "" : "s"}.</p><p>You're now at <strong>${founder.current_customer_count}/100</strong>.</p>`,
+        emailHtml: weeklyRecapEmail({
+          questsCompleted: questsCompleted ?? 0,
+          customersThisWeek,
+          totalCustomers: founder.current_customer_count,
+        }),
       },
     );
     sent += 1;

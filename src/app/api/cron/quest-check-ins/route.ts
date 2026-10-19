@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notify } from "@/lib/notifications/notify";
+import { questCheckInEmail } from "@/lib/email/templates";
 import type { Founder, Quest } from "@/types/database";
 
 // Proactive, commitment-specific check-ins — the coach previously only ever
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
       `Still working on "${quest.title}"? Let your coach know if you want help or a different approach.`,
       {
         emailSubject: `How's "${quest.title}" going?`,
-        emailHtml: `<p>It's been a couple of days since you started "<strong>${quest.title}</strong>." How's it going?</p><p>If you're stuck, need a different approach, or just haven't had time — open the coach chat in the app and we can figure out the next move together.</p>`,
+        emailHtml: questCheckInEmail({ questId: quest.id, questTitle: quest.title }),
         questId: quest.id,
       },
     );
