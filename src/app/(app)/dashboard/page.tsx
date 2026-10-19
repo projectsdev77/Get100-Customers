@@ -10,6 +10,7 @@ import {
 } from "@/lib/quests/lifecycle";
 import { logCustomer, startFirstSuggestedQuest } from "./actions";
 import { markQuestDone, skipQuest } from "../quests/actions";
+import { QuestSteps } from "../quests/quest-steps";
 import { isoDaysAgo } from "@/lib/utils/days-remaining";
 import { detectSkipPattern } from "@/lib/growth-profile/patterns";
 import { STAGE_LABELS } from "@/lib/founders/field-options";
@@ -211,7 +212,6 @@ export default async function DashboardPage() {
             key={quest.id}
             status={quest.status}
             title={quest.title}
-            instructions={quest.instructions}
             xp={quest.xp_value}
             window={quest.suggested_window}
             tool={quest.tools_provided[0] ?? null}
@@ -232,7 +232,9 @@ export default async function DashboardPage() {
                 </form>
               </>
             }
-          />
+          >
+            <QuestSteps quest={quest} />
+          </QuestCard>
         ))}
       </section>
 

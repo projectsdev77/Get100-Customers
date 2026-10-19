@@ -16,7 +16,7 @@ import {
 } from "@/lib/quests/lifecycle";
 import type { RecentQuestInfo } from "@/lib/ai/select-quest";
 import { recomputeGrowthProfile } from "@/lib/growth-profile/recompute";
-import { getQuestSteps } from "@/lib/quests/steps";
+import { getQuestSteps, sanitizeQuestEdit } from "@/lib/quests/steps";
 import { summarizeResultNotes } from "@/lib/ai/summarize-result-notes";
 import { computeLevel } from "@/lib/gamification/level";
 import { computeNextStreak } from "@/lib/gamification/streak";
@@ -247,6 +247,40 @@ export async function toggleQuestStep(questId: string, stepIndex: number) {
     .eq("founder_id", founder.id);
 
   revalidatePath("/quests");
+}
+
+// Founder's own edit of an active quest's title and checklist (add,
+// rewrite, remove steps). Only active quests are editable: a suggestion
+// hasn't been committed to yet, and a finished one is history. The
+// original AI instructions are kept; once sub_tasks is saved, the
+// checklist is what every view shows.
+export async function updateQuestContent(
+  questId: string,
+  input: { title: string; steps: Array<{ label: string; done: boolean }> },
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const founder = await getCurrentFounder(supabase);
+  if (!founder) return { error: "You're signed out. Refresh and try again." };
+
+  const clean = sanitizeQuestEdit(input);
+  if ("error" in clean) return { error: clean.error };
+
+  const { data, error } = await supabase
+    .from("quests")
+    .update({ title: clean.title, sub_tasks: clean.steps })
+    .eq("id", questId)
+    .eq("founder_id", founder.id)
+    .in("status", ["active", "in_progress"])
+    .select("id");
+  if (error) {
+    console.error("updateQuestContent failed:", error);
+    return { error: "Couldn't save your changes. Try again." };
+  }
+  if (!data || data.length === 0) return { error: "This quest can't be edited anymore." };
+
+  revalidatePath("/quests");
+  revalidatePath("/dashboard");
+  return {};
 }
 
 // Active → awaiting_report. Structured result questions get answered next

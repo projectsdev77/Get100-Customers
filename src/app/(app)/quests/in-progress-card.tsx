@@ -5,14 +5,15 @@ import type { Quest } from "@/types/database";
 import { getQuestSteps } from "@/lib/quests/steps";
 import { daysRemaining } from "@/lib/utils/days-remaining";
 import { Button, buttonClasses } from "@/components/ui/actions/Button";
-import { markQuestDone, toggleQuestStep } from "./actions";
+import { markQuestDone } from "./actions";
+import { QuestSteps } from "./quest-steps";
 import { SkipForm } from "./skip-form";
 
 // Quests redesign §3 — the description becomes a checklist (parsed from
 // instructions, persisted per step in sub_tasks — see lib/quests/steps.ts),
 // with a step-progress ring and an inline "why" note instead of navigating
-// away. Bespoke to this page: the dashboard keeps rendering active quests
-// through the plain shared QuestCard.
+// away. The checklist itself (QuestSteps) is shared with the dashboard's
+// active-quest card so ticks and edits match everywhere.
 export function InProgressCard({ quest, defaultOpen }: { quest: Quest; defaultOpen: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   const [whyOpen, setWhyOpen] = useState(false);
@@ -51,33 +52,7 @@ export function InProgressCard({ quest, defaultOpen }: { quest: Quest; defaultOp
         </div>
       </div>
 
-      {open && steps.length > 0 && (
-        <div className="flex flex-col rounded-[20px] bg-sunken p-1.5">
-          {steps.map((step, i) => (
-            <form key={i} action={toggleQuestStep.bind(null, quest.id, i)}>
-              <button
-                type="submit"
-                className="flex w-full items-start gap-3 rounded-[14px] p-2.5 text-left transition-colors hover:bg-card"
-              >
-                <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] font-bold text-[var(--ink-900)] ${
-                    step.done ? "border-[var(--lime-300)] bg-[var(--lime-300)]" : "border-strong bg-transparent"
-                  }`}
-                >
-                  {step.done ? "✓" : ""}
-                </span>
-                <span
-                  className={`text-sm leading-[1.5] text-balance ${
-                    step.done ? "text-secondary line-through" : "text-primary"
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </button>
-            </form>
-          ))}
-        </div>
-      )}
+      {open && steps.length > 0 && <QuestSteps quest={quest} />}
 
       {whyOpen && quest.reasoning && (
         <p className="rounded-2xl bg-accent-soft px-4 py-3 text-sm leading-[1.5] text-primary">
