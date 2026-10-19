@@ -2,11 +2,25 @@ import { Type } from "@google/genai";
 import { GEMINI_MODELS } from "@/lib/ai/gemini";
 import { generateStructuredContent } from "@/lib/ai/generate-structured";
 import { getQuestSteps } from "@/lib/quests/steps";
+import { DEFAULT_TIMEZONE, isValidTimeZone, localHour } from "@/lib/founders/timezone";
 import type { Quest } from "@/types/database";
 
+// The cron runs hourly; a founder is due when it's 9-11am their time. The
+// three-hour window means a delayed or skipped GitHub Actions run (they
+// happen) just shifts the email an hour later instead of losing the day.
+const MORNING_START_HOUR = 9;
+const MORNING_END_HOUR = 12;
+
+export function isNudgeHour(timeZone: string | null, now = Date.now()): boolean {
+  const zone = timeZone && isValidTimeZone(timeZone) ? timeZone : DEFAULT_TIMEZONE;
+  const hour = localHour(zone, new Date(now));
+  return hour >= MORNING_START_HOUR && hour < MORNING_END_HOUR;
+}
+
 export const NUDGE_WINDOW_HOURS = 24;
-// Shorter than the cron interval, so yesterday's run at 13:00:40 doesn't
-// block today's at 13:00:10 and make the nudge skip every other day.
+// Longer than the 3-hour morning window, so the hourly runs inside it send
+// once; shorter than a day, so yesterday's 11am nudge doesn't block today's
+// 9am one.
 const NUDGE_DEDUPE_HOURS = 20;
 
 export type NudgeQuest = Pick<

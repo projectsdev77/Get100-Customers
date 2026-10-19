@@ -62,6 +62,7 @@ export default async function SettingsPage({
       label: "Notifications",
       content: (
         <NotificationPrefsForm
+          timezone={founder?.timezone ?? null}
           prefs={
             founder?.email_notification_prefs ?? {
               new_quest: true,

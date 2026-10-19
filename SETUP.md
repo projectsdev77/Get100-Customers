@@ -73,15 +73,15 @@ Gemini's 20/day cap (previous step) is genuinely limiting for active testing. `s
    - `CRON_SECRET` — same value as above
    - `APP_URL` — your deployed app's base URL (this step needs a real deployment; skip until you deploy)
 3. `.github/workflows/weekly-recap.yml` fires every Monday 14:00 UTC, or trigger it manually anytime from the Actions tab ("Run workflow").
-4. The same two secrets also run the daily jobs: `quest-check-ins.yml` (15:00 UTC) and `daily-nudge.yml` (13:00 UTC, which is 9am US Eastern; edit its cron line to move it).
+4. The same two secrets also run `quest-check-ins.yml` (daily, 15:00 UTC) and `daily-nudge.yml` (hourly; each founder is emailed once, between 9 and 11am in their own timezone).
 
-**Daily quest nudge:** each morning, founders whose active quest hasn't moved in 24 hours get a short AI-written email telling them to spend 10 minutes on it today. "Moved" means they logged a customer, reported or completed a quest, ticked a step, or accepted a quest. The same message is logged in their Notifications tab and links to the quest. A few rules keep it from feeling spammy:
+**Daily quest nudge:** each morning in their own timezone, founders whose active quest hasn't moved in 24 hours get a short AI-written email telling them to spend 10 minutes on it today. "Moved" means they logged a customer, reported or completed a quest, ticked a step, or accepted a quest. The same message is logged in their Notifications tab and links to the quest. A few rules keep it from feeling spammy:
 - at most one nudge a day;
 - skipped if a check-in or re-engagement email went out in the last 24 hours;
 - never sent to restricted accounts;
 - founders can turn it off in Settings → Notifications.
 
-If the AI is unavailable, a plain written version is sent instead. Re-run `supabase/schema.sql` once to add the `quests.last_progress_at` column it relies on.
+Each founder's timezone is detected from their browser the first time they open the app, and can be changed in Settings → Notifications. Founders without one yet are treated as US Eastern. If the AI is unavailable, a plain written version is sent instead. Re-run `supabase/schema.sql` once to add the `quests.last_progress_at` and `founders.timezone` columns it relies on. Running hourly uses about 720 GitHub Actions minutes a month, which is free for public repos and within the 2,000 free minutes for private ones on GitHub Free.
 
 ## 8. App environment
 

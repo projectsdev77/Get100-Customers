@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isValidTimeZone } from "@/lib/founders/timezone";
 import { appendStrategyHistory } from "@/lib/growth-profile/append-strategy-history";
 import { isPasswordValid } from "@/lib/auth/password";
 import { hasPasswordSet } from "@/lib/auth/find-user-by-email";
@@ -230,9 +231,15 @@ export async function updateNotificationPrefs(formData: FormData) {
     return acc;
   }, {} as EmailNotificationPrefs);
 
+  const timeZone = String(formData.get("timezone") || "");
+
   await supabase
     .from("founders")
-    .update({ email_notification_prefs: prefs, updated_at: new Date().toISOString() })
+    .update({
+      email_notification_prefs: prefs,
+      ...(isValidTimeZone(timeZone) ? { timezone: timeZone } : {}),
+      updated_at: new Date().toISOString(),
+    })
     .eq("auth_user_id", user.id);
 
   revalidatePath("/settings");

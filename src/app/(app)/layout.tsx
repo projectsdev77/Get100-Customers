@@ -10,6 +10,7 @@ import { TopNav } from "@/components/ui/navigation/TopNav";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { LinkButton } from "@/components/ui/actions/Button";
 import { CelebrationProvider } from "@/components/celebrations/CelebrationProvider";
+import { TimezoneSync } from "./timezone-sync";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -52,6 +53,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     >
       <div className="min-h-screen bg-canvas">
         <TopNav unreadCount={unreadCount} onLogout={logout} />
+        {founder && !founder.timezone && <TimezoneSync />}
 
         {restricted && (
           <div className="mx-auto max-w-[1120px] px-6 pt-4">

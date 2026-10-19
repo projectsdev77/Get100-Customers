@@ -1,14 +1,15 @@
 name: Daily quest nudge
 
 # Morning email nudge for founders whose active quest hasn't moved in the
-# last 24 hours (same zero-budget pattern as quest-check-ins.yml). 13:00
-# UTC is 9am US Eastern / 6am US Pacific / 2pm UK. Change the cron line to
-# suit your founders' timezones. Requires the APP_URL and CRON_SECRET repo
-# secrets.
+# last 24 hours (same zero-budget pattern as quest-check-ins.yml). Runs
+# hourly; the endpoint only emails founders for whom it's 9-11am in their
+# own saved timezone, at most once a day. Minute 7 avoids the top-of-hour
+# rush when GitHub delays scheduled runs most. Requires the APP_URL and
+# CRON_SECRET repo secrets.
 
 on:
   schedule:
-    - cron: "0 13 * * *" # daily at 13:00 UTC
+    - cron: "7 * * * *" # every hour at :07
   workflow_dispatch: {}
 
 jobs:

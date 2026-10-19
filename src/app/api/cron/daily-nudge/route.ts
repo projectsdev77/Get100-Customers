@@ -6,15 +6,17 @@ import {
   buildNudgeContext,
   buildNudgeEmailHtml,
   fallbackNudge,
+  isNudgeHour,
   selectNudges,
   writeNudgeWithAI,
   type NudgeQuest,
 } from "@/lib/notifications/daily-nudge";
 import type { Founder } from "@/types/database";
 
-// Triggered each morning by .github/workflows/daily-nudge.yml (same
-// zero-budget pattern as the other crons). Emails founders whose active
-// quest hasn't moved in a day and logs the same message to their
+// Triggered hourly by .github/workflows/daily-nudge.yml (same zero-budget
+// pattern as the other crons). Each run only considers founders for whom
+// it's currently morning in their own timezone, emails those whose active
+// quest hasn't moved in a day, and logs the same message to their
 // Notifications tab via notify().
 export const maxDuration = 60;
 
@@ -41,8 +43,19 @@ export async function POST(request: Request) {
     .select("id, founder_id, title, sub_tasks, instructions, expires_at, activated_at, last_progress_at")
     .in("status", ["active", "in_progress"])
     .returns<NudgeQuest[]>();
-  const quests = activeQuests ?? [];
-  const founderIds = [...new Set(quests.map((q) => q.founder_id))];
+  const candidateIds = [...new Set((activeQuests ?? []).map((q) => q.founder_id))];
+  if (candidateIds.length === 0) return NextResponse.json({ sent: 0, checked: 0 });
+
+  const { data: founderRows } = await admin
+    .from("founders")
+    .select("id, name, company_name, current_customer_count, timezone")
+    .in("id", candidateIds)
+    .returns<Pick<Founder, "id" | "name" | "company_name" | "current_customer_count" | "timezone">[]>();
+  const founders = new Map(
+    (founderRows ?? []).filter((f) => isNudgeHour(f.timezone, now)).map((f) => [f.id, f]),
+  );
+  const quests = (activeQuests ?? []).filter((q) => founders.has(q.founder_id));
+  const founderIds = [...founders.keys()];
   if (founderIds.length === 0) return NextResponse.json({ sent: 0, checked: 0 });
 
   const [customers, reports, completed, subscriptions, notifications] = await Promise.all([
@@ -75,16 +88,6 @@ export async function POST(request: Request) {
     now,
   );
   if (toNudge.length === 0) return NextResponse.json({ sent: 0, checked: founderIds.length });
-
-  const { data: founderRows } = await admin
-    .from("founders")
-    .select("id, name, company_name, current_customer_count")
-    .in(
-      "id",
-      toNudge.map((q) => q.founder_id),
-    )
-    .returns<Pick<Founder, "id" | "name" | "company_name" | "current_customer_count">[]>();
-  const founders = new Map((founderRows ?? []).map((f) => [f.id, f]));
 
   let sent = 0;
   let aiWritten = 0;

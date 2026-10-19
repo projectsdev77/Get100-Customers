@@ -128,6 +128,11 @@ alter table quests add column if not exists last_progress_at timestamptz;
 alter table founders add column if not exists buying_motion text
   check (buying_motion in ('self_serve', 'sales_led', 'local_in_person'));
 
+-- IANA timezone (e.g. Europe/London), filled in from the browser on first
+-- visit and editable in Settings, so the daily nudge arrives in the
+-- founder's morning. Null means not detected yet (treated as US Eastern).
+alter table founders add column if not exists timezone text;
+
 -- At most one 'suggested' quest per founder (MAX_SUGGESTED_QUESTS in
 -- lifecycle.ts) is the "a single Next Up suggestion is always waiting"
 -- invariant — but fillNextQuestSlot only enforced it with a

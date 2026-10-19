@@ -29,6 +29,7 @@ export interface Founder {
   auth_user_id: string;
   name: string | null;
   company_name: string | null;
+  timezone: string | null;
   industry: string | null;
   product_description: string | null;
   icp: string | null;
