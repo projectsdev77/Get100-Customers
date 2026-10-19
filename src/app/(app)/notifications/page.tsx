@@ -20,6 +20,7 @@ const QUEST_LINKED_TYPES: Array<NotificationType | "admin_message"> = [
   "new_quest",
   "window_approaching",
   "quest_check_in",
+  "daily_nudge",
 ];
 
 function questHref(n: NotificationLogEntry): string | null {

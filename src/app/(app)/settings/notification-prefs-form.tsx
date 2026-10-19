@@ -13,6 +13,7 @@ const LABELS: Record<ToggleableType, string> = {
   milestone: "Milestones (level up, customer count)",
   weekly_recap: "Weekly progress recap",
   quest_check_in: "Mid-quest check-ins",
+  daily_nudge: "Daily reminder when a quest has gone quiet",
 };
 
 export function NotificationPrefsForm({ prefs }: { prefs: EmailNotificationPrefs }) {

@@ -94,6 +94,7 @@ export interface Quest {
   result_questions: Array<{ id: string; prompt: string; type: "number" | "text" | "boolean" }>;
   success_criteria: string | null;
   sub_tasks: Array<{ label: string; done: boolean }>;
+  last_progress_at: string | null;
   suggested_window: string | null;
   expires_at: string | null;
   status: QuestStatus;
@@ -156,7 +157,8 @@ export type NotificationType =
   | "re_engagement"
   | "milestone"
   | "weekly_recap"
-  | "quest_check_in";
+  | "quest_check_in"
+  | "daily_nudge";
 
 export interface NotificationLogEntry {
   id: string;

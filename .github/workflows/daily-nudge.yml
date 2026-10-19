@@ -1,0 +1,21 @@
+name: Daily quest nudge
+
+# Morning email nudge for founders whose active quest hasn't moved in the
+# last 24 hours (same zero-budget pattern as quest-check-ins.yml). 13:00
+# UTC is 9am US Eastern / 6am US Pacific / 2pm UK. Change the cron line to
+# suit your founders' timezones. Requires the APP_URL and CRON_SECRET repo
+# secrets.
+
+on:
+  schedule:
+    - cron: "0 13 * * *" # daily at 13:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  trigger-daily-nudge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call daily nudge endpoint
+        run: |
+          curl -sf -X POST "${{ secrets.APP_URL }}/api/cron/daily-nudge" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

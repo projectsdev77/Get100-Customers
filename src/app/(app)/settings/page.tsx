@@ -70,6 +70,7 @@ export default async function SettingsPage({
               milestone: true,
               weekly_recap: true,
               quest_check_in: true,
+              daily_nudge: true,
             }
           }
         />

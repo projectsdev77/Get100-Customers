@@ -29,6 +29,7 @@ const NOTIFICATION_TYPES: NotificationType[] = [
   "milestone",
   "weekly_recap",
   "quest_check_in",
+  "daily_nudge",
 ];
 
 export async function updateProfile(formData: FormData) {

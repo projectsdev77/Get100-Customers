@@ -115,6 +115,11 @@ create table if not exists quests (
 alter table quests add column if not exists activated_at timestamptz;
 alter table quests add column if not exists check_in_sent boolean not null default false;
 
+-- Set whenever a founder ticks a quest step, so the daily nudge cron
+-- (src/app/api/cron/daily-nudge/route.ts) doesn't nag someone who made
+-- progress yesterday without finishing the quest or logging a customer.
+alter table quests add column if not exists last_progress_at timestamptz;
+
 -- How this founder's customers actually buy — self-serve signup, a
 -- sales call/demo cycle, or local/in-person — used to size quest windows
 -- and success expectations to match (a sales-led founder's "converted"

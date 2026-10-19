@@ -241,7 +241,7 @@ export async function toggleQuestStep(questId: string, stepIndex: number) {
 
   await supabase
     .from("quests")
-    .update({ sub_tasks: updated })
+    .update({ sub_tasks: updated, last_progress_at: new Date().toISOString() })
     .eq("id", questId)
     .eq("founder_id", founder.id);
 

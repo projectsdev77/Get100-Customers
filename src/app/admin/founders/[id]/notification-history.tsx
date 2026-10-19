@@ -10,6 +10,7 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   milestone: "Milestone",
   weekly_recap: "Weekly recap",
   quest_check_in: "Quest check-in",
+  daily_nudge: "Daily nudge",
   admin_message: "Message from support",
 };
 
