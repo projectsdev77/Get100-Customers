@@ -56,7 +56,7 @@ export function GrowthHud({
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div className="flex items-center gap-3 rounded-tile bg-tile-level px-4 py-3.5 text-on-tile">
+        <div className="flex min-h-[132px] items-center gap-3 rounded-tile bg-tile-level px-4 py-3.5 text-on-tile">
           <ProgressRing
             size="sm"
             value={xpProgress.current}
@@ -74,7 +74,7 @@ export function GrowthHud({
             </span>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-2 rounded-tile bg-tile-streak p-4 text-on-tile">
+        <div className="flex min-h-[132px] items-center justify-between gap-2 rounded-tile bg-tile-streak py-2 pl-4 text-on-tile">
           <div className="flex min-w-0 flex-col justify-center gap-1.5">
             <span className="text-[13px] font-medium">Streak</span>
             {streak > 0 ? (
@@ -87,16 +87,10 @@ export function GrowthHud({
             )}
           </div>
           {CELEBRATIONS_ENABLED && (
-            <>
-              <DecorativeImage
-                src={ILLUSTRATIONS.promoStreak}
-                className="celebration-illustration-light h-[88px] w-[88px] shrink-0 self-end object-contain"
-              />
-              <DecorativeImage
-                src={ILLUSTRATIONS.promoStreakDark}
-                className="celebration-illustration-dark h-[88px] w-[88px] shrink-0 self-end object-contain"
-              />
-            </>
+            <DecorativeImage
+              src={ILLUSTRATIONS.promoStreak}
+              className="mr-3 h-[116px] w-[128px] min-w-0 max-w-[45%] shrink object-contain"
+            />
           )}
         </div>
       </div>

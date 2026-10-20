@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { CelebrationShell } from "./CelebrationShell";
-import { ProgressRing } from "@/components/ui/game/ProgressRing";
+import { CelebrationRing } from "./CelebrationRing";
+import { DecorativeImage } from "./DecorativeImage";
 import { confettiBurst, prefersReducedMotion } from "./confetti";
 import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
 
@@ -16,7 +17,6 @@ export function GrowthModeModal({ onEnter }: { onEnter: () => void }) {
   const [count, setCount] = useState(reduced ? 100 : 97);
   const [revealed, setRevealed] = useState(reduced);
   const [copyVisible, setCopyVisible] = useState(reduced);
-  const [imgOk, setImgOk] = useState(true);
 
   useEffect(() => {
     if (reduced) return;
@@ -44,76 +44,67 @@ export function GrowthModeModal({ onEnter }: { onEnter: () => void }) {
     <CelebrationShell
       labelledBy="celebration-growth-mode-title"
       onClose={onEnter}
-      className="bg-tile-customers text-on-tile"
+      className="overflow-y-auto overflow-x-hidden bg-[var(--violet-200)] text-[var(--ink-900)]"
     >
-      <div className="grid h-full grid-cols-1 items-center gap-7 p-8 sm:grid-cols-[200px_1fr] sm:p-9">
-        <ProgressRing
-          value={count}
-          max={100}
-          diameterPx={200}
-          thicknessPx={15}
-          color="var(--ink-900)"
-          center="var(--tile-customers)"
-          label="Milestone progress"
-        >
-          <span className="font-light text-[56px] leading-none tracking-[-0.04em]">{count}</span>
-          <span className="text-xs font-medium text-tile-customers-ink">of 100</span>
-        </ProgressRing>
-        <div className="flex flex-col gap-2.5">
-          <span className="font-mono text-xs font-semibold tracking-[0.14em] text-tile-customers-ink">
+      <div className="celebration-stage flex min-h-full flex-col items-center justify-center gap-10 px-4 py-16">
+        <CelebrationRing fill="var(--violet-100)" track="#FFFFFF" progress={count / 100}>
+          <span className="absolute inset-0 grid place-items-center font-light text-[calc(96px*var(--celebration-scale))] leading-none tracking-[-0.04em]">
+            {count}
+          </span>
+        </CelebrationRing>
+        <div className="flex max-w-[560px] flex-col items-center gap-3.5 text-center">
+          <span className="font-mono text-[13px] font-semibold leading-none tracking-[0.16em] text-[var(--violet-600)]">
             MILESTONE
           </span>
-          <h2 className="text-4xl font-medium leading-[1.05] tracking-[-0.035em]">100 customers.</h2>
+          <h2 className="celebration-headline font-medium leading-[1.05] tracking-[-0.02em]">100 customers.</h2>
         </div>
       </div>
 
       <div
         data-mode="growth"
-        className={`absolute inset-0 grid grid-cols-1 items-center gap-7 bg-growth-hero p-8 text-[var(--ink-900)] transition-[clip-path] duration-700 ease-[cubic-bezier(.22,1,.36,1)] sm:grid-cols-[200px_1fr] sm:p-9 ${
-          revealed ? "[clip-path:circle(160%_at_23%_50%)]" : "[clip-path:circle(0%_at_23%_50%)]"
+        className={`celebration-stage absolute inset-0 overflow-y-auto overflow-x-hidden bg-growth-hero text-[var(--ink-900)] transition-[clip-path] duration-700 ease-[cubic-bezier(.22,1,.36,1)] ${
+          revealed ? "[clip-path:circle(160%_at_50%_40%)]" : "[clip-path:circle(0%_at_50%_40%)]"
         }`}
       >
-        <ProgressRing
-          value={100}
-          max={250}
-          diameterPx={200}
-          thicknessPx={15}
-          color="var(--ink-900)"
-          center="var(--growth-hero)"
-          label="Next target progress"
-        >
-          <span className="font-light text-[56px] leading-none tracking-[-0.04em]">100</span>
-          <span className="text-xs font-medium">of 250</span>
-        </ProgressRing>
-        <div
-          className={`flex flex-col gap-3 transition-opacity duration-[400ms] ${
-            copyVisible ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          {imgOk && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={ILLUSTRATIONS.growthMode}
-              alt=""
-              aria-hidden="true"
-              className="h-[140px] max-w-[300px] object-contain"
-              onError={() => setImgOk(false)}
-            />
-          )}
-          <span className="font-mono text-xs font-semibold tracking-[0.14em]">GROWTH MODE</span>
-          <h2 id="celebration-growth-mode-title" className="text-[30px] font-medium leading-[1.1] tracking-[-0.03em]">
-            Welcome to Growth Mode.
-          </h2>
-          <p className="max-w-[420px] text-sm leading-[1.5]">
-            Your first 100 is done. Next target: 250. Same quests, bigger goal.
-          </p>
-          <button
-            type="button"
-            onClick={onEnter}
-            className="h-11 w-fit rounded-full bg-[var(--ink-900)] px-5 text-sm font-medium text-white"
+        <div className="flex min-h-full flex-col items-center justify-center gap-10 px-4 py-16">
+          <CelebrationRing
+            fill="var(--lime-200)"
+            track="#FFFFFF"
+            progress={100 / 250}
+            badge={
+              <span className="absolute -bottom-[18px] rounded-full bg-[var(--ink-900)] px-4 py-2 font-mono text-sm font-semibold leading-none text-white">
+                100 / 250
+              </span>
+            }
           >
-            Enter Growth Mode
-          </button>
+            <DecorativeImage
+              src={ILLUSTRATIONS.growthMode}
+              className="relative w-[calc(560px*var(--celebration-scale))] max-w-none mb-[calc(90px*var(--celebration-scale))] object-contain"
+            />
+          </CelebrationRing>
+          <div
+            className={`flex max-w-[560px] flex-col items-center gap-3.5 text-center transition-opacity duration-[400ms] ${
+              copyVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <span className="font-mono text-[13px] font-semibold leading-none tracking-[0.16em]">GROWTH MODE</span>
+            <h2
+              id="celebration-growth-mode-title"
+              className="celebration-headline font-medium leading-[1.05] tracking-[-0.02em] text-balance"
+            >
+              Welcome to Growth Mode.
+            </h2>
+            <p className="text-lg leading-[1.45] text-pretty">
+              Your first 100 is done. Next target: 250. Same quests, bigger goal.
+            </p>
+            <button
+              type="button"
+              onClick={onEnter}
+              className="mt-2.5 rounded-full bg-[var(--ink-900)] px-6 py-3.5 text-[15px] font-semibold leading-none text-white"
+            >
+              Enter Growth Mode
+            </button>
+          </div>
         </div>
       </div>
     </CelebrationShell>

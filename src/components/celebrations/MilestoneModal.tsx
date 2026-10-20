@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CelebrationShell } from "./CelebrationShell";
-import { ProgressRing } from "@/components/ui/game/ProgressRing";
+import { CelebrationShell, CloseButton } from "./CelebrationShell";
+import { CelebrationRing } from "./CelebrationRing";
+import { DecorativeImage } from "./DecorativeImage";
 import { confettiBurst, prefersReducedMotion } from "./confetti";
 import { milestoneCelebrationIllustration } from "@/lib/celebrations/illustrations";
 
@@ -30,9 +31,28 @@ function copyFor(milestone: number) {
 // 1g "Ring takeover", for every milestone except 1 (FirstCustomerModal) and
 // 100 (GrowthModeModal). Stays open until the founder taps the CTA, ×, or
 // Esc.
+// The ring only frames the team scene (100-999); the desk and rooftop scenes
+// stand on their own.
+function sceneFor(milestone: number) {
+  const src = milestoneCelebrationIllustration(milestone);
+  if (milestone >= 1000) {
+    return { src, ring: false, className: "w-[calc(540px*var(--celebration-scale))]" };
+  }
+  if (milestone >= 100) {
+    return {
+      src,
+      ring: true,
+      className: "h-[calc(400px*var(--celebration-scale))] mb-[calc(28px*var(--celebration-scale))]",
+    };
+  }
+  return { src, ring: false, className: "h-[calc(400px*var(--celebration-scale))]" };
+}
+
+// Ring takeover, for every milestone except 1 (FirstCustomerModal) and
+// 100 (GrowthModeModal). Stays open until the founder taps the CTA, ×, or
+// Esc.
 export function MilestoneModal({
   milestone,
-  previousMilestone,
   onClose,
 }: {
   milestone: number;
@@ -41,102 +61,60 @@ export function MilestoneModal({
 }) {
   const reduced = prefersReducedMotion();
   const [bgVisible, setBgVisible] = useState(reduced);
-  const [count, setCount] = useState(reduced ? milestone : previousMilestone);
   const [copyVisible, setCopyVisible] = useState(reduced);
-  const [imgOk, setImgOk] = useState(true);
   const copy = copyFor(milestone);
+  const scene = sceneFor(milestone);
+  const image = (
+    <DecorativeImage src={scene.src} className={`relative max-w-none object-contain ${scene.className}`} />
+  );
 
   useEffect(() => {
     if (reduced) return;
     const t1 = setTimeout(() => setBgVisible(true), 10);
     const t2 = setTimeout(() => setCopyVisible(true), 400);
     const t3 = setTimeout(() => confettiBurst(24, 0.3, 0.5), 1100);
-
-    const duration = 800;
-    const start = performance.now();
-    let frame: number;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      setCount(Math.round(previousMilestone + t * (milestone - previousMilestone)));
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    const rafTimer = setTimeout(() => {
-      frame = requestAnimationFrame(tick);
-    }, 300);
-
-    return () => {
-      [t1, t2, t3, rafTimer].forEach(clearTimeout);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, [reduced, milestone, previousMilestone]);
+    return () => [t1, t2, t3].forEach(clearTimeout);
+  }, [reduced]);
 
   return (
     <CelebrationShell
       labelledBy="celebration-milestone-title"
       onClose={onClose}
-      className={`bg-tile-customers text-on-tile transition-opacity duration-300 ${
+      className={`overflow-y-auto overflow-x-hidden bg-[var(--violet-200)] text-[var(--ink-900)] transition-opacity duration-300 ${
         bgVisible ? "opacity-100" : "opacity-0"
       }`}
     >
       <div
-        className="grid h-full grid-cols-1 items-center gap-7 p-8 sm:grid-cols-[240px_1fr] sm:p-9"
+        className="celebration-stage flex min-h-full flex-col items-center justify-center gap-10 px-4 py-16"
         onClick={(e) => e.stopPropagation()}
       >
-        <ProgressRing
-          value={reduced ? 1 : count}
-          max={1}
-          diameterPx={240}
-          thicknessPx={17}
-          color="var(--ink-900)"
-          center="var(--tile-customers)"
-          label="Milestone progress"
-        >
-          <span className="font-light text-[56px] leading-none tracking-[-0.04em]">{count}</span>
-          <span className="text-xs font-medium text-tile-customers-ink">of {milestone}</span>
-        </ProgressRing>
+        {scene.ring ? <CelebrationRing fill="var(--violet-100)">{image}</CelebrationRing> : image}
 
         <div
-          className={`flex flex-col gap-3 transition-all duration-300 ${
+          className={`flex max-w-[560px] flex-col items-center gap-3.5 text-center transition-all duration-300 ${
             copyVisible ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
           }`}
         >
-          {imgOk && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={milestoneCelebrationIllustration(milestone)}
-              alt=""
-              aria-hidden="true"
-              className="h-[180px] max-w-[260px] object-contain"
-              onError={() => setImgOk(false)}
-            />
-          )}
-          <span className="font-mono text-xs font-semibold tracking-[0.14em] text-tile-customers-ink">
+          <span className="font-mono text-[13px] font-semibold leading-none tracking-[0.16em] text-[var(--violet-600)]">
             {copy.eyebrow}
           </span>
-          <h2 id="celebration-milestone-title" className="text-[30px] font-medium leading-[1.1] tracking-[-0.03em]">
+          <h2
+            id="celebration-milestone-title"
+            className="celebration-headline font-medium leading-[1.05] tracking-[-0.02em] text-balance"
+          >
             {copy.headline}
           </h2>
-          <p className="max-w-[420px] text-sm leading-[1.5] text-tile-customers-ink">{copy.body}</p>
+          <p className="text-lg leading-[1.45] text-pretty text-[var(--ink-600)]">{copy.body}</p>
           <button
             type="button"
             onClick={onClose}
-            className="h-11 w-fit rounded-full bg-[var(--ink-900)] px-5 text-sm font-medium text-white"
+            className="mt-2.5 rounded-full bg-[var(--ink-900)] px-6 py-3.5 text-[15px] font-semibold leading-none text-white"
           >
             Keep going
           </button>
         </div>
       </div>
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        className="absolute right-4.5 top-4.5 grid h-11 w-11 place-items-center rounded-full bg-white/70 text-xl font-normal leading-none text-[var(--ink-900)]"
-      >
-        ×
-      </button>
+      <CloseButton onClose={onClose} />
     </CelebrationShell>
   );
 }

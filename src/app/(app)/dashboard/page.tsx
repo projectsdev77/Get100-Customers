@@ -83,15 +83,24 @@ export default async function DashboardPage() {
 
   const questsCard = (
     <Card className="flex flex-col gap-3 p-5">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-medium text-primary">Your quests</h2>
+      <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h2 className="text-base font-medium text-primary">Your quests</h2>
+          <p className="text-sm text-secondary">
+            {isNewUser
+              ? "Pick one to get started."
+              : `${questCount} quest${questCount === 1 ? "" : "s"} in your log right now.`}
+          </p>
+        </div>
         {CELEBRATIONS_ENABLED && (
-          <DecorativeImage src={ILLUSTRATIONS.spotQuest} className="h-[80px] w-[80px] shrink-0 object-contain" />
+          <DecorativeImage
+            src={ILLUSTRATIONS.spotQuest}
+            className="h-[116px] w-[128px] min-w-0 max-w-[40%] shrink object-contain"
+          />
         )}
       </div>
       {isNewUser ? (
         <>
-          <p className="text-sm text-secondary">Pick one to get started.</p>
           {suggestedQuests.length > 0 && (
             <div className="flex flex-col gap-1.5">
               {suggestedQuests.slice(0, 3).map((quest) => (
@@ -115,9 +124,6 @@ export default async function DashboardPage() {
         </>
       ) : (
         <>
-          <p className="text-sm text-secondary">
-            {questCount} quest{questCount === 1 ? "" : "s"} in your log right now.
-          </p>
           <Link href="/quests" className="text-sm font-medium text-accent">
             View your quests →
           </Link>
@@ -132,7 +138,10 @@ export default async function DashboardPage() {
         currentCount={founder.current_customer_count}
         icon={
           CELEBRATIONS_ENABLED && (
-            <DecorativeImage src={ILLUSTRATIONS.spotJournal} className="h-[80px] w-[80px] shrink-0 object-contain" />
+            <DecorativeImage
+              src={ILLUSTRATIONS.spotJournal}
+              className="h-[104px] w-[128px] min-w-0 max-w-[40%] shrink object-contain"
+            />
           )
         }
       />
@@ -153,7 +162,7 @@ export default async function DashboardPage() {
         founderName={founder.name}
       />
       {CELEBRATIONS_ENABLED ? (
-        <div className="hero-welcome-banner mt-20 flex min-h-[128px] items-center gap-4 rounded-[24px] py-0 pl-8 pr-6 max-[600px]:mt-0">
+        <div className="hero-welcome-banner mt-[60px] flex min-h-[140px] items-center gap-4 rounded-[24px] py-0 pl-9 pr-6 max-[600px]:mt-0">
           <div className="min-w-0 flex-1">
             <h1 className="text-[clamp(22px,3.4vw,30px)] font-medium leading-[1.15] tracking-[-0.01em] text-white">
               Welcome{founder.name ? `, ${founder.name}` : ""}
@@ -162,7 +171,7 @@ export default async function DashboardPage() {
           </div>
           <HeroWelcomeIllustration
             founderId={founder.id}
-            className="h-[210px] max-w-[46%] shrink min-w-0 -mt-[82px] mr-[6%] self-end object-contain object-bottom max-[600px]:hidden"
+            className="h-[210px] max-w-[46%] shrink min-w-0 -mt-[70px] mr-[6%] self-end object-contain object-bottom max-[600px]:hidden"
           />
         </div>
       ) : (

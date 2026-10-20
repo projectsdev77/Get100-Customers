@@ -64,28 +64,30 @@ export function QuestCard({
 
   return (
     <div id={id} className="flex flex-col gap-3 rounded-panel bg-card p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span
-          className={`inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-on-tile ${meta.bg}`}
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${meta.ink}`} />
-          {meta.label}
-        </span>
-        <span className="flex items-center gap-2">
-          {window && <span className="text-xs text-secondary">{window}</span>}
-          {xp != null && <XpPill xp={xp} />}
-        </span>
-      </div>
-
       <div className="flex items-start gap-3">
-        <span className="min-w-0 flex-1 text-xl font-medium leading-[1.25] tracking-[-0.01em] text-balance text-primary">
-          {title}
-        </span>
-        {categoryImage && (
-          <DecorativeImage
-            src={categoryImage}
-            className="aspect-square h-[clamp(72px,18vw,120px)] shrink-0 object-contain"
-          />
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
+          <span
+            className={`inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-on-tile ${meta.bg}`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${meta.ink}`} />
+            {meta.label}
+          </span>
+          <span className="text-xl font-medium leading-[1.25] tracking-[-0.01em] text-balance text-primary">
+            {title}
+          </span>
+        </div>
+        {(window || xp != null || categoryImage) && (
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {(window || xp != null) && (
+              <span className="flex items-center gap-2">
+                {window && <span className="text-xs text-secondary">{window}</span>}
+                {xp != null && <XpPill xp={xp} />}
+              </span>
+            )}
+            {categoryImage && (
+              <DecorativeImage src={categoryImage} className="h-[96px] w-[104px] object-contain" />
+            )}
+          </div>
         )}
       </div>
 

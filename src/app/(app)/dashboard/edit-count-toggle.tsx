@@ -17,7 +17,7 @@ export function EditCountToggle({
   icon,
 }: {
   currentCount: number;
-  /** Decorative only — 06-illustration-placement §4 ("Log progress card: spot-journal, 80x80, right"). Omit for no change in behavior. */
+  /** Decorative only — 06-illustration-placement §4 ("Log progress card: spot-journal, right"). Omit for no change in behavior. */
   icon?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -36,18 +36,20 @@ export function EditCountToggle({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <h2 className="flex-1 text-base font-medium text-primary">Log progress</h2>
+      <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
+          <h2 className="text-base font-medium text-primary">Log progress</h2>
+          {!open && (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="text-sm font-medium text-accent"
+            >
+              Edit count
+            </button>
+          )}
+        </div>
         {icon}
-        {!open && (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="text-sm font-medium text-accent"
-          >
-            Edit count
-          </button>
-        )}
       </div>
       {open && (
         <form action={formAction} className="flex items-end gap-2">

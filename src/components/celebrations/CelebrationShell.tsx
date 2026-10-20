@@ -51,3 +51,21 @@ export function CelebrationShell({
     </div>
   );
 }
+
+// 44px circle, top-right (handoff-ui-redesign §B). Fixed light colors since
+// every celebration background is light in both themes.
+export function CloseButton({ onClose }: { onClose: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label="Close"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+      className="absolute right-6 top-6 z-10 grid h-11 w-11 place-items-center rounded-full bg-white text-lg font-normal leading-none text-[var(--ink-900)]"
+    >
+      ×
+    </button>
+  );
+}

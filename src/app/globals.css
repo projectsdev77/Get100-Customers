@@ -158,3 +158,21 @@ body {
     var(--violet-200) 100%
   );
 }
+
+/* Celebration overlays (handoff-ui-redesign §B): one centred column. The
+   ring and images scale down together on phones and short screens so the
+   whole scene still fits without scrolling. */
+.celebration-stage {
+  --celebration-scale: 1;
+}
+.celebration-headline {
+  font-size: 56px;
+}
+@media (max-width: 767px), (max-height: 820px) {
+  .celebration-stage {
+    --celebration-scale: 0.7;
+  }
+  .celebration-headline {
+    font-size: 36px;
+  }
+}
