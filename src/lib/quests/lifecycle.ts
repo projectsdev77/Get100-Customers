@@ -202,6 +202,12 @@ export async function buildQuestInsertFields(
   };
 }
 
+function templateFallback(founder: Founder, templates: QuestTemplate[], excludeTemplateIds: string[]) {
+  const template = pickTemplate(founder, templates, excludeTemplateIds);
+  if (!template) return null;
+  return { fields: templateToQuestFields(template, founder), usedTemplateId: template.id as string | null };
+}
+
 // Tops up to one pending "next up" suggestion, independent of the active
 // count (design handoff — a suggestion should always be waiting, but
 // accepting it is what's gated by the active-quest cap, not generating
@@ -263,13 +269,18 @@ export async function fillNextQuestSlot(
   }));
   const history = await getRecentQuestHistory(supabase, founder.id);
 
-  const built = await withTimeout(
-    buildQuestInsertFields(founder, growth, templates, usedTemplateIds, [
-      ...occupyingInfo,
-      ...history,
-    ]),
-    QUEST_GENERATION_TIMEOUT_MS,
-  );
+  // A slow or quota-limited AI previously left the founder with no "Next
+  // up" quest at all, even though the template library was right there.
+  // If the AI path times out or yields nothing, use a rule-picked template
+  // as-is (no AI call), so a quest always appears when one is eligible.
+  const built =
+    (await withTimeout(
+      buildQuestInsertFields(founder, growth, templates, usedTemplateIds, [
+        ...occupyingInfo,
+        ...history,
+      ]),
+      QUEST_GENERATION_TIMEOUT_MS,
+    )) ?? templateFallback(founder, templates, usedTemplateIds);
   if (!built) return false;
 
   // No notification here on purpose — a suggestion refilling isn't worth
