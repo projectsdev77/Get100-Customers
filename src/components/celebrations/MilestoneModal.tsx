@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { CelebrationShell, CloseButton } from "./CelebrationShell";
-import { CelebrationRing } from "./CelebrationRing";
 import { DecorativeImage } from "./DecorativeImage";
 import { confettiBurst, prefersReducedMotion } from "./confetti";
 import { milestoneCelebrationIllustration } from "@/lib/celebrations/illustrations";
@@ -31,24 +30,12 @@ function copyFor(milestone: number) {
 // 1g "Ring takeover", for every milestone except 1 (FirstCustomerModal) and
 // 100 (GrowthModeModal). Stays open until the founder taps the CTA, ×, or
 // Esc.
-// The ring only frames the team scene (100-999); the desk and rooftop scenes
-// stand on their own.
-function sceneFor(milestone: number) {
-  const src = milestoneCelebrationIllustration(milestone);
-  if (milestone >= 1000) {
-    return { src, ring: false, className: "w-[calc(540px*var(--celebration-scale))]" };
-  }
-  if (milestone >= 100) {
-    return {
-      src,
-      ring: true,
-      className: "h-[calc(400px*var(--celebration-scale))] mb-[calc(28px*var(--celebration-scale))]",
-    };
-  }
-  return { src, ring: false, className: "h-[calc(400px*var(--celebration-scale))]" };
+function sceneClassFor(milestone: number) {
+  if (milestone >= 1000) return "w-[calc(540px*var(--celebration-scale))]";
+  return "h-[calc(400px*var(--celebration-scale))]";
 }
 
-// Ring takeover, for every milestone except 1 (FirstCustomerModal) and
+// Full-screen takeover, for every milestone except 1 (FirstCustomerModal) and
 // 100 (GrowthModeModal). Stays open until the founder taps the CTA, ×, or
 // Esc.
 export function MilestoneModal({
@@ -63,10 +50,6 @@ export function MilestoneModal({
   const [bgVisible, setBgVisible] = useState(reduced);
   const [copyVisible, setCopyVisible] = useState(reduced);
   const copy = copyFor(milestone);
-  const scene = sceneFor(milestone);
-  const image = (
-    <DecorativeImage src={scene.src} className={`relative max-w-none object-contain ${scene.className}`} />
-  );
 
   useEffect(() => {
     if (reduced) return;
@@ -88,7 +71,10 @@ export function MilestoneModal({
         className="celebration-stage flex min-h-full flex-col items-center justify-center gap-10 px-4 py-16"
         onClick={(e) => e.stopPropagation()}
       >
-        {scene.ring ? <CelebrationRing fill="var(--violet-100)">{image}</CelebrationRing> : image}
+        <DecorativeImage
+          src={milestoneCelebrationIllustration(milestone)}
+          className={`max-w-none object-contain ${sceneClassFor(milestone)}`}
+        />
 
         <div
           className={`flex max-w-[560px] flex-col items-center gap-3.5 text-center transition-all duration-300 ${

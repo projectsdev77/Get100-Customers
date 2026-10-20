@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { CelebrationShell } from "./CelebrationShell";
-import { CelebrationRing } from "./CelebrationRing";
 import { DecorativeImage } from "./DecorativeImage";
 import { confettiBurst, prefersReducedMotion } from "./confetti";
 import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
@@ -47,11 +46,9 @@ export function GrowthModeModal({ onEnter }: { onEnter: () => void }) {
       className="overflow-y-auto overflow-x-hidden bg-[var(--violet-200)] text-[var(--ink-900)]"
     >
       <div className="celebration-stage flex min-h-full flex-col items-center justify-center gap-10 px-4 py-16">
-        <CelebrationRing fill="var(--violet-100)" track="#FFFFFF" progress={count / 100}>
-          <span className="absolute inset-0 grid place-items-center font-light text-[calc(96px*var(--celebration-scale))] leading-none tracking-[-0.04em]">
-            {count}
-          </span>
-        </CelebrationRing>
+        <span className="font-light text-[calc(96px*var(--celebration-scale))] leading-none tracking-[-0.04em]">
+          {count}
+        </span>
         <div className="flex max-w-[560px] flex-col items-center gap-3.5 text-center">
           <span className="font-mono text-[13px] font-semibold leading-none tracking-[0.16em] text-[var(--violet-600)]">
             MILESTONE
@@ -67,21 +64,15 @@ export function GrowthModeModal({ onEnter }: { onEnter: () => void }) {
         }`}
       >
         <div className="flex min-h-full flex-col items-center justify-center gap-10 px-4 py-16">
-          <CelebrationRing
-            fill="var(--lime-200)"
-            track="#FFFFFF"
-            progress={100 / 250}
-            badge={
-              <span className="absolute -bottom-[18px] rounded-full bg-[var(--ink-900)] px-4 py-2 font-mono text-sm font-semibold leading-none text-white">
-                100 / 250
-              </span>
-            }
-          >
+          <div className="flex flex-col items-center gap-6">
             <DecorativeImage
               src={ILLUSTRATIONS.growthMode}
-              className="relative w-[calc(560px*var(--celebration-scale))] max-w-none mb-[calc(90px*var(--celebration-scale))] object-contain"
+              className="w-[calc(560px*var(--celebration-scale))] max-w-none object-contain"
             />
-          </CelebrationRing>
+            <span className="rounded-full bg-[var(--ink-900)] px-4 py-2 font-mono text-sm font-semibold leading-none text-white">
+              100 / 250
+            </span>
+          </div>
           <div
             className={`flex max-w-[560px] flex-col items-center gap-3.5 text-center transition-opacity duration-[400ms] ${
               copyVisible ? "opacity-100" : "opacity-0"

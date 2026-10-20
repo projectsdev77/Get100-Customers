@@ -160,7 +160,7 @@ body {
 }
 
 /* Celebration overlays (handoff-ui-redesign §B): one centred column. The
-   ring and images scale down together on phones and short screens so the
+   images and headline scale down together on phones and short screens so the
    whole scene still fits without scrolling. */
 .celebration-stage {
   --celebration-scale: 1;
