@@ -35,7 +35,7 @@ export function QuestCard({
   id,
   status,
   title,
-  instructions,
+  steps,
   xp,
   window,
   tool,
@@ -47,7 +47,8 @@ export function QuestCard({
   id?: string;
   status: QuestCardStatus;
   title: string;
-  instructions?: string | null;
+  /** Read-only numbered preview, e.g. for a suggestion not yet accepted. */
+  steps?: string[];
   xp?: number;
   window?: string | null;
   tool?: { label: string; content: string } | null;
@@ -88,7 +89,18 @@ export function QuestCard({
         )}
       </div>
 
-      {instructions && <p className="text-sm text-secondary text-balance">{instructions}</p>}
+      {steps && steps.length > 0 && (
+        <ol className="flex flex-col gap-1 rounded-[20px] bg-sunken p-1.5">
+          {steps.map((step, i) => (
+            <li key={i} className="flex items-start gap-3 p-2.5">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-semibold text-secondary">
+                {i + 1}
+              </span>
+              <span className="text-sm leading-[1.5] text-balance text-primary">{step}</span>
+            </li>
+          ))}
+        </ol>
+      )}
 
       {tool && (
         <div className="flex flex-col gap-1.5 rounded-tile bg-sunken p-4">

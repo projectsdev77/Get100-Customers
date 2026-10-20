@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentFounder } from "@/lib/founders/get-founder";
 import { refreshQuestLog, MAX_ACTIVE_QUESTS } from "@/lib/quests/lifecycle";
 import type { Quest } from "@/types/database";
+import { getQuestSteps } from "@/lib/quests/steps";
 import { QuestCard } from "@/components/ui/quests/QuestCard";
 import { Button } from "@/components/ui/actions/Button";
 import { Input } from "@/components/ui/forms/Input";
@@ -166,7 +167,7 @@ export default async function QuestsPage({
                   id={`quest-${quest.id}`}
                   status="suggested"
                   title={quest.title}
-                  instructions={quest.instructions}
+                  steps={getQuestSteps(quest).map((step) => step.label)}
                   xp={quest.xp_value}
                   window={quest.suggested_window}
                   reasoning={quest.reasoning}
