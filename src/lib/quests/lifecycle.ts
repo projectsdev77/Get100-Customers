@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import type { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Founder, GrowthProfile, Quest, QuestResult, QuestTemplate } from "@/types/database";
 import { pickTemplate, templateToQuestFields } from "./select-template";
 import { personalizeQuestWithAI } from "@/lib/ai/personalize-quest";
@@ -25,14 +27,19 @@ export const MAX_ACTIVE_QUESTS = 3;
 const MAX_SUGGESTED_QUESTS = 1;
 const ACTIVE_STATUSES = ["active", "in_progress"];
 
-// Bounds how long a quest-mutating action (skipQuest, acceptQuest, a
-// dashboard/quests page load) can be stalled by ensureQuestSlots's live AI
-// generation attempt. Without this, a degraded Gemini/Groq (quota
-// exhaustion, 503s) leaves the caller hanging for as long as the AI
-// provider chain takes to exhaust its own retries — the page (or the
-// skip button) just spins. If the AI call resolves after the timeout, its
-// result is simply discarded; the next visit tries again.
-const QUEST_GENERATION_TIMEOUT_MS = 8_000;
+// How long fillNextQuestSlot waits for the AI before falling back to a
+// template. The admin "generate now" action waits inline, so it keeps a
+// short limit. The normal refill runs in the background (see
+// ensureQuestSlots), where a full AI response, often 10-20 seconds, is
+// worth waiting for, so templates stay a last resort.
+const INLINE_GENERATION_TIMEOUT_MS = 8_000;
+const BACKGROUND_GENERATION_TIMEOUT_MS = 45_000;
+
+// While one background refill is running for a founder, page loads and the
+// auto-refresh don't start another (each would spend an AI call from the
+// daily quota). Longer than the background timeout, so a crashed run frees
+// itself.
+const GENERATION_LOCK_MS = 90_000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
   return Promise.race([
@@ -213,6 +220,14 @@ function templateFallback(founder: Founder, templates: QuestTemplate[], excludeT
 // accepting it is what's gated by the active-quest cap, not generating
 // it). Called after any action that might have resolved the current
 // suggestion or freed an active slot.
+//
+// The AI often needs 10-20 seconds to write a quest, so instead of making
+// the founder wait (or giving up after a few seconds and leaving "Next up"
+// empty), the refill runs after the response via after(). The page shows a
+// "writing your next quest" placeholder that refreshes itself until it
+// lands. It uses the service-role client because request cookies aren't
+// available once the response has been sent; every query is scoped to
+// this founder's id.
 export async function ensureQuestSlots(
   supabase: SupabaseServerClient,
   founder: Founder,
@@ -223,7 +238,48 @@ export async function ensureQuestSlots(
   const subscription = await getSubscription(supabase, founder.id);
   if (isRestricted(subscription)) return;
 
-  await fillNextQuestSlot(supabase, founder);
+  const { count: suggestedCount } = await supabase
+    .from("quests")
+    .select("id", { count: "exact", head: true })
+    .eq("founder_id", founder.id)
+    .eq("status", "suggested");
+  if ((suggestedCount ?? 0) >= MAX_SUGGESTED_QUESTS) return;
+
+  const admin = createAdminClient();
+  if (!(await claimGenerationLock(admin, founder.id))) return;
+
+  after(async () => {
+    try {
+      await fillNextQuestSlot(admin, founder, BACKGROUND_GENERATION_TIMEOUT_MS);
+    } catch (err) {
+      console.error("Background quest generation failed:", err);
+    } finally {
+      await admin.from("founders").update({ next_quest_requested_at: null }).eq("id", founder.id);
+    }
+  });
+}
+
+// Atomically marks a refill as in progress, only if none started within
+// GENERATION_LOCK_MS. If the column is missing (schema.sql not re-run yet)
+// it proceeds without the lock: duplicate suggestions are still blocked by
+// the quests_one_suggested_per_founder index, it just costs extra AI calls.
+async function claimGenerationLock(
+  admin: ReturnType<typeof createAdminClient>,
+  founderId: string,
+): Promise<boolean> {
+  const now = new Date();
+  const staleBefore = new Date(now.getTime() - GENERATION_LOCK_MS).toISOString();
+  const { data, error } = await admin
+    .from("founders")
+    .update({ next_quest_requested_at: now.toISOString() })
+    .eq("id", founderId)
+    .or(`next_quest_requested_at.is.null,next_quest_requested_at.lt."${staleBefore}"`)
+    .select("id");
+  if (error) {
+    console.error("claimGenerationLock failed, generating without a lock:", error);
+    return true;
+  }
+  return (data ?? []).length > 0;
 }
 
 // Split out of ensureQuestSlots so an admin support action
@@ -236,8 +292,9 @@ export async function ensureQuestSlots(
 // MAX_SUGGESTED_QUESTS/generation-failure no-op apart from a genuine
 // insert instead of guessing from a void return.
 export async function fillNextQuestSlot(
-  supabase: SupabaseServerClient,
+  supabase: SupabaseServerClient | ReturnType<typeof createAdminClient>,
   founder: Founder,
+  timeoutMs: number = INLINE_GENERATION_TIMEOUT_MS,
 ): Promise<boolean> {
   const { data: occupying } = await supabase
     .from("quests")
@@ -269,17 +326,16 @@ export async function fillNextQuestSlot(
   }));
   const history = await getRecentQuestHistory(supabase, founder.id);
 
-  // A slow or quota-limited AI previously left the founder with no "Next
-  // up" quest at all, even though the template library was right there.
-  // If the AI path times out or yields nothing, use a rule-picked template
-  // as-is (no AI call), so a quest always appears when one is eligible.
+  // Last resort: if the AI path times out or yields nothing, use a
+  // rule-picked template as-is (no AI call) rather than leaving "Next up"
+  // empty.
   const built =
     (await withTimeout(
       buildQuestInsertFields(founder, growth, templates, usedTemplateIds, [
         ...occupyingInfo,
         ...history,
       ]),
-      QUEST_GENERATION_TIMEOUT_MS,
+      timeoutMs,
     )) ?? templateFallback(founder, templates, usedTemplateIds);
   if (!built) return false;
 

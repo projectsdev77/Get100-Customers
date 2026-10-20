@@ -133,6 +133,12 @@ alter table founders add column if not exists buying_motion text
 -- founder's morning. Null means not detected yet (treated as US Eastern).
 alter table founders add column if not exists timezone text;
 
+-- Set while a background "Next up" refill is running for this founder
+-- (src/lib/quests/lifecycle.ts), so page loads during it don't start a
+-- second AI call. Cleared when the refill finishes; treated as stale after
+-- 90 seconds in case a run dies midway.
+alter table founders add column if not exists next_quest_requested_at timestamptz;
+
 -- At most one 'suggested' quest per founder (MAX_SUGGESTED_QUESTS in
 -- lifecycle.ts) is the "a single Next Up suggestion is always waiting"
 -- invariant — but fillNextQuestSlot only enforced it with a

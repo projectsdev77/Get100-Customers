@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { Banner } from "@/components/ui/surfaces/Banner";
 import { ReportCard } from "./report-card";
 import { InProgressCard } from "./in-progress-card";
+import { QuestWriting } from "./quest-writing";
 import { QuestJournal, type JournalEntry } from "./quest-journal";
 import { SkipForm, SKIP_REASON_LABELS } from "./skip-form";
 import { acceptQuest, regenerateQuest, setNextFocus } from "./actions";
@@ -20,6 +21,10 @@ import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
 import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
 
 const HISTORY_STATUSES: Quest["status"][] = ["completed", "skipped", "expired"];
+
+// Room for the background "Next up" refill (after() in ensureQuestSlots)
+// to finish an AI call that can take 10-20 seconds.
+export const maxDuration = 60;
 
 export default async function QuestsPage({
   searchParams,
@@ -146,7 +151,7 @@ export default async function QuestsPage({
             </section>
           )}
 
-          {(suggested.length > 0 || (active.length === 0 && awaitingReport.length === 0)) && (
+          {(suggested.length > 0 || !restricted || (active.length === 0 && awaitingReport.length === 0)) && (
             <section className="flex flex-col gap-3">
               <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">Next up</h2>
               {suggested.length === 0 && (
@@ -154,11 +159,13 @@ export default async function QuestsPage({
                   {CELEBRATIONS_ENABLED && (
                     <DecorativeImage src={ILLUSTRATIONS.emptyNoSuggested} className="h-[140px] object-contain" />
                   )}
-                  <p className="text-sm text-secondary">
-                    {restricted
-                      ? "Your account is restricted, so new quests are paused until you subscribe."
-                      : "Your coach is putting together your next quest. Check back in a moment."}
-                  </p>
+                  {restricted ? (
+                    <p className="text-sm text-secondary">
+                      Your account is restricted, so new quests are paused until you subscribe.
+                    </p>
+                  ) : (
+                    <QuestWriting message="Your coach is writing your next quest…" />
+                  )}
                 </div>
               )}
               {suggested.map((quest) => (

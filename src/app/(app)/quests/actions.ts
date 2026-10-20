@@ -52,6 +52,17 @@ export async function acceptQuest(questId: string) {
   revalidatePath("/dashboard");
 }
 
+// "Get my next quest" button, shown when the background refill is taking
+// unusually long. Starts a new refill if none is running.
+export async function requestNextQuest() {
+  const supabase = await createClient();
+  const founder = await getCurrentFounder(supabase);
+  if (!founder) return;
+  await refreshQuestLog(supabase, founder);
+  revalidatePath("/quests");
+  revalidatePath("/dashboard");
+}
+
 // "Not for me" — first-class growth-profile signal, not just a dismissal
 // (SPEC §7.4), works from 'suggested' or 'active'.
 export async function skipQuest(formData: FormData) {

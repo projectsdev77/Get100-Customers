@@ -12,6 +12,10 @@ import { LinkButton } from "@/components/ui/actions/Button";
 import { CelebrationProvider } from "@/components/celebrations/CelebrationProvider";
 import { TimezoneSync } from "./timezone-sync";
 
+// Room for the background "Next up" refill (after() in ensureQuestSlots)
+// to finish an AI call that can take 10-20 seconds.
+export const maxDuration = 60;
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const {

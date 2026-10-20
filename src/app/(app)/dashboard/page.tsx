@@ -11,6 +11,7 @@ import {
 import { logCustomer, startFirstSuggestedQuest } from "./actions";
 import { markQuestDone, skipQuest } from "../quests/actions";
 import { QuestSteps } from "../quests/quest-steps";
+import { QuestWriting } from "../quests/quest-writing";
 import { isoDaysAgo } from "@/lib/utils/days-remaining";
 import { detectSkipPattern } from "@/lib/growth-profile/patterns";
 import { STAGE_LABELS } from "@/lib/founders/field-options";
@@ -25,6 +26,10 @@ import { HeroWelcomeIllustration } from "@/components/celebrations/HeroWelcomeIl
 import { DecorativeImage } from "@/components/celebrations/DecorativeImage";
 import { ILLUSTRATIONS } from "@/lib/celebrations/illustrations";
 import { CELEBRATIONS_ENABLED } from "@/lib/celebrations/flag";
+
+// Room for the background "Next up" refill (after() in ensureQuestSlots)
+// to finish an AI call that can take 10-20 seconds.
+export const maxDuration = 60;
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -105,7 +110,7 @@ export default async function DashboardPage() {
               </Button>
             </form>
           ) : (
-            <p className="text-sm text-secondary">Your coach is preparing your first quest.</p>
+            <QuestWriting message="Your coach is writing your first quest…" />
           )}
         </>
       ) : (

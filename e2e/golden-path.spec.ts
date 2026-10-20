@@ -102,8 +102,11 @@ test.describe("founder golden path", () => {
       await page.goto("/quests");
       await expect(page.getByRole("heading", { name: "Quests" })).toBeVisible();
 
+      // The first quest is written by the AI in the background after the
+      // dashboard loads (ensureQuestSlots), and the page refreshes itself
+      // until it lands, which can take longer than the default wait.
       const acceptButton = page.getByRole("button", { name: "Accept" }).first();
-      await expect(acceptButton).toBeVisible();
+      await expect(acceptButton).toBeVisible({ timeout: 60_000 });
       await acceptButton.click();
 
       await expect(page.getByText("In progress (1 of 3)")).toBeVisible();
